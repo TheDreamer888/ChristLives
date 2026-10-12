@@ -8,20 +8,15 @@
  */
 import { secureClear } from "./secureStore";
 import { createPasskey, getPasskeyAssertion, isPasskeySupported } from "./webauthn";
-
-const API_BASE = import.meta.env['VITE_API_BASE_URL'] ?? "http://localhost:8000";
+import { ApiError, request } from "../lib/http";
+import { apiClient, type AuthSession } from "../lib/api";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include", // send/receive the httpOnly session cookie
-    headers: { "Content-Type": "application/json" },
+  const { body } = await request(path, init ? {
     ...init,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail ?? `Falha no pedido (${res.status})`);
-  }
-  return res.status === 204 ? (undefined as T) : res.json();
+    headers: { "Content-Type": "application/json", ...init.headers },
+  } : undefined);
+  return body as T;
 }
 
 export interface ProviderInfo {
@@ -45,9 +40,12 @@ export const authClient = {
   },
 
   /** Redirects the browser to the provider's consent screen (Google/Microsoft/GitHub/...). */
-  async loginWithProvider(providerId: string): Promise<void> {
+  async loginWithProvider(providerId: string, returnTo?: string): Promise<void> {
+    const params = new URLSearchParams()
+    if (returnTo) params.set('return_to', returnTo)
+    const query = params.size ? `?${params.toString()}` : ''
     const { authorize_url } = await api<{ authorize_url: string; state: string }>(
-      `/api/auth/oauth/${providerId}/start`,
+      `/api/auth/oauth/${providerId}/start${query}`,
     );
     window.location.assign(authorize_url);
   },
@@ -56,14 +54,23 @@ export const authClient = {
     try {
       const user = await api<SessionUser | null>("/api/auth/session");
       return user;
-    } catch {
-      return null; // Only the server can confirm an authenticated session.
+    } catch (reason) {
+      if (reason instanceof ApiError && reason.status === 401) return null;
+      throw reason;
     }
   },
 
   async logout(): Promise<void> {
     await api("/api/auth/logout", { method: "POST" });
     await secureClear();
+  },
+
+  listSessions(): Promise<AuthSession[]> {
+    return apiClient.listAuthSessions();
+  },
+
+  revokeSession(sessionId: string): Promise<void> {
+    return apiClient.revokeAuthSession(sessionId);
   },
 
   /** Registers a new passkey / hardware security key for the signed-in user. */

@@ -1,0 +1,50 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+exec > >(tee /var/log/aegis-bootstrap.log | logger -t aegis-bootstrap -s 2>/dev/console) 2>&1
+
+dnf install -y docker awscli-2
+systemctl enable --now docker
+
+%{ if enable_cloudflare_tunnel ~}
+cat > /usr/local/sbin/aegis-cloudflared <<'SCRIPT'
+#!/bin/bash
+set -Eeuo pipefail
+
+TOKEN=$$(aws ssm get-parameter \
+  --name "${cloudflare_tunnel_token_parameter_name}" \
+  --with-decryption \
+  --region "${region}" \
+  --query 'Parameter.Value' \
+  --output text)
+
+exec /usr/bin/docker run --rm \
+  --name aegis-cloudflared \
+  --network host \
+  --env "TUNNEL_TOKEN=$${TOKEN}" \
+  "${cloudflared_image}" tunnel run --no-autoupdate
+SCRIPT
+
+chmod 0750 /usr/local/sbin/aegis-cloudflared
+
+cat > /etc/systemd/system/aegis-cloudflared.service <<'UNIT'
+[Unit]
+Description=Aegis Cloudflare Tunnel
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/aegis-cloudflared
+Restart=on-failure
+RestartSec=15
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now aegis-cloudflared.service
+%{ endif ~}

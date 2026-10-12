@@ -115,10 +115,10 @@ Icon?
 node_modules/
 services/api-rust/target/
 **/obj/
+**/bin/
 **/target/
 .artifacts/
 *.tgz
-
 
 
 

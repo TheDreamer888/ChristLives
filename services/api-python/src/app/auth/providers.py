@@ -29,6 +29,7 @@ class OAuthProvider:
     id_field: str = "id"
     email_field: str = "email"
     name_field: str = "name"
+    email_verified_field: str = "email_verified"
 
 
 def _provider(
@@ -41,6 +42,7 @@ def _provider(
     id_field: str = "id",
     email_field: str = "email",
     name_field: str = "name",
+    email_verified_field: str = "email_verified",
 ) -> OAuthProvider:
     prefix = name.upper()
     return OAuthProvider(
@@ -55,6 +57,7 @@ def _provider(
         id_field=id_field,
         email_field=email_field,
         name_field=name_field,
+        email_verified_field=email_verified_field,
     )
 
 
@@ -89,6 +92,7 @@ PROVIDERS: dict[str, OAuthProvider] = {
             id_field="id",
             email_field="email",
             name_field="name",
+            email_verified_field="verified",
         ),
         # Extra alternatives ("todas as alternativas") — enabled automatically
         # once the matching *_CLIENT_ID / *_CLIENT_SECRET env vars are set.
@@ -99,6 +103,7 @@ PROVIDERS: dict[str, OAuthProvider] = {
             "https://gitlab.com/oauth/token",
             "https://gitlab.com/api/v4/user",
             "read_user",
+            email_verified_field="confirmed_at",
         ),
         _provider(
             "apple",
@@ -115,6 +120,7 @@ PROVIDERS: dict[str, OAuthProvider] = {
             "https://discord.com/api/oauth2/token",
             "https://discord.com/api/users/@me",
             "identify email",
+            email_verified_field="verified",
         ),
     ]
 }
@@ -122,4 +128,8 @@ PROVIDERS: dict[str, OAuthProvider] = {
 
 def enabled_providers() -> list[OAuthProvider]:
     """Providers with credentials configured — what the login tab may show."""
-    return [p for p in PROVIDERS.values() if p.client_id and p.client_secret]
+    return [
+        p
+        for p in PROVIDERS.values()
+        if p.client_id and p.client_secret and p.userinfo_url
+    ]

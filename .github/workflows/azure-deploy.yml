@@ -1,0 +1,66 @@
+name: Azure deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: production
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  provision-and-deploy:
+    name: Provision Azure resources and deploy apps
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'eastus' }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'rg-aegis-prod' }}
+      AZURE_APP_NAME: ${{ vars.AZURE_APP_NAME || 'aegis' }}
+      FRONTEND_IMAGE: ${{ vars.FRONTEND_IMAGE || 'ghcr.io/your-org/aegis-frontend:latest' }}
+      API_IMAGE: ${{ vars.API_IMAGE || 'ghcr.io/your-org/aegis-api-python:latest' }}
+      FRONTEND_ORIGIN: ${{ vars.FRONTEND_ORIGIN || 'https://app.example.com' }}
+      API_ORIGIN: ${{ vars.API_ORIGIN || 'https://api.example.com' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create resource group
+        shell: bash
+        run: |
+          az group create \
+            --name "$AZURE_RESOURCE_GROUP" \
+            --location "$AZURE_LOCATION"
+
+      - name: Deploy Bicep infrastructure
+        shell: bash
+        run: |
+          az deployment group create \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --template-file infra/azure/main.bicep \
+            --parameters \
+              location="$AZURE_LOCATION" \
+              appName="$AZURE_APP_NAME" \
+              frontendImage="$FRONTEND_IMAGE" \
+              apiImage="$API_IMAGE" \
+              frontendOrigin="$FRONTEND_ORIGIN" \
+              apiOrigin="$API_ORIGIN"
+
+      - name: Display deployment output
+        shell: bash
+        run: az deployment group list --resource-group "$AZURE_RESOURCE_GROUP" --output table

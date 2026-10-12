@@ -15,7 +15,7 @@ import uuid
 from typing import Any
 
 import jwt
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 SESSION_COOKIE_NAME = "protectia_session"
 SESSION_TTL_SECONDS = 60 * 60 * 8  # 8h
@@ -35,13 +35,15 @@ def _signing_key() -> str:
     return key
 
 
-def issue_session_token(user_id: str, methods: list[str]) -> str:
+def issue_session_token(
+    user_id: str, methods: list[str], session_id: str | None = None
+) -> str:
     """Sign then encrypt the session claims -> opaque cookie value."""
     now = int(time.time())
     claims = {
         "sub": user_id,
         "amr": methods,  # authentication methods used (google, passkey, ...)
-        "jti": str(uuid.uuid4()),
+        "jti": session_id or str(uuid.uuid4()),
         "iat": now,
         "exp": now + SESSION_TTL_SECONDS,
     }
@@ -53,5 +55,5 @@ def verify_session_token(token: str) -> dict[str, Any] | None:
     try:
         signed = _fernet().decrypt(token.encode()).decode()
         return jwt.decode(signed, _signing_key(), algorithms=["HS256"])
-    except Exception:
+    except (InvalidToken, jwt.InvalidTokenError):
         return None
