@@ -73,6 +73,12 @@ def _auto_cleanup(path: Path, days: int = 30) -> None:
             continue
 
 
+def env(name: str) -> str | None:
+    """Lê uma variável de ambiente; vazio conta como não definida."""
+    value = os.getenv(name, "").strip()
+    return value or None
+
+
 _ensure_dirs(DATA_DIR, LOG_DIR)
 
 
