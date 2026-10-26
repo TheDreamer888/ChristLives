@@ -47,8 +47,47 @@ class Store:
     def __init__(self) -> None:
         self.users: dict[str, UserRecord] = {}
         self.email_index: dict[str, str] = {}
+        self.oauth_index: dict[tuple[str, str], str] = {}  # (provider, subject) -> user id
         self.oauth_states = _TTLCache(ttl_seconds=600)
         self.webauthn_challenges = _TTLCache(ttl_seconds=300)
+
+    def get_or_create_oauth_user(
+        self,
+        provider: str,
+        subject: str,
+        email: str | None,
+        name: str | None,
+        email_verified: bool,
+    ) -> UserRecord:
+        """Identifica o utilizador por (provedor, subject), nunca só pelo email.
+
+        O email só liga a uma conta existente (ou a reivindica) quando o provedor
+        o confirmou como verificado — evita tomada de conta por email falso.
+        """
+        import uuid
+
+        known_id = self.oauth_index.get((provider, subject))
+        if known_id and known_id in self.users:
+            user = self.users[known_id]
+            user.linked_methods.add(provider)
+            return user
+
+        user = None
+        if email and email_verified and email in self.email_index:
+            user = self.users[self.email_index[email]]
+            user.linked_methods.add(provider)
+        if user is None:
+            user = UserRecord(
+                id=str(uuid.uuid4()),
+                email=email if email_verified else None,
+                name=name,
+                linked_methods={provider},
+            )
+            self.users[user.id] = user
+            if email and email_verified:
+                self.email_index[email] = user.id
+        self.oauth_index[(provider, subject)] = user.id
+        return user
 
     def get_or_create_user(self, email: str | None, name: str | None, method: str) -> UserRecord:
         if email and email in self.email_index:
