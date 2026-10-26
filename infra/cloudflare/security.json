@@ -1,0 +1,32 @@
+{
+  "_comentario": "Configuração de segurança da zona Cloudflare. Aplicada por apply_security.py (workflow cloudflare-security.yml). Os rulesets abaixo SUBSTITUEM as regras personalizadas e de rate limiting criadas no painel.",
+  "zone_settings": {
+    "always_use_https": "on",
+    "automatic_https_rewrites": "on",
+    "min_tls_version": "1.2",
+    "tls_1_3": "on",
+    "ssl": "full",
+    "security_level": "medium",
+    "browser_check": "on"
+  },
+  "custom_rules": [
+    {
+      "description": "Bloquear sondagens de ficheiros e painéis sensíveis",
+      "action": "block",
+      "expression": "(starts_with(http.request.uri.path, \"/.env\") or starts_with(http.request.uri.path, \"/.git\") or starts_with(http.request.uri.path, \"/.svn\") or starts_with(http.request.uri.path, \"/.aws\") or starts_with(http.request.uri.path, \"/.ssh\") or starts_with(http.request.uri.path, \"/wp-\") or http.request.uri.path contains \"/xmlrpc.php\" or http.request.uri.path contains \"phpmyadmin\" or http.request.uri.path contains \"/cgi-bin/\" or http.request.uri.path contains \"/vendor/phpunit\" or ends_with(http.request.uri.path, \".php\"))"
+    },
+    {
+      "description": "Bloquear métodos HTTP que o site não usa",
+      "action": "block",
+      "expression": "(not http.request.method in {\"GET\" \"HEAD\" \"POST\" \"OPTIONS\" \"DELETE\"})"
+    }
+  ],
+  "rate_limit": {
+    "description": "Limitar pedidos à API por IP",
+    "expression": "(starts_with(http.request.uri.path, \"/api/\"))",
+    "characteristics": ["ip.src", "cf.colo.id"],
+    "period": 10,
+    "requests_per_period": 50,
+    "mitigation_timeout": 10
+  }
+}
