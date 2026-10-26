@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" role="img" aria-labelledby="t d">
+  <title id="t">Escudo Aegis</title>
+  <desc id="d">Escudo geométrico com um fecho de verificação, rodeado por anéis de proteção.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#5eead4" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="240" cy="240" r="230" fill="url(#glow)"/>
+  <circle cx="240" cy="240" r="200" fill="none" stroke="url(#g)" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 10"/>
+  <circle cx="240" cy="240" r="160" fill="none" stroke="url(#g)" stroke-opacity=".5" stroke-width="1.5"/>
+  <path d="M240 82 360 126v96c0 84-50 140-120 176C170 362 120 306 120 222v-96z" fill="#0b1220" stroke="url(#g)" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M240 112 332 146v76c0 66-38 110-92 140-54-30-92-74-92-140v-76z" fill="url(#g)" fill-opacity=".14"/>
+  <path d="m192 238 36 36 64-72" fill="none" stroke="url(#g)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#5eead4">
+    <circle cx="240" cy="40" r="5"/><circle cx="440" cy="240" r="5" fill="#6366f1"/>
+    <circle cx="40" cy="240" r="5" fill="#6366f1"/><circle cx="240" cy="440" r="5"/>
+  </g>
+</svg>

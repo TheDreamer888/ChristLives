@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Aegis — segurança defensiva, mercados e conhecimento num workspace com privacidade por definição." />
+    <meta property="og:title" content="Aegis — Defesa em órbita" />
+    <meta property="og:description" content="Segurança defensiva, mercados e conhecimento num workspace com privacidade por definição." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="hero.svg" />
+    <link rel="icon" type="image/svg+xml" href="hero.svg" />
+    <link rel="stylesheet" href="landing.css" />
+    <script src="motion.js" defer></script>
+    <title>Aegis</title>
+  </head>
+  <body>
+    <a class="skip" href="#main">Saltar para o conteúdo</a>
+
+    <header class="nav" id="top">
+      <a class="wordmark" href="./" aria-label="Aegis, início">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 21 5.5v6.2c0 5.3-3.7 8.9-9 10.3C6.7 20.6 3 17 3 11.7V5.5z" /></svg>
+        AEGIS
+      </a>
+      <nav aria-label="Principal">
+        <ul class="nav-links">
+          <li><a href="#defesa">Defesa</a></li>
+          <li><a href="#mercados">Mercados</a></li>
+          <li><a href="#educacao">Educação</a></li>
+          <li><a href="#privacidade">Privacidade</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn-ghost nav-cta" href="app/">Abrir workspace</a>
+      <details class="menu">
+        <summary aria-label="Abrir menu"><span></span><span></span></summary>
+        <ul>
+          <li><a href="#defesa">Defesa</a></li>
+          <li><a href="#mercados">Mercados</a></li>
+          <li><a href="#educacao">Educação</a></li>
+          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="app/">Abrir workspace →</a></li>
+        </ul>
+      </details>
+    </header>
+
+    <main id="main">
+      <!-- 01 · HERO -->
+      <section class="stage hero" aria-labelledby="hero-title">
+        <div class="letterbox" aria-hidden="true"></div>
+        <div class="layer" style="--d: 6" aria-hidden="true"><div class="stars stars-far"></div></div>
+        <div class="layer" style="--d: 14" aria-hidden="true"><div class="stars"></div></div>
+        <div class="layer" style="--d: 22" aria-hidden="true"><div class="sun"></div></div>
+        <div class="layer" style="--d: 34" aria-hidden="true"><div class="planet"><div class="atmosphere"></div></div></div>
+        <div class="layer" style="--d: 56" aria-hidden="true"><div class="orbit-ring"><i class="satellite"></i></div></div>
+        <div class="spot" aria-hidden="true"></div>
+
+        <div class="stage-copy layer-copy" style="--d: -10">
+          <p class="kicker reveal">Missão 01 · Privacidade por definição</p>
+          <h1 id="hero-title" class="display reveal">Defesa<br />em órbita.</h1>
+          <p class="lead reveal">
+            Um workspace que protege, ensina e ajuda a decidir — inteiramente no teu navegador.
+            Sem anúncios. Sem rastreio. Sem fontes remotas.
+          </p>
+          <div class="actions reveal">
+            <a class="btn btn-solid" href="app/">Lançar workspace</a>
+            <a class="btn btn-ghost" href="#defesa">Ver a missão</a>
+          </div>
+        </div>
+
+        <a class="scroll-cue" href="#telemetria" aria-label="Descer para a telemetria"><span></span></a>
+      </section>
+
+      <!-- TELEMETRIA -->
+      <section class="telemetry" id="telemetria" aria-label="Telemetria do workspace">
+        <dl>
+          <div><dt>Rastreadores</dt><dd>0</dd></div>
+          <div><dt>Análise</dt><dd>100<small>%</small></dd><span>local</span></div>
+          <div><dt>Fontes remotas</dt><dd>0</dd></div>
+          <div><dt>Texto enviado</dt><dd>0<small>B</small></dd></div>
+        </dl>
+      </section>
+
+      <!-- 02 · DEFESA -->
+      <section class="stage panel panel-defesa" id="defesa" aria-labelledby="defesa-title">
+        <div class="art radar" aria-hidden="true">
+          <div class="radar-grid"></div>
+          <div class="radar-sweep"></div>
+          <i class="blip b1"></i><i class="blip b2"></i><i class="blip b3"></i>
+        </div>
+        <div class="stage-copy">
+          <p class="kicker reveal">Missão 02 · Defesa</p>
+          <h2 id="defesa-title" class="display reveal">Vê o sinal<br />antes do impacto.</h2>
+          <p class="lead reveal">
+            Revisão estática de scripts e registos, feita localmente. Deteta execução remota,
+            ofuscação e downloads sem verificação — e explica porquê. O que colas nunca é executado nem enviado.
+          </p>
+          <ul class="specs reveal">
+            <li><b>Local</b><span>Nada sai do dispositivo</span></li>
+            <li><b>Explicável</b><span>Cada sinal com contexto</span></li>
+            <li><b>Honesto</b><span>Padrões não são prova de segurança</span></li>
+          </ul>
+          <a class="btn btn-ghost reveal" href="app/">Abrir central de defesa</a>
+        </div>
+      </section>
+
+      <!-- 03 · MERCADOS -->
+      <section class="stage panel panel-mercados panel-right" id="mercados" aria-labelledby="mercados-title">
+        <div class="art trajectory" aria-hidden="true">
+          <svg viewBox="0 0 600 400" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="trail" x1="0" x2="1">
+                <stop offset="0" stop-color="#fff" stop-opacity="0" />
+                <stop offset="1" stop-color="#fff" stop-opacity=".9" />
+              </linearGradient>
+            </defs>
+            <path class="grid-line" d="M0 100H600M0 200H600M0 300H600" />
+            <path class="path" pathLength="1" d="M0 360 C120 340 160 250 240 260 S360 300 420 190 520 80 600 40" stroke="url(#trail)" />
+          </svg>
+        </div>
+        <div class="stage-copy">
+          <p class="kicker reveal">Missão 03 · Mercados</p>
+          <h2 id="mercados-title" class="display reveal">Simula a trajetória.<br />Antes do risco.</h2>
+          <p class="lead reveal">
+            Um simulador de posição com custos de entrada e saída, para aprender com cenários e não com promessas.
+            Sem capital real, sem ordens, sem cotações inventadas.
+          </p>
+          <p class="fine reveal">Conteúdo educativo. Não é aconselhamento financeiro nem garante resultados.</p>
+          <a class="btn btn-ghost reveal" href="app/">Abrir simulador</a>
+        </div>
+      </section>
+
+      <!-- 04 · EDUCAÇÃO -->
+      <section class="stage panel panel-educacao" id="educacao" aria-labelledby="educacao-title">
+        <div class="art orbits" aria-hidden="true">
+          <div class="system">
+            <i class="o o1"><b></b></i><i class="o o2"><b></b></i><i class="o o3"><b></b></i>
+            <i class="o o4"><b><s></s></b></i>
+            <span class="core"></span>
+          </div>
+        </div>
+        <div class="stage-copy">
+          <p class="kicker reveal">Missão 04 · Educação</p>
+          <h2 id="educacao-title" class="display reveal">Do 5.º ano<br />à faculdade.</h2>
+          <p class="lead reveal">
+            Percursos de segurança digital, literacia financeira e APIs com privacidade.
+            Lições curtas, perguntas diretas e um guia que nunca envia as tuas perguntas para fora.
+          </p>
+          <ul class="specs reveal">
+            <li><b>Fundamentos</b><span>Cidadania digital</span></li>
+            <li><b>Preparação</b><span>Finanças pessoais</span></li>
+            <li><b>Especialização</b><span>Autonomia</span></li>
+          </ul>
+          <a class="btn btn-ghost reveal" href="app/">Começar a aprender</a>
+        </div>
+      </section>
+
+      <!-- 05 · PRIVACIDADE -->
+      <section class="stage finale" id="privacidade" aria-labelledby="privacidade-title">
+        <div class="layer" style="--d: 10" aria-hidden="true"><div class="stars"></div></div>
+        <div class="layer" style="--d: 26" aria-hidden="true"><div class="eclipse"></div></div>
+        <div class="spot" aria-hidden="true"></div>
+        <div class="stage-copy center">
+          <p class="kicker reveal">Missão 05 · Privacidade</p>
+          <h2 id="privacidade-title" class="display reveal">O teu espaço.<br />Os teus dados.</h2>
+          <p class="lead reveal">
+            Privacidade não é uma opção premium. É a base: sem analytics publicitários, pixels ou gravação de sessões.
+          </p>
+          <div class="actions reveal">
+            <a class="btn btn-solid" href="app/">Lançar workspace</a>
+            <a class="btn btn-ghost" href="app/legal/privacy.html">Política de privacidade</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="wordmark small">AEGIS</span>
+      <ul>
+        <li><a href="app/legal/privacy.html">Privacidade</a></li>
+        <li><a href="app/legal/terms.html">Termos</a></li>
+        <li><a href="https://github.com/TheDreamer888/ChristLives">GitHub</a></li>
+        <li><a href="#top">Voltar ao topo ↑</a></li>
+      </ul>
+      <small>© Aegis · Projeto em desenvolvimento</small>
+    </footer>
+  </body>
+</html>
