@@ -113,6 +113,8 @@ def call(method: str, path: str, body: dict, token: str) -> dict:
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode(errors="replace")[:500]
         raise RuntimeError(f"{method} {path} -> HTTP {exc.code}: {detail}") from exc
+    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        raise RuntimeError(f"{method} {path} -> sem resposta válida da API ({exc.__class__.__name__})") from exc
 
 
 def main() -> int:
