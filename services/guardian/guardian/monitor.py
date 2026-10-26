@@ -15,7 +15,7 @@ from pathlib import Path
 
 import psutil
 
-from guardian.baseline import Baseline, data_dir
+from guardian.baseline import Baseline, data_dir, load_allowlist
 from guardian.notify import toast
 from guardian.rules import ConnInfo, ProcInfo, Verdict, score_connection, score_process
 
@@ -58,9 +58,35 @@ class Guardian:
         self.names: dict[int, str] = {}
         self.recent_alerts: dict[str, float] = {}
         self.dirty = False
+        # Lista de permitidos num ficheiro à parte: `guardian allow` pode editá-la
+        # com o agente a correr; é relida só quando o ficheiro muda.
+        self.allow_path = self.dir / "allow.json"
+        self.allowed: set[str] = set()
+        self._allow_mtime = -1.0
+
+    def _refresh_allowlist(self) -> None:
+        try:
+            mtime = self.allow_path.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        if mtime != self._allow_mtime:
+            self._allow_mtime = mtime
+            self.allowed = load_allowlist(self.allow_path)
+
+    def _process_allowed(self, exe: str | None) -> bool:
+        # Só o caminho exato: permitir um nome (ex.: svchost.exe) desligaria a
+        # deteção de imitações noutras pastas.
+        return bool(exe) and exe.lower() in self.allowed
+
+    def _connection_allowed(self, name: str | None) -> bool:
+        if not name or not self.allowed:
+            return False
+        name = name.lower()
+        return name in self.allowed or any(a.endswith("\\" + name) for a in self.allowed)
 
     # ---- processos ----
     def scan_processes(self, first_pass: bool = False) -> list[Verdict]:
+        self._refresh_allowlist()
         verdicts: list[Verdict] = []
         alive: set[tuple[int, float]] = set()
         fresh: list[tuple[psutil.Process, str]] = []
@@ -92,7 +118,7 @@ class Guardian:
             )
             exe = (info.exe or "").lower() or None
             pair = f"{(info.parent_name or '').lower()}>{name.lower()}" if info.parent_name else None
-            if not (first_pass or self.baseline.learning):
+            if not (first_pass or self.baseline.learning or self._process_allowed(exe)):
                 v = score_process(info, self.baseline.exes, self.baseline.pairs)
                 if v.alert:
                     self._raise("processo", f"{name} (PID {proc.pid})", info.exe, v)
@@ -124,7 +150,7 @@ class Guardian:
             who = (info.exe_name or "processo desconhecido").lower()
             endpoint = f"{who}:{info.remote_port}" if info.remote_port else None
             listener = f"{who}:{info.local_port}" if info.status == "LISTEN" else None
-            if not self.baseline.learning:
+            if not (self.baseline.learning or self._connection_allowed(info.exe_name)):
                 v = score_connection(info, self.baseline.endpoints, self.baseline.listeners)
                 if v.alert:
                     target = f"{info.remote_ip}:{info.remote_port}" if info.remote_port else f"porta {info.local_port}"
@@ -142,10 +168,13 @@ class Guardian:
         if now - self.recent_alerts.get(key, 0) < DEDUPE_SECONDS:
             return
         self.recent_alerts[key] = now
-        entry = {"ts": now, "tipo": kind, "alvo": subject, "pontos": v.score, "motivos": v.reasons}
+        entry = {"ts": now, "tipo": kind, "alvo": subject, "exe": ident, "pontos": v.score, "motivos": v.reasons}
         self._log(entry)
         if self.notify:
-            toast(f"Aegis Guardian: {kind} suspeito", f"{subject}\n" + "; ".join(v.reasons[:3]))
+            toast(
+                f"Aegis Guardian: {kind} suspeito",
+                f"{subject}\n" + "; ".join(v.reasons[:2]) + "\nSe é seguro: python -m guardian allow --last",
+            )
 
     def _log(self, entry: dict) -> None:
         try:

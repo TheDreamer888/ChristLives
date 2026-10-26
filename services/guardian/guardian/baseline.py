@@ -17,6 +17,21 @@ def data_dir() -> Path:
     return path
 
 
+def load_allowlist(path: Path) -> set[str]:
+    """Caminhos e nomes de executáveis marcados como seguros (em minúsculas)."""
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    return {str(x).lower() for x in raw if isinstance(x, str)} if isinstance(raw, list) else set()
+
+
+def save_allowlist(path: Path, items: set[str]) -> None:
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(sorted(items), ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(path)
+
+
 @dataclass
 class Baseline:
     exes: set[str] = field(default_factory=set)
