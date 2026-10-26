@@ -36,8 +36,16 @@ python -m pip install -r requirements.txt
 python -m guardian test-notify     # confirma que as notificações aparecem
 python -m guardian run             # vigia (Ctrl+C para parar)
 python -m guardian status          # modo, linha de base e últimos alertas
+python -m guardian alerts -n 20    # histórico de alertas com os motivos
+python -m guardian allow --last    # o último alerta era seguro: não voltar a avisar
+python -m guardian allow "C:\Programas\X\x.exe" --remove   # voltar a vigiar
 python -m guardian reset           # volta a aprender do zero
 ```
+
+**Falsos positivos.** `allow` guarda a escolha em `allow.json`, e o agente relê-a
+sem precisar de reiniciar. Para processos vale só o **caminho exato**: permitir
+`C:\Ferramentas\svchost.exe` não desliga a deteção de um `svchost.exe` falso
+noutra pasta. Um nome sem caminho só silencia alertas de rede.
 
 Para arrancar sozinho ao iniciar sessão (sem janela):
 
