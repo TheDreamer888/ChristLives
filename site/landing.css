@@ -7,7 +7,7 @@
   --bg: #000;
   --fg: #f5f7fa;
   --muted: #a3acb9;
-  --dim: #5b6573;
+  --dim: #8a94a3; /* 6,9:1 sobre preto (WCAG AA para texto pequeno) */
   --line: rgba(255, 255, 255, .14);
   --accent: #5eead4;
   --accent-2: #818cf8;
