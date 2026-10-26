@@ -1,0 +1,46 @@
+name: Cloudflare Security
+
+run-name: "Cloudflare security • ${{ inputs.apply && 'aplicar' || 'simular' }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Aplicar à zona (desligado = só simular)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-security
+  cancel-in-progress: false
+
+jobs:
+  security:
+    name: Aplicar configuração de segurança
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: infra-production
+    defaults:
+      run:
+        working-directory: infra/cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest==8.4.2
+      - name: Validar configuração
+        run: python -m pytest -q -p no:cacheprovider
+      - name: Simular
+        if: ${{ !inputs.apply }}
+        run: python apply_security.py
+      - name: Aplicar
+        if: ${{ inputs.apply }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: python apply_security.py --apply
