@@ -21,5 +21,9 @@ test('app compiler options are valid and resolve the source alias', () => {
     parsed.options,
     ts.sys,
   ).resolvedModule
-  assert.equal(resolved?.resolvedFileName, path.join(rootDir, 'src/lib/workspace.ts'))
+  // O TypeScript devolve sempre '/'; path.join usa '\' no Windows. Normalizar antes de comparar.
+  assert.equal(
+    path.resolve(resolved?.resolvedFileName ?? ''),
+    path.resolve(rootDir, 'src/lib/workspace.ts'),
+  )
 })
