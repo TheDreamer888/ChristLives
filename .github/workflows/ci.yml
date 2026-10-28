@@ -48,6 +48,21 @@ jobs:
       - run: poetry install --no-interaction
       - run: poetry run python -m compileall -q src
 
+  guardian:
+    name: Guardian
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: services/guardian
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt pytest==8.4.2
+      - run: python -m pytest -q tests
+      - run: python -m guardian run --once --no-notify --learn-hours 0
+
   rust:
     name: Rust API
     runs-on: ubuntu-latest
