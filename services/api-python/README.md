@@ -26,13 +26,14 @@ repositório. A app recusa arrancar sem `SECRET_KEY` (`settings.require_secret_k
 
 ## Segurança de dependências ("antivírus de pacotes")
 
-Ferramentas de scan já declaradas no grupo `dev` do `pyproject.toml`
-(`bandit`, `safety`) mais `pip-audit`, instaladas à parte no venv:
+Ferramentas de scan declaradas no grupo `dev` do `pyproject.toml` (`bandit`,
+`pip-audit`). O `safety` foi substituído pelo `pip-audit`, porque trazia o `nltk`,
+que tem uma vulnerabilidade sem correção.
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install pip-audit bandit
-.\.venv\Scripts\python.exe -m pip_audit          # vulnerabilidades conhecidas (OSV/PyPI Advisory)
-.\.venv\Scripts\python.exe -m bandit -r src       # padrões de código inseguro
+poetry install --with dev
+poetry run pip-audit                              # vulnerabilidades conhecidas (OSV/PyPI Advisory)
+poetry run bandit -r src                          # padrões de código inseguro
 ```
 
 Corre estas verificações antes de cada release e sempre que uma dependência
