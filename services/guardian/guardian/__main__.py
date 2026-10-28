@@ -57,9 +57,23 @@ def main() -> None:
     allow.add_argument("target", nargs="?", help="caminho completo ou nome do executável")
     allow.add_argument("--last", action="store_true", help="usar o programa do último alerta")
     allow.add_argument("--remove", action="store_true", help="retirar da lista de permitidos")
+    report = sub.add_parser("report", help="gerar um relatório HTML local e abri-lo")
+    report.add_argument("--no-open", action="store_true", help="só gerar, sem abrir no browser")
     sub.add_parser("test-notify", help="mostrar uma notificação de teste")
     sub.add_parser("reset", help="apagar a linha de base e voltar a aprender")
     args = parser.parse_args()
+
+    if args.cmd == "report":
+        import os
+
+        from guardian.report import write_report
+
+        folder = data_dir()
+        path = write_report(folder, _read_alerts(folder, 500), load_allowlist(folder / "allow.json"))
+        print(f"Relatório: {path}")
+        if not args.no_open and hasattr(os, "startfile"):
+            os.startfile(path)  # abre no browser predefinido (só Windows)
+        return
 
     if args.cmd == "run":
         from guardian.monitor import Guardian

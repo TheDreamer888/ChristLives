@@ -37,6 +37,7 @@ python -m guardian test-notify     # confirma que as notificações aparecem
 python -m guardian run             # vigia (Ctrl+C para parar)
 python -m guardian status          # modo, linha de base e últimos alertas
 python -m guardian alerts -n 20    # histórico de alertas com os motivos
+python -m guardian report          # relatório HTML local, abre no browser
 python -m guardian allow --last    # o último alerta era seguro: não voltar a avisar
 python -m guardian allow "C:\Programas\X\x.exe" --remove   # voltar a vigiar
 python -m guardian reset           # volta a aprender do zero
