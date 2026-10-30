@@ -13,7 +13,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 thiserror = "1"
 sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "chrono", "uuid"] }
-jsonwebtoken = "9"
+jsonwebtoken = "10"
 argon2 = "0.5"
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
