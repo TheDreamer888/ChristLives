@@ -87,13 +87,10 @@ não presta aconselhamento jurídico, médico ou financeiro.
 O chat também rejeita entradas que pareçam conter emails, números de telefone
 ou credenciais antes de as enviar ao fornecedor. Esta deteção é uma salvaguarda
 adicional, não uma garantia de anonimização; não introduzas dados sensíveis.
-O estudo bíblico também usa `POST /api/assistant/bible-chat`, com o mesmo
-fornecedor, limite por endereço IP e salvaguardas para entradas sensíveis. O
-endpoint não consulta nem cita uma tradução bíblica em tempo real: recomenda
-confirmar referências numa Bíblia publicada. Aceita até 10 mensagens anteriores
-para dar contexto à conversa. A funcionalidade é grátis para o visitante, mas o
-fornecedor configurado pode cobrar ao operador. A pergunta e o contexto são
-encaminhados ao fornecedor e não são persistidos pelo Aegis.
+O Chat IA multi-modelo (`POST /api/chat`, Claude/ChatGPT/Grok), as notícias e
+cotações (`/api/markets/*`), os indicadores do Banco Mundial (`/api/economy/*`) e
+a organização com Notion (`/api/organize/*`) estão descritos no `CLAUDE.md` da raiz
+e configurados pelas variáveis em `.env.example`.
 
 ## Conhecimento legal e de segurança do assistente
 
@@ -202,10 +199,17 @@ As sessões de autenticação duram até 8 horas e são persistidas no PostgreSQ
 para permitir revogação imediata. A área **Conta** lista as sessões ativas e
 permite terminar outras sessões; o **Centro de Segurança** apresenta eventos
 de login, passkeys, códigos de recuperação e revogações. Os eventos guardam
-apenas o tipo, a gravidade e metadados mínimos, são visíveis apenas à conta
-associada e são eliminados após 90 dias. Um login com código de recuperação e
-a regeneração de códigos aparecem como alertas na aplicação; não é enviado
-email nem webhook.
+apenas o tipo, a gravidade e metadados mínimos e são eliminados após 90 dias.
+
+`GET /api/auth/security/events` devolve apenas os eventos da conta autenticada.
+Para gestão de equipa, `GET /api/agency/security/events` exige `X-Agency-ID` e
+permissão `owner` ou `admin`; membros sem privilégio de gestão recebem `403`.
+Este endpoint devolve apenas atividade dos utilizadores que pertencem à agência
+selecionada, evitando leitura cruzada entre agências.
+
+Um login com código de recuperação e a regeneração de códigos aparecem como
+alertas na aplicação. Não existe envio automático por email/webhook neste
+componente: a monitorização é exclusivamente in-app.
 
 A migração Alembic `20261010_0003` cria as tabelas necessárias e é aplicada
 automaticamente pelo serviço `api-migrate` do Compose. Depois da primeira

@@ -4,10 +4,13 @@ import hashlib
 import hmac
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
+
+from fastapi import HTTPException
 
 from src.app.auth.routes import _safe_oauth_return_path
 from src.app.auth.store import Store
+from src.app.routers import agency
 from src.app.routers.agency import _verify_stripe_signature
 
 
@@ -62,6 +65,40 @@ class StripeSignatureTests(unittest.TestCase):
                     f"t={int(time.time())},v1={'0' * 64}",
                 )
             )
+
+
+class TeamSecurityEventsRouteTests(unittest.IsolatedAsyncioTestCase):
+    async def test_manager_can_list_team_events(self) -> None:
+        user = object()
+        agency_ref = type("AgencyRef", (), {"id": "agency-1"})()
+        request = object()
+        mocked_events = [{"id": "event-1", "event_type": "login"}]
+
+        with (
+            patch("src.app.routers.agency._require_user", new=AsyncMock(return_value=user)),
+            patch("src.app.routers.agency._current_agency", new=AsyncMock(return_value=(agency_ref, "owner"))),
+            patch("src.app.routers.agency.list_agency_security_events", new=AsyncMock(return_value=mocked_events)) as loader,
+        ):
+            response = await agency.list_team_security_events(request)
+
+        self.assertEqual(response, {"events": mocked_events})
+        loader.assert_awaited_once_with("agency-1")
+
+    async def test_member_cannot_list_team_events(self) -> None:
+        user = object()
+        agency_ref = type("AgencyRef", (), {"id": "agency-1"})()
+        request = object()
+
+        with (
+            patch("src.app.routers.agency._require_user", new=AsyncMock(return_value=user)),
+            patch("src.app.routers.agency._current_agency", new=AsyncMock(return_value=(agency_ref, "member"))),
+            patch("src.app.routers.agency.list_agency_security_events", new=AsyncMock()) as loader,
+            self.assertRaises(HTTPException) as raised,
+        ):
+            await agency.list_team_security_events(request)
+
+        self.assertEqual(raised.exception.status_code, 403)
+        loader.assert_not_called()
 
 
 if __name__ == "__main__":

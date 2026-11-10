@@ -1,9 +1,11 @@
-# Aegis
+# ProtectIA
 
-Plataforma de segurança e gestão para agências, com frontend React e serviços
-independentes em Python, Rust e .NET. A aplicação principal está em
-`services/api-python`; os serviços Rust e .NET são atualmente protótipos
-independentes, não substitutos da API principal.
+Plataforma modular com gestão de agências e controlos de segurança digital,
+acompanhada pela área editorial Aegis de fé, reflexão e estudo bíblico. São
+experiências distintas na mesma aplicação — a área Aegis não é uma capacidade
+de segurança. O frontend usa React; a API principal está em
+`services/api-python`. Os serviços Rust e .NET são protótipos independentes,
+não substitutos da API principal.
 
 ## Índice
 
@@ -15,6 +17,7 @@ independentes, não substitutos da API principal.
 - [Build, lint e testes](#build-lint-e-testes)
 - [Configuração e segurança](#configuração-e-segurança)
 - [Infraestrutura e deployment](#infraestrutura-e-deployment)
+- [Estado de comercialização](#estado-de-comercialização)
 
 ## Estrutura
 
@@ -57,6 +60,22 @@ de risco real. Consulte os READMEs do
 [frontend](apps/frontend/README.md) e da
 [API Python](services/api-python/README.md) para os limites, privacidade e
 configuração detalhados.
+
+## Estado de comercialização
+
+Este repositório ainda não define uma licença de distribuição para o produto
+completo, uma versão de produção, níveis de suporte ou condições comerciais.
+O metadado de licença do pacote Python não concede, por si só, uma licença
+uniforme para o frontend, os serviços e os materiais de terceiros. Não
+distribua nem anuncie direitos de revenda antes de rever a titularidade do
+código, as licenças das dependências e os direitos das integrações.
+
+O rascunho de oferta encontra-se em
+[sales/fiverr/ProtectIA-Draft.md](sales/fiverr/ProtectIA-Draft.md). É material
+interno, não uma licença nem uma oferta pronta a publicar: faltam decisões de
+licenciamento, preço, suporte, versão e entrega, além da validação final da
+instalação e da experiência comercial. Não se anuncia proteção antivírus,
+garantia de segurança de URLs ou scoring de risco real.
 
 ## Pré-requisitos
 
@@ -137,6 +156,15 @@ O serviço Rust requer `DATABASE_URL` e aceita `PORT` (por omissão `3000`):
 cd services/api-rust
 cargo run
 ```
+
+Rotas: `/health/live` (liveness, não toca na base de dados), `/health/ready` e
+`/health` (readiness, 503 se o Postgres estiver indisponível), `/api/hello` e
+`/api/version`. Arranca mesmo com o Postgres em baixo e termina de forma ordenada
+com Ctrl+C/SIGTERM. Variáveis opcionais: `HOST` (por omissão `0.0.0.0`),
+`CORS_ORIGINS` (lista separada por vírgulas; por omissão `http://localhost:5173`),
+`DB_MAX_CONNECTIONS` (10), `DB_ACQUIRE_TIMEOUT_SECS` (3), `REQUEST_TIMEOUT_SECS`
+(15) e `RUST_LOG`. Valores inválidos impedem o arranque. `api-rust --healthcheck`
+é a sonda usada pelo `HEALTHCHECK` do Dockerfile.
 
 O serviço .NET inclui `/health` e o endpoint de exemplo `/weatherforecast`:
 

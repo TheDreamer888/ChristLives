@@ -43,7 +43,7 @@ async def create_auth_session(user_id: str, session_id: str) -> None:
 
 async def is_auth_session_active(user_id: str, session_id: str) -> bool:
     now = datetime.now(UTC)
-    async with session_factory() as session:
+    async with session_factory()() as session:
         return bool(
             await session.scalar(
                 select(AuthSession.id).where(
@@ -58,7 +58,7 @@ async def is_auth_session_active(user_id: str, session_id: str) -> bool:
 
 async def list_auth_sessions(user_id: str, current_session_id: str) -> list[dict[str, Any]]:
     now = datetime.now(UTC)
-    async with session_factory() as session:
+    async with session_factory()() as session:
         rows = (
             await session.scalars(
                 select(AuthSession)

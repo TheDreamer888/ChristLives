@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import LoginTab from './components/LoginTab'
+import { lazy, Suspense, useState } from 'react'
 import './App.css'
+
+const LoginTab = lazy(() => import('./components/LoginTab'))
 
 type ScanState = 'ready' | 'scanning' | 'complete'
 type EducationTrack = '5-7' | '7-9' | '9-12' | 'college'
@@ -39,7 +40,7 @@ function App() {
     window.setTimeout(() => setScanState('complete'), 1600)
   }
 
-  if (activeView === 'login') return <main className="login-shell"><button className="back-button" type="button" onClick={() => setActiveView('protection')}>Voltar para protecao</button><LoginTab /></main>
+  if (activeView === 'login') return <main className="login-shell"><button className="back-button" type="button" onClick={() => setActiveView('protection')}>Voltar para protecao</button><Suspense fallback={<p role="status">A carregar…</p>}><LoginTab /></Suspense></main>
 
   if (activeView === 'education') {
     const selectedTrack = tracks.find((track) => track.id === educationTrack) ?? tracks[0]!
@@ -82,4 +83,3 @@ function App() {
 }
 
 export default App
-

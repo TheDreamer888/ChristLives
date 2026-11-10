@@ -1,6 +1,50 @@
 # Frontend Aegis
 
-Interface React + TypeScript + Vite para a gestão de agências e clientes.
+Interface React + TypeScript + Vite de um espaço de IA para conversar, analisar
+mercados, aprender economia e organizar o trabalho, mantendo a gestão de agências
+e clientes.
+
+## Áreas
+
+- **Início** (`#overview`): pergunta rápida à IA, atalhos, últimas notícias e
+  progresso nos cursos.
+- **Chat IA** (`#chat`): conversas com Claude, ChatGPT ou Grok (cada um só aparece
+  se o backend tiver a chave), modos Geral/Trading/Tutor/Organização, respostas em
+  markdown seguro, copiar/regenerar/parar. As conversas ficam só na memória do
+  separador. Inclui o separador **Suporte Aegis** (assistente documental e contacto
+  comercial).
+- **Trading IA** (`#trading`): cotações (Finnhub), análise por IA com cotações e
+  títulos como contexto, calculadora de risco e lista de decisão. Não executa
+  ordens nem é aconselhamento financeiro.
+- **Notícias** (`#news`): notícias globais de mercado por categoria e pesquisa,
+  com briefing por IA.
+- **Cursos** (`#courses`): lições de economia com dados do Banco Mundial, quizzes
+  e tutor IA; o progresso fica no `localStorage` deste browser.
+- **Organização** (`#organize`): assistente de email (texto colado), tarefas no
+  Notion e estado das ligações Gmail/Outlook.
+- **Proteção digital**, **Integrações**, **Clientes**, **Plano e faturação** e
+  **Privacidade** mantêm-se.
+- Endereços antigos (`#assistant`, `#markets`, `#intelligence`, `#education`,
+  `#worship`) redirecionam para as áreas novas.
+
+### Leveza e infraestrutura
+
+Cada área é carregada por `React.lazy`, com SVGs locais e fontes do sistema. Não
+carrega imagens externas, vídeos automáticos, fontes remotas, bibliotecas de
+animação ou modelos de IA no dispositivo. Isto reduz trabalho evitável, mas não
+constitui garantia de fluidez em todos os dispositivos.
+
+Esta alteração não provisiona Cloudflare nem modifica DNS, WAF ou faturação.
+Uma futura publicação deve manter APIs autenticadas fora de cache público e
+separar assets estáticos de respostas privadas. Custos de IA requerem limites e
+monitorização no servidor; não é prometida rentabilidade.
+
+Documentação oficial consultada:
+[React lazy](https://react.dev/reference/react/lazy),
+[animações de alto desempenho](https://web.dev/articles/animations-guide),
+[movimento reduzido](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion),
+[cache Cloudflare](https://developers.cloudflare.com/cache/concepts/default-cache-behavior/) e
+[custos Workers AI](https://developers.cloudflare.com/workers-ai/platform/pricing/).
 
 ## Workspace e integrações
 
@@ -15,17 +59,18 @@ Interface React + TypeScript + Vite para a gestão de agências e clientes.
 - A configuração de IA é consultada através de `GET /api/ai/plans`, com sessão
   httpOnly. `ai_configured` indica apenas a presença de configuração no backend:
   não confirma disponibilidade, fornecedor, conformidade ou ligação por cliente.
-- O Assistente separa pesquisa de mercado, pesquisa de lojas por cidade/código
-  postal em Portugal, estudo bíblico com IA e suporte documental Aegis. Pesquisas
-  de mercado e lojas abrem resultados externos; preços, stock e horários não são
-  recolhidos nem validados pela aplicação. O estudo bíblico usa
-  `POST /api/assistant/bible-chat`; é grátis para visitantes, mas o fornecedor
-  de IA configurado pode cobrar ao operador. A pergunta e até 10 mensagens
-  anteriores são encaminhadas ao fornecedor, mas não ficam guardadas pelo Aegis.
+- O Chat IA usa `POST /api/chat`; a mensagem, até 20 mensagens anteriores e o
+  contexto escolhido (cotações, títulos, lição ou email colado) são enviados ao
+  fornecedor de IA configurado, que pode cobrar ao operador. Nada fica guardado
+  pelo Aegis.
 - Não são guardadas credenciais de integração no browser. A app não é um antivírus
   e não foi publicada na Play Store por esta alteração.
 
 ### Referências e limites
+
+As respostas da IA podem conter erros e não são verificadas automaticamente. O
+modo Trading é educativo: não é aconselhamento financeiro e não executa ordens.
+O chat recusa conteúdo adulto e rejeita mensagens com palavras-passe ou chaves.
 
 Os requisitos do catálogo apontam para documentação oficial:
 [Microsoft Graph](https://learn.microsoft.com/en-us/graph/permissions-reference),
@@ -56,7 +101,8 @@ pnpm --filter frontend test
 
 Em desenvolvimento, ambos os clientes (autenticação e produto) usam `/api` na
 origem do frontend. O proxy Vite encaminha os pedidos para
-`http://localhost:8000`; define `VITE_API_PROXY_TARGET` para outro backend.
+`http://127.0.0.1:8000` (IPv4 explícito, porque o Node resolve `localhost` para
+`::1`); define `VITE_API_PROXY_TARGET` para outro backend.
 Isto evita pedidos cross-site entre `127.0.0.1` e `localhost`, sem alterar
 `SameSite=Lax`, httpOnly nem as permissões impostas pela API.
 

@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
+    Text,
     false,
     func,
 )
@@ -146,6 +147,24 @@ class SecurityEvent(Base):
     severity: Mapped[str] = mapped_column(String(16), nullable=False)
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class MailConnection(Base):
+    """Ligação OAuth de leitura a uma caixa de correio (Gmail/Outlook) de um utilizador.
+
+    ``token_ciphertext`` é um token Fernet (MAIL_TOKEN_ENC_KEY) com o JSON dos tokens de
+    acesso/refresh; nunca é guardado nem registado em claro.
+    """
+
+    __tablename__ = "mail_connections"
+
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(16), primary_key=True)
+    token_ciphertext: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class SecurityRateLimit(Base):

@@ -1,21 +1,38 @@
 import os
 from contextlib import asynccontextmanager
 
+# Usa o repositório de certificados do sistema operativo para pedidos HTTPS de saída
+# (Claude, World Bank, GDELT, Finnhub, Notion). Necessário em redes/antivírus que
+# intercetam TLS com uma raiz instalada só no sistema; inofensivo nos restantes casos.
+# Desativar com TRUSTSTORE=0.
+if os.getenv("TRUSTSTORE", "1") != "0":
+    try:
+        import truststore
+
+        truststore.inject_into_ssl()
+    except ImportError:  # pragma: no cover - dependência declarada no pyproject
+        pass
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.app.auth.routes import router as auth_router
 from src.app.config import settings
 from src.app.database import dispose_database, session_factory
+from src.app.firewall import firewall
 from src.app.routers.agency import router as agency_router
 from src.app.routers.ai import router as ai_router
 from src.app.routers.assistant import router as assistant_router
+from src.app.routers.chat import router as chat_router
 from src.app.routers.dns import router as dns_router
+from src.app.routers.economy import router as economy_router
+from src.app.routers.markets import router as markets_router
+from src.app.routers.organize import router as organize_router
 from src.app.routers.protection import router as protection_router
-from src.ml.model import RiskModel
+from src.app.routers.security_center import router as security_center_router
 from src.pylibrary.logging import get_logger
 
 logger = get_logger(__name__)
@@ -24,19 +41,24 @@ settings.require_secret_key()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    firewall.start()  # descarrega listas de ameaças reais em segundo plano
     try:
         yield
     finally:
+        await firewall.stop()
         await dispose_database()
 
 
 app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
 
+# Ordem (de fora para dentro): cabeçalhos de segurança → CORS → firewall → rotas.
+# Assim as respostas bloqueadas pelo firewall também levam cabeçalhos de segurança e CORS.
+app.add_middleware(BaseHTTPMiddleware, dispatch=firewall)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -48,8 +70,12 @@ async def apply_security_controls(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    if request.url.path.startswith("/api/auth/"):
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # A API só devolve JSON: nenhum conteúdo dela deve executar scripts ou ser incorporado.
+    response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-site"
+    if request.url.path.startswith(("/api/auth/", "/api/security/", "/api/chat", "/api/organize/")):
         response.headers["Cache-Control"] = "no-store"
     if (
         os.getenv("ENV", "development").lower() == "production"
@@ -65,12 +91,11 @@ app.include_router(assistant_router)
 app.include_router(auth_router)
 app.include_router(agency_router)
 app.include_router(protection_router)
-
-risk_model = RiskModel()
-
-class RiskScoreRequest(BaseModel):
-    finding_ids: list[str] = Field(default_factory=list, max_length=50)
-    finding_count: int = Field(ge=0, le=50)
+app.include_router(chat_router)
+app.include_router(markets_router)
+app.include_router(economy_router)
+app.include_router(organize_router)
+app.include_router(security_center_router)
 
 
 @app.get("/health")
@@ -93,9 +118,3 @@ async def readiness():
 @app.get("/api/protect/status")
 def status():
     return {"status": "ok", "app": settings.app_name}
-
-@app.post("/api/protect/risk-score")
-def risk_score(payload: RiskScoreRequest):
-    score = risk_model.score(payload.model_dump())
-    logger.info(f"Risk score computed: {score}")
-    return {"score": score}

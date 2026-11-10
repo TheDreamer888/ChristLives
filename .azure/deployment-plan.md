@@ -1,6 +1,6 @@
 # Aegis Multi-Cloud Infrastructure Plan
 
-> **Status:** Executing — user approved IaC generation and validation only. No cloud resources will be created by this plan.
+> **Status:** Ready for Validation — IaC generation completed; pending validation step. No cloud resources will be created by this plan.
 >
 > Prepared: 2026-10-10
 

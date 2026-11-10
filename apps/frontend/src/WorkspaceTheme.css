@@ -1,0 +1,479 @@
+.aegis-frame {
+  --bg: #fafbf8;
+  --panel-muted: #f3f5ee;
+  --line: #e7e9e0;
+  --ink: #30392c;
+  --ink-soft: #737a6b;
+  --brand: #405336;
+  --brand-2: #61784e;
+  --shadow: 0 4px 20px rgb(44 58 34 / 4%);
+  grid-template-columns: 230px minmax(0, 1fr);
+  background: var(--bg);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+.aegis-frame .aegis-sidebar { padding: 28px 18px 18px; background: #fff; color: var(--ink); border-right: 1px solid var(--line); }
+.aegis-frame .aegis-brand { justify-content: flex-start; flex-wrap: wrap; column-gap: 10px; padding: 0 12px 25px; background: transparent; color: #34472b; font: 600 30px/1 Georgia, serif; letter-spacing: -1.2px; border-radius: 0; }
+.aegis-frame .aegis-brand > span { width: 30px; height: 30px; font-size: 29px; border: 0; color: #8a9a6c; }
+.aegis-brand small { display: block; width: 100%; margin: 0 0 0 40px; font: 500 9px/1.7 "Segoe UI", sans-serif; letter-spacing: 2px; color: #879076; }
+.aegis-frame .workspace-label { margin: 0 0 13px; grid-template-columns: auto 1fr; background: #f7f8f2; border: 1px solid #eceee4; padding: 12px; font-size: 11px; }
+.aegis-frame .workspace-label small { color: #7b8370; font-size: 9px; margin-top: 5px; }
+.aegis-frame .workspace-avatar { background: #e8eddf; color: #728154; }
+.aegis-frame .nav-label { color: #8a917f; font-size: 8px; padding: 0 12px; letter-spacing: 1.5px; margin: 12px 0; }
+.aegis-frame .aegis-sidebar nav { gap: 5px; }
+.aegis-frame .aegis-nav { color: #727968; border-radius: 9px; padding: 12px; font: 500 12px/1.2 "Segoe UI", sans-serif; gap: 12px; }
+.aegis-frame .aegis-nav svg { width: 18px; height: 18px; }
+.aegis-frame .aegis-nav:hover { color: #425432; background: #f6f7f1; }
+.aegis-frame .aegis-nav.active { color: #495e37; background: #edf1e6; font-weight: 650; }
+.aegis-frame .aegis-nav.active::before { display: none; }
+.aegis-frame .nav-count, .aegis-frame .aegis-nav.active .nav-count { background: #e4eada; color: #5b7146; font-size: 9px; min-width: 20px; }
+.aegis-frame .sidebar-bottom { margin-top: auto; padding-top: 22px; gap: 18px; }
+.aegis-frame .privacy-note { padding: 14px; background: #f7f8f2; border: 1px solid #eceee4; }
+.aegis-frame .privacy-note strong { font-size: 11px; color: #5b6c48; }
+.aegis-frame .privacy-note p { color: #7a8370; font-size: 10px; line-height: 1.7; }
+.aegis-frame .privacy-note > svg { color: #7f8e65; }
+.aegis-frame .privacy-note button { background: transparent; color: #5a6c46; padding: 4px 0; text-align: left; font-size: 10px; }
+.aegis-frame .account-button { background: transparent; color: #455239; padding: 0 8px; font-size: 11px; }
+.aegis-frame .account-avatar { background: #efe9df; color: #927654; }
+.aegis-frame .account-button small { color: #7c8374; font-size: 9px; }
+.aegis-frame .main-column { display: block; }
+.aegis-frame .aegis-topbar { background: #fafbf8; backdrop-filter: none; -webkit-backdrop-filter: none; padding: 20px 34px; min-height: 76px; }
+.aegis-frame .breadcrumb { font: 400 11px/1.4 "Segoe UI", sans-serif; color: #8b917f; }
+.aegis-frame .breadcrumb b { font-weight: 600; color: #5a654b; }
+.aegis-frame .search-wrap { background: #fff; border-color: #e8ebe0; width: 265px; padding: 8px 11px; border-radius: 9px; }
+.aegis-frame .search-wrap input { font: 400 11px "Segoe UI", sans-serif; }
+.aegis-frame .private-badge { color: #647650; border-color: #e2e8d8; background: #f2f5eb; font-size: 10px; gap: 6px; }
+.aegis-frame .workspace-main { max-width: 1340px; width: 100%; padding: 30px 34px; }
+.aegis-frame .page-heading { align-items: center; margin-bottom: 28px; }
+.aegis-frame .page-heading .eyebrow { font: 650 9px/1.5 "Segoe UI", sans-serif; color: #8b927c; letter-spacing: 1.7px; margin-bottom: 10px; }
+.aegis-frame .page-heading h1 { background: none; color: #333e2b; font: 600 clamp(22px, 2.4vw, 29px)/1.3 "Segoe UI", sans-serif; letter-spacing: -.9px; }
+.aegis-frame .page-subtitle { font-size: 11px; color: #7e8673; line-height: 1.8; }
+.aegis-frame .edition { display: grid; gap: 5px; font: 500 8px "Segoe UI", sans-serif; color: #959d87; border: 0; background: transparent; padding: 0; text-align: right; letter-spacing: 1.5px; flex-shrink: 0; }
+.aegis-frame .edition b { color: #7a8767; font-weight: 600; }
+.aegis-frame .aegis-panel { border-color: var(--line); border-radius: 16px; box-shadow: none; }
+.aegis-frame .aegis-panel > p { line-height: 1.8; }
+.aegis-frame .aegis-panel h2 { font-family: "Segoe UI", sans-serif; font-weight: 600; letter-spacing: -.5px; }
+.aegis-frame .button { border-radius: 9px; box-shadow: none; transition: background .15s ease, transform .15s ease; }
+.aegis-frame .button:hover { box-shadow: none; }
+.aegis-frame .button-dark { background: #405336; }
+.aegis-frame .button-outline { border-color: #dce3d2; color: #536846; }
+.aegis-frame .workspace-footer { font-size: 10px; color: #828b76; border-color: var(--line); margin-top: 35px; }
+.learning-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.learning-cards .aegis-panel { display: flex; flex-direction: column; align-items: flex-start; }
+.learning-cards .button { margin-top: auto; }
+.mobile-menu-toggle { display: none; }
+@media (max-width: 1180px) {
+  .aegis-frame { grid-template-columns: 200px minmax(0, 1fr); }
+  .aegis-frame .aegis-sidebar { padding-inline: 12px; }
+  .aegis-frame .workspace-main, .aegis-frame .aegis-topbar { padding-inline: 24px; }
+  .aegis-frame .edition { display: none; }
+}
+@media (max-width: 992px) and (min-width: 761px) {
+  .aegis-frame .aegis-sidebar { position: sticky; height: 100vh; overflow-y: auto; border-right: 1px solid var(--line); }
+  .aegis-frame .aegis-sidebar nav { display: grid; grid-template-columns: 1fr; }
+  .aegis-frame .sidebar-bottom { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .aegis-frame { display: block; }
+  .aegis-frame .aegis-sidebar { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 15px 18px; height: auto; position: static; border: 0; border-bottom: 1px solid var(--line); }
+  .aegis-frame .aegis-brand { font-size: 27px; padding: 0; width: auto; }
+  .aegis-frame .aegis-brand small { font-size: 8px; }
+  .aegis-frame .aegis-sidebar .workspace-label, .aegis-frame .aegis-sidebar .nav-label, .aegis-frame .aegis-sidebar .sidebar-bottom { display: none; }
+  .mobile-menu-toggle { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid #e0e5d7; border-radius: 8px; background: #f3f6ed; color: #586b46; font-size: 11px; cursor: pointer; }
+  .aegis-frame .aegis-sidebar nav { display: none; }
+  .aegis-frame .aegis-sidebar.menu-open nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-column: 1 / -1; gap: 5px; overflow: visible; margin-top: 15px; }
+  .aegis-frame .aegis-sidebar .aegis-nav { width: 100%; white-space: normal; }
+  .aegis-frame .aegis-topbar { flex-direction: row; padding: 12px 18px; min-height: 0; }
+  .aegis-frame .breadcrumb, .aegis-frame .private-badge { display: none; }
+  .aegis-frame .top-actions { width: 100%; }
+  .aegis-frame .search-wrap { flex: 1; width: auto; min-width: 0; }
+  .aegis-frame .search-wrap input { font-size: 16px; }
+  .aegis-frame .mobile-account { display: inline-flex; }
+  .aegis-frame .workspace-main { padding: 24px 18px; }
+  .aegis-frame .page-heading { align-items: flex-start; margin-bottom: 22px; }
+  .aegis-frame .workspace-footer { flex-wrap: wrap; gap: 15px; }
+}
+@media (max-width: 480px) {
+  .learning-cards { grid-template-columns: 1fr; }
+  .aegis-frame .workspace-main { padding: 22px 14px; }
+  .aegis-frame .page-heading h1 { font-size: 22px; }
+  .aegis-frame .aegis-sidebar .aegis-nav { padding: 11px 8px; font-size: 11px; gap: 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aegis-frame *, .aegis-frame *::before, .aegis-frame *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .aegis-frame .page-heading h1 { color: CanvasText; }
+  .aegis-frame button, .faith-post, .faith-hero, .faith-daily { border: 1px solid ButtonText; }
+}
+
+.aegis-frame {
+  --bg: #f6f7f4;
+  --panel: #fff;
+  --panel-muted: #f3f5ef;
+  --line: #e4e8df;
+  --ink: #263126;
+  --ink-soft: #697367;
+  --brand: #405336;
+  --brand-2: #60794e;
+  --shadow: 0 12px 32px rgb(43 55 37 / 6%);
+  background:
+    radial-gradient(ellipse at 80% -20%, rgb(232 237 223 / 72%), transparent 42%),
+    var(--bg);
+  grid-template-columns: 248px minmax(0, 1fr);
+}
+
+.aegis-frame .aegis-sidebar {
+  background: rgb(255 255 253 / 94%);
+  border-right-color: #e7e9e2;
+  padding: 26px 17px 18px;
+}
+
+.aegis-frame .aegis-brand {
+  color: #35442f;
+  font-size: 28px;
+  letter-spacing: -1.4px;
+  padding-bottom: 24px;
+}
+
+.aegis-frame .aegis-brand > span {
+  color: #82936b;
+}
+
+.aegis-frame .workspace-label {
+  background: #f7f8f4;
+  border-color: #eaede5;
+  border-radius: 12px;
+}
+
+.aegis-frame .nav-label {
+  color: #92998b;
+  letter-spacing: 1.35px;
+}
+
+.aegis-frame .aegis-sidebar nav {
+  gap: 4px;
+}
+
+.aegis-frame .aegis-nav {
+  min-height: 42px;
+  border-radius: 9px;
+  color: #687164;
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.aegis-frame .aegis-nav:hover {
+  color: #394a31;
+  background: #f5f7f1;
+}
+
+.aegis-frame .aegis-nav.active {
+  color: #3e5334;
+  background: #edf1e7;
+}
+
+.aegis-frame .aegis-nav:focus-visible,
+.aegis-frame button:focus-visible,
+.aegis-frame a:focus-visible,
+.aegis-frame input:focus-visible,
+.aegis-frame textarea:focus-visible {
+  outline: 3px solid rgb(96 121 78 / 42%);
+  outline-offset: 2px;
+}
+
+.aegis-frame .nav-count,
+.aegis-frame .aegis-nav.active .nav-count {
+  background: #e4eadb;
+  color: #536945;
+}
+
+.aegis-frame .privacy-note {
+  border-color: #e8ece1;
+  border-radius: 12px;
+  background: #f7f8f3;
+}
+
+.aegis-frame .privacy-note strong {
+  color: #526544;
+}
+
+.aegis-frame .account-button {
+  border-radius: 10px;
+}
+
+.aegis-frame .main-column {
+  min-width: 0;
+}
+
+.aegis-frame .aegis-topbar {
+  min-height: 72px;
+  padding: 15px clamp(22px, 3.2vw, 48px);
+  background: rgb(246 247 244 / 88%);
+  border-bottom-color: rgb(222 227 216 / 85%);
+}
+
+.aegis-frame .breadcrumb {
+  color: #858d7f;
+}
+
+.aegis-frame .breadcrumb b {
+  color: #465540;
+}
+
+.aegis-frame .search-wrap {
+  border-color: #e4e8de;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgb(43 55 37 / 3%);
+}
+
+.aegis-frame .search-wrap:focus-within {
+  outline-color: #83966d;
+}
+
+.aegis-frame .private-badge {
+  border-color: #e1e7d8;
+  background: #f3f6ee;
+  color: #5b7048;
+}
+
+.aegis-frame .workspace-main {
+  max-width: 1460px;
+  padding: clamp(25px, 3vw, 42px) clamp(22px, 3.2vw, 48px);
+}
+
+.aegis-frame .page-heading {
+  margin-bottom: 30px;
+}
+
+.aegis-frame .page-heading .eyebrow {
+  color: #818b75;
+  font-size: 9px;
+  letter-spacing: 1.55px;
+}
+
+.aegis-frame .page-heading h1 {
+  color: #303d2d;
+  font-size: clamp(25px, 2.6vw, 34px);
+  font-weight: 600;
+  letter-spacing: -1.15px;
+}
+
+.aegis-frame .page-subtitle {
+  color: #737d6c;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.aegis-frame .edition {
+  color: #919987;
+  font-size: 8px;
+  letter-spacing: 1.4px;
+}
+
+.aegis-frame .edition b {
+  color: #71805f;
+}
+
+.aegis-frame .aegis-panel {
+  border-color: #e5e9e0;
+  border-radius: 14px;
+  box-shadow: 0 2px 5px rgb(43 55 37 / 3%), 0 10px 28px rgb(43 55 37 / 3%);
+}
+
+.aegis-frame .aegis-panel h2 {
+  color: #354131;
+}
+
+.aegis-frame .button {
+  min-height: 40px;
+  border-radius: 9px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.aegis-frame .button-dark {
+  background: #405336;
+  box-shadow: 0 4px 12px rgb(64 83 54 / 13%);
+}
+
+.aegis-frame .button-dark:hover:not(:disabled) {
+  background: #34462c;
+  transform: translateY(-1px);
+}
+
+.aegis-frame .button-outline {
+  border-color: #dce3d5;
+  color: #506544;
+}
+
+.aegis-frame .button-outline:hover:not(:disabled) {
+  background: #f5f7f1;
+  border-color: #cbd6c0;
+}
+
+.aegis-frame .workspace-footer {
+  border-color: #e4e8df;
+  color: #818a79;
+}
+
+.aegis-frame .workspace-footer a,
+.aegis-frame .workspace-footer button {
+  color: #637451;
+}
+
+.aegis-frame .faith-layout {
+  gap: 22px;
+}
+
+.aegis-frame .faith-hero {
+  min-height: 300px;
+  border: 1px solid #e5e5dc;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgb(43 55 37 / 5%);
+  background: #efeee8;
+}
+
+.aegis-frame .faith-hero-copy {
+  padding: 38px 0 34px 34px;
+}
+
+.aegis-frame .faith-kicker,
+.aegis-frame .faith-overline {
+  color: #737867;
+}
+
+.aegis-frame .faith-hero h2 {
+  color: #303b2e;
+  font-size: clamp(30px, 3.1vw, 44px);
+}
+
+.aegis-frame .faith-hero h2 em {
+  color: #78845f;
+}
+
+.aegis-frame .faith-hero p {
+  color: #646b5d;
+}
+
+.aegis-frame .faith-primary {
+  min-height: 42px;
+  border-radius: 9px;
+  background: #405336;
+  box-shadow: 0 4px 12px rgb(64 83 54 / 14%);
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.aegis-frame .faith-primary:hover {
+  background: #34462c;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgb(64 83 54 / 18%);
+}
+
+.aegis-frame .faith-paths {
+  gap: 12px;
+  margin: 18px 0 32px;
+}
+
+.aegis-frame .faith-paths > button {
+  min-height: 126px;
+  border-color: #e7e9e1;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgb(43 55 37 / 2%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.aegis-frame .faith-paths > button:hover {
+  border-color: #ccd6c2;
+  box-shadow: 0 8px 18px rgb(43 55 37 / 7%);
+  transform: translateY(-2px);
+}
+
+.aegis-frame .faith-paths strong {
+  color: #3b4436;
+  font-size: 12px;
+}
+
+.aegis-frame .faith-post,
+.aegis-frame .faith-side-card,
+.aegis-frame .faith-composer,
+.aegis-frame .faith-draft,
+.aegis-frame .faith-practice,
+.aegis-frame .faith-empty {
+  border-color: #e5e9e0;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgb(43 55 37 / 3%);
+}
+
+.aegis-frame .faith-daily {
+  border-color: #e6e0eb;
+  border-radius: 14px;
+}
+
+.aegis-frame .faith-protection-card {
+  border-radius: 14px;
+}
+
+.aegis-frame .mobile-menu-toggle {
+  border-color: #e0e6d8;
+  background: #f4f6ef;
+  color: #526743;
+}
+
+@media (max-width: 1180px) {
+  .aegis-frame {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 992px) and (min-width: 761px) {
+  .aegis-frame .aegis-sidebar {
+    padding: 20px 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .aegis-frame .aegis-sidebar {
+    background: #fff;
+    border-bottom-color: #e5e9e0;
+  }
+
+  .aegis-frame .aegis-topbar {
+    background: #f6f7f4;
+    border-bottom-color: #e5e9e0;
+  }
+
+  .aegis-frame .workspace-main {
+    padding: 24px 18px;
+  }
+
+  .aegis-frame .page-heading h1 {
+    font-size: clamp(23px, 6vw, 28px);
+  }
+
+  .aegis-frame .faith-hero-copy {
+    padding: 28px 0 28px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .aegis-frame .workspace-main {
+    padding: 21px 14px;
+  }
+
+  .aegis-frame .faith-paths > button {
+    min-height: 118px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aegis-frame .aegis-nav,
+  .aegis-frame .button,
+  .aegis-frame .faith-primary,
+  .aegis-frame .faith-paths > button {
+    transition: none;
+  }
+
+  .aegis-frame .faith-paths > button:hover,
+  .aegis-frame .faith-primary:hover,
+  .aegis-frame .button-dark:hover:not(:disabled) {
+    transform: none;
+  }
+}

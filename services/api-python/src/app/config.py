@@ -117,6 +117,59 @@ class Settings(BaseSettings):
     ai_base_url: str = "https://api.openai.com/v1"
     ai_model: str = "gpt-4o-mini"
 
+    # Chat multi-IA (/api/chat). Cada fornecedor só aparece se a chave estiver definida.
+    # Claude usa o SDK oficial; OpenAI e xAI (Grok) usam a API compatível com Chat Completions.
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-opus-5-5"
+    anthropic_effort: str = Field(default="medium", pattern="^(low|medium|high|xhigh|max)$")
+    xai_api_key: str | None = None
+    xai_base_url: str = "https://api.x.ai/v1"
+    xai_model: str = "grok-4"
+    chat_requests_per_hour: int = Field(default=60, ge=1, le=1000)
+
+    # Firewall da aplicação (WAF) — ver src/app/firewall.py.
+    firewall_enabled: bool = True
+    firewall_requests_per_minute: int = Field(default=240, ge=10, le=10_000)
+    firewall_burst: int = Field(default=60, ge=5, le=2_000)
+    firewall_ban_threshold: int = Field(default=20, ge=3, le=1_000)
+    firewall_ban_minutes: int = Field(default=60, ge=1, le=10_080)
+    firewall_max_body_bytes: int = Field(default=2_000_000, ge=10_000, le=50_000_000)
+    firewall_threat_feeds: bool = True
+    # Listas separadas por vírgulas de IPs/CIDR. A blocklist bloqueia sempre; a allowlist
+    # nunca é bloqueada nem limitada. TRUSTED_PROXIES: proxies cujo X-Forwarded-For é aceite.
+    firewall_blocklist: str = ""
+    firewall_allowlist: str = ""
+    trusted_proxies: str = ""
+
+    # Supervisão por IA (Claude): revê respostas do chat e faz triagem de eventos de segurança.
+    supervisor_enabled: bool = True
+    supervisor_model: str = "claude-opus-5-5"
+    # Emails (verificados) com acesso ao centro de segurança, separados por vírgulas.
+    security_admin_emails: str = ""
+
+    # Mercados: Finnhub (cotações e notícias) se houver chave; GDELT (sem chave) para notícias.
+    finnhub_api_key: str | None = None
+
+    # Organização: integração interna do Notion (token do servidor, base de dados de tarefas).
+    notion_token: str | None = None
+    notion_database_id: str | None = None
+    notion_version: str = "2022-06-28"
+    notion_title_property: str = "Name"
+
+    # Organização: leitura de email por utilizador (OAuth Authorization Code + PKCE, só leitura).
+    # Clientes OAuth próprios, separados do login. Os tokens ficam cifrados com MAIL_TOKEN_ENC_KEY.
+    gmail_client_id: str | None = None
+    gmail_client_secret: str | None = None
+    gmail_redirect_uri: str | None = None
+    outlook_client_id: str | None = None
+    outlook_client_secret: str | None = None
+    outlook_tenant: str = Field(default="common", pattern=r"^[A-Za-z0-9.-]{1,64}$")
+    outlook_redirect_uri: str | None = None
+    mail_token_enc_key: str | None = None
+    mail_requests_per_hour: int = Field(default=120, ge=1, le=2000)
+    public_api_url: str = "http://localhost:8000"
+
+
     # Contactos comerciais: cifrados individualmente e conservados por prazo limitado.
     sales_lead_enc_key: str | None = None
     sales_lead_db_path: Path = DATA_DIR / "sales_leads.sqlite3"

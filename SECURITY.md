@@ -1,21 +1,26 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+ProtectIA has no published production release or defined security-support
+window yet. Until a release policy is published, no version should be assumed
+to receive security updates.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Support status |
+| --- | --- |
+| Unreleased development builds | No support commitment |
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Please do not disclose exploitable vulnerabilities in public issues or
+discussions. Use GitHub's **Report a vulnerability** option in this
+repository's Security tab to send a private report, if private vulnerability
+reporting is enabled. If it is unavailable, contact the repository owner
+privately before sharing technical details publicly.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Include the affected version or commit, impact, reproduction steps, and any
+suggested mitigation. Do not include real user data, credentials, or secrets.
+
+There is currently no guaranteed response or remediation SLA. The maintainers
+will communicate triage status and coordinate disclosure through the private
+reporting channel.

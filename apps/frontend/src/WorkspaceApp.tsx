@@ -1,7 +1,8 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ComponentType, type FormEvent } from 'react'
 import { authClient } from './auth/authClient'
 import { INTEGRATIONS, filterIntegrations, integrationStatus, type AiConfiguration } from './lib/integrations'
-import { bibleBookSearchLinks, marketSearchLinks, shopSearchLinks } from './lib/discovery'
+import { applyTheme, nextThemePreference, readStoredPreference, resolveTheme, storePreference, themeLabel, type ThemePreference } from './lib/theme'
+import type { ChatSeed } from './components/ai/ChatView'
 import {
   ApiError,
   apiClient,
@@ -12,32 +13,81 @@ import {
   type ClientWorkspace,
   type SalesLeadReceipt,
   type SecurityEvent,
+  type TeamSecurityEvent,
   type AuthSession,
   type UrlCheckResponse,
 } from './lib/api'
 import './Workspace.css'
+import './WorkspaceTheme.css'
+import './WorkspaceModern.css'
+import './WorkspaceDark.css'
+import './components/ai/AiViews.css'
 
-const LoginTab = lazy(() => import('./components/LoginTab'))
+// Carregamento diferido resiliente: uma falha de rede (ou uma nova versão publicada,
+// que muda os nomes dos ficheiros) tenta outra vez e, se persistir, recarrega a página
+// uma única vez em vez de deixar o site inteiro no ecrã de erro.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mesma restrição que React.lazy
+function lazyWithRetry<C extends ComponentType<any>, T extends { default: C } = { default: C }>(load: () => Promise<T>) {
+  const loaded = (module: T) => {
+    try { window.sessionStorage.removeItem('aegis-chunk-reload') } catch { /* sem armazenamento */ }
+    return module
+  }
+  return lazy(async () => {
+    try {
+      return loaded(await load())
+    } catch {
+      await new Promise(resolve => window.setTimeout(resolve, 800))
+      try {
+        return loaded(await load())
+      } catch (error) {
+        let reloaded = false
+        try { reloaded = window.sessionStorage.getItem('aegis-chunk-reload') === '1' } catch { /* sem armazenamento */ }
+        if (!reloaded) {
+          try { window.sessionStorage.setItem('aegis-chunk-reload', '1') } catch { /* sem armazenamento */ }
+          window.location.reload()
+          return new Promise<T>(() => {})
+        }
+        throw error
+      }
+    }
+  })
+}
 
-type View = 'overview' | 'clients' | 'billing' | 'invite' | 'security' | 'markets' | 'intelligence' | 'assistant' | 'integrations' | 'education' | 'privacy' | 'account'
+const LoginTab = lazyWithRetry(() => import('./components/LoginTab'))
+const HomeView = lazyWithRetry(() => import('./components/ai/HomeView'))
+const ChatView = lazyWithRetry(() => import('./components/ai/ChatView'))
+const TradingView = lazyWithRetry(() => import('./components/ai/TradingView'))
+const NewsView = lazyWithRetry(() => import('./components/ai/NewsView'))
+const CoursesView = lazyWithRetry(() => import('./components/ai/CoursesView'))
+const OrganizeView = lazyWithRetry(() => import('./components/ai/OrganizeView'))
+const SecurityCenter = lazyWithRetry(() => import('./components/ai/SecurityCenter'))
 
-const AREAS: { id: View; label: string; title: string; subtitle: string; icon: string }[] = [
-  { id: 'overview', label: 'Comunidade', title: 'Comunidade Aegis', subtitle: 'Partilha conhecimento, aprende em conjunto e ajuda a tornar a internet mais segura.', icon: 'community' },
-  { id: 'clients', label: 'Clientes', title: 'Clientes geridos', subtitle: 'Workspaces de cliente isolados para a tua agência.', icon: 'clients' },
-  { id: 'billing', label: 'Plano e faturação', title: 'Plano da agência', subtitle: 'Subscrição, capacidade e gestão de pagamentos.', icon: 'billing' },
-  { id: 'security', label: 'Segurança', title: 'Segurança', subtitle: 'Acompanha os teus registos de segurança.', icon: 'security' },
-  { id: 'markets', label: 'Mercados', title: 'Mercados', subtitle: 'Explora informação de mercado.', icon: 'markets' },
-  { id: 'intelligence', label: 'Inteligência', title: 'Inteligência', subtitle: 'Ferramentas para apoiar as tuas decisões.', icon: 'intelligence' },
-  { id: 'assistant', label: 'Assistente', title: 'Assistentes Aegis', subtitle: 'Pesquisa de mercado, lojas em Portugal e estudo bíblico com IA.', icon: 'assistant' },
-  { id: 'integrations', label: 'Integrações', title: 'O teu ecossistema, com controlo.', subtitle: 'Consulta capacidades, configuração e requisitos antes de partilhar dados.', icon: 'integrations' },
-  { id: 'education', label: 'Educação', title: 'Educação', subtitle: 'Aprende sobre segurança e privacidade.', icon: 'education' },
-  { id: 'privacy', label: 'Privacidade', title: 'Privacidade', subtitle: 'Controla os teus dados.', icon: 'privacy' },
+type View = 'overview' | 'chat' | 'trading' | 'news' | 'courses' | 'organize' | 'clients' | 'billing' | 'invite' | 'security' | 'integrations' | 'privacy' | 'account'
+
+const AREAS: { id: View; label: string; title: string; subtitle: string; icon: string; group: 'ai' | 'tools' | 'account' }[] = [
+  { id: 'overview', label: 'Início', title: 'Bem-vindo ao Aegis.', subtitle: 'A tua IA para conversar, analisar mercados, aprender economia e organizar o dia.', icon: 'home', group: 'ai' },
+  { id: 'chat', label: 'Chat IA', title: 'Conversa com a melhor IA para cada tarefa.', subtitle: 'Claude, ChatGPT e Grok, com regras de segurança e sem conteúdo adulto.', icon: 'chat', group: 'ai' },
+  { id: 'trading', label: 'Trading IA', title: 'Mercados com dados e disciplina.', subtitle: 'Cotações, análise por IA, gestão de risco e uma lista de decisão. Sem promessas de lucro.', icon: 'markets', group: 'ai' },
+  { id: 'news', label: 'Notícias', title: 'Notícias globais de mercado.', subtitle: 'Títulos de todo o mundo, atualizados ao minuto, com briefing por IA.', icon: 'news', group: 'ai' },
+  { id: 'courses', label: 'Cursos', title: 'Aprende economia com dados reais.', subtitle: 'Lições curtas, indicadores do Banco Mundial, quizzes e um tutor IA.', icon: 'education', group: 'ai' },
+  { id: 'organize', label: 'Organização', title: 'Menos caixa de entrada. Mais foco.', subtitle: 'Resume emails do Gmail e Outlook, extrai tarefas e envia-as para o Notion.', icon: 'organize', group: 'ai' },
+  { id: 'security', label: 'Segurança', title: 'Centro de segurança.', subtitle: 'Firewall com reputação de IP em tempo real, IA supervisora, verificação de ligações e segurança da tua conta.', icon: 'security', group: 'tools' },
+  { id: 'integrations', label: 'Integrações', title: 'O teu ecossistema, com controlo.', subtitle: 'Consulta capacidades, configuração e requisitos antes de partilhar dados.', icon: 'integrations', group: 'tools' },
+  { id: 'clients', label: 'Clientes', title: 'Clientes geridos', subtitle: 'Workspaces de cliente isolados para a tua agência.', icon: 'clients', group: 'account' },
+  { id: 'billing', label: 'Plano e faturação', title: 'Plano da agência', subtitle: 'Subscrição, capacidade e gestão de pagamentos.', icon: 'billing', group: 'account' },
+  { id: 'privacy', label: 'Privacidade', title: 'Privacidade', subtitle: 'Controla os teus dados.', icon: 'privacy', group: 'account' },
 ]
 const isView = (value: string): value is View => AREAS.some(area => area.id === value) || value === 'account' || value === 'invite'
+// Endereços antigos continuam a funcionar depois da mudança de tema.
+const LEGACY_VIEWS: Record<string, View> = { assistant: 'chat', markets: 'trading', intelligence: 'trading', education: 'courses', worship: 'overview' }
 
 function Icon({ name, size }: { name: string; size?: number }) {
   const paths: Record<string, string> = {
     community: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M16 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
+    home: 'M3 11l9-8 9 8 M5 9.5V20h14V9.5 M10 20v-6h4v6',
+    chat: 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z',
+    news: 'M4 5h13v14H6a2 2 0 0 1-2-2Z M17 9h3v8a2 2 0 0 1-2 2 M8 9h5 M8 13h5',
+    organize: 'M9 6h11 M9 12h11 M9 18h11 M4 6l1 1 2-2 M4 12l1 1 2-2 M4 18l1 1 2-2',
     clients: 'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',
     billing: 'M3 5h18v14H3z M3 9h18 M7 15h4',
     security: 'M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z M8 12l3 3 5-6',
@@ -51,6 +101,11 @@ function Icon({ name, size }: { name: string; size?: number }) {
     arrow: 'M5 12h14 M14 7l5 5-5 5',
     search: 'M21 21l-6-6 M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14',
     close: 'M6 6l12 12 M18 6 6 18',
+    menu: 'M4 7h16 M4 12h16 M4 17h10',
+    up: 'M12 19V5 M6 11l6-6 6 6',
+    sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v2 M12 20v2 M4.9 4.9l1.4 1.4 M17.7 17.7l1.4 1.4 M2 12h2 M20 12h2 M4.9 19.1l1.4-1.4 M17.7 6.3l1.4-1.4',
+    moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8',
+    auto: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 3v18',
   }
   return <svg aria-hidden="true" width={size ?? 20} height={size ?? 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] ?? paths['arrow']} /></svg>
 }
@@ -63,6 +118,11 @@ function useSecurity(view: View) {
   const [user, setUser] = useState<Awaited<ReturnType<typeof authClient.getSession>>>(null)
   const [events, setEvents] = useState<SecurityEvent[]>([])
   const [sessions, setSessions] = useState<AuthSession[]>([])
+  const [teamEvents, setTeamEvents] = useState<TeamSecurityEvent[]>([])
+  const [teamEventsLoading, setTeamEventsLoading] = useState(false)
+  const [teamEventsError, setTeamEventsError] = useState('')
+  const [managerAgencies, setManagerAgencies] = useState<AgencyRef[]>([])
+  const [selectedAgencyId, setSelectedAgencyId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [refreshCount, setRefreshCount] = useState(0)
@@ -80,15 +140,25 @@ function useSecurity(view: View) {
         if (!currentUser) {
           setEvents([])
           setSessions([])
+          setTeamEvents([])
+          setManagerAgencies([])
+          setSelectedAgencyId('')
           return
         }
-        const [securityEvents, activeSessions] = await Promise.all([
+        const [securityEvents, activeSessions, agencies] = await Promise.all([
           apiClient.listSecurityEvents(),
           authClient.listSessions(),
+          apiClient.listAgencies(),
         ])
         if (!active) return
+        const manageableAgencies = agencies.filter(agency => agency.role === 'owner' || agency.role === 'admin')
         setEvents(securityEvents)
         setSessions(activeSessions)
+        setManagerAgencies(manageableAgencies)
+        setSelectedAgencyId(previous => {
+          if (previous && manageableAgencies.some(agency => agency.id === previous)) return previous
+          return manageableAgencies[0]?.id ?? ''
+        })
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : 'Não foi possível carregar os controlos de segurança.')
       } finally {
@@ -98,14 +168,47 @@ function useSecurity(view: View) {
     return () => { active = false }
   }, [view, refreshCount])
 
+  useEffect(() => {
+    if (view !== 'security') return
+    if (!user || !selectedAgencyId) {
+      setTeamEvents([])
+      setTeamEventsError('')
+      setTeamEventsLoading(false)
+      return
+    }
+    let active = true
+    setTeamEventsLoading(true)
+    setTeamEventsError('')
+    void (async () => {
+      try {
+        const events = await apiClient.listAgencySecurityEvents(selectedAgencyId)
+        if (!active) return
+        setTeamEvents(events)
+      } catch (cause) {
+        if (!active) return
+        setTeamEvents([])
+        setTeamEventsError(cause instanceof Error ? cause.message : 'Não foi possível carregar os alertas da equipa.')
+      } finally {
+        if (active) setTeamEventsLoading(false)
+      }
+    })()
+    return () => { active = false }
+  }, [view, user, selectedAgencyId, refreshCount])
+
   return {
     user,
     events,
     sessions,
+    teamEvents,
+    teamEventsLoading,
+    teamEventsError,
+    managerAgencies,
+    selectedAgencyId,
     loading,
     error,
     alertCount: events.filter(event => event.severity === 'warning').length,
     refresh: () => setRefreshCount(count => count + 1),
+    selectAgency: setSelectedAgencyId,
   }
 }
 
@@ -116,94 +219,6 @@ function downloadText(filename: string, text: string, type: string) {
   link.download = filename
   link.click()
   URL.revokeObjectURL(url)
-}
-
-function OverviewView({ go }: { go: (view: View) => void }) {
-  return (
-    <section className="community-layout" aria-label="Comunidade Aegis">
-      <div className="community-feed">
-        <section className="community-welcome">
-          <div>
-            <span className="community-live"><i /> HUB DE CONFIANÇA</span>
-            <h2>Uma comunidade<br /><em>mais segura e mais clara.</em></h2>
-            <p>Guias diretos, acesso rápido às áreas-chave e uma experiência visual forte para a tua equipa.</p>
-          </div>
-          <div className="community-welcome-mark" aria-hidden="true">A</div>
-        </section>
-
-        <div className="community-feature-grid">
-          <article className="community-feature-card">
-            <div className="community-feature-header">
-              <span className="community-feature-icon" aria-hidden="true">🛡</span>
-              <h3>Segurança operacional</h3>
-            </div>
-            <p>Acompanha eventos e exporta registos com um fluxo simples e direto.</p>
-            <button className="button button-outline" type="button" onClick={() => go('security')}>Abrir segurança</button>
-          </article>
-          <article className="community-feature-card">
-            <div className="community-feature-header">
-              <span className="community-feature-icon" aria-hidden="true">🎓</span>
-              <h3>Educação prática</h3>
-            </div>
-            <p>Consolida hábitos de proteção com conteúdos pensados para equipas.</p>
-            <button className="button button-outline" type="button" onClick={() => go('education')}>Abrir educação</button>
-          </article>
-          <article className="community-feature-card">
-            <div className="community-feature-header">
-              <span className="community-feature-icon" aria-hidden="true">🤖</span>
-              <h3>Assistente Aegis</h3>
-            </div>
-            <p>Obtém orientação baseada na documentação pública do produto.</p>
-            <button className="button button-outline" type="button" onClick={() => go('assistant')}>Abrir assistente</button>
-          </article>
-          <article className="community-feature-card">
-            <div className="community-feature-header">
-              <span className="community-feature-icon" aria-hidden="true">🔒</span>
-              <h3>Privacidade real</h3>
-            </div>
-            <p>Controla dados com foco em minimização e sem tracking publicitário.</p>
-            <button className="button button-outline" type="button" onClick={() => go('privacy')}>Abrir privacidade</button>
-          </article>
-        </div>
-        <section className="community-roadmap">
-          <p className="eyebrow">CICLO RECOMENDADO</p>
-          <h3>Fluxo rápido para equipas</h3>
-          <div className="community-roadmap-steps">
-            <article><strong>1. Rever</strong><span>Consulta riscos e sinais de atividade.</span></article>
-            <article><strong>2. Aprender</strong><span>Seleciona conteúdos educativos relevantes.</span></article>
-            <article><strong>3. Aplicar</strong><span>Usa o assistente para validar próximos passos.</span></article>
-          </div>
-        </section>
-      </div>
-
-      <aside className="community-aside" aria-label="Sobre a comunidade">
-        <section className="community-aside-card community-guidelines">
-          <span className="community-aside-icon" aria-hidden="true">✦</span>
-          <h3>Um espaço seguro</h3>
-          <p>Partilha conhecimento, protege a tua privacidade e trata cada pessoa com respeito.</p>
-          <ul>
-            <li>Não publiques credenciais nem dados pessoais.</li>
-            <li>Confirma informação antes de a partilhares.</li>
-            <li>Participa ao teu ritmo — sem rankings ou sequências.</li>
-          </ul>
-        </section>
-        <section className="community-aside-card">
-          <p className="eyebrow">ATALHOS IMPORTANTES</p>
-          <h3>Entrar diretamente</h3>
-          <button className="community-topic-link" type="button" onClick={() => go('clients')}>
-            <span><i className="community-topic-dot" />Clientes</span><b>↗</b>
-          </button>
-          <button className="community-topic-link" type="button" onClick={() => go('billing')}>
-            <span><i className="community-topic-dot topic-privacidade" />Plano e faturação</span><b>↗</b>
-          </button>
-          <button className="community-topic-link" type="button" onClick={() => go('integrations')}>
-            <span><i className="community-topic-dot topic-desenvolvimento" />Integrações</span><b>↗</b>
-          </button>
-        </section>
-        <p className="community-aside-footnote">Sem publicidade comportamental e sem mecânicas de pressão de uso.</p>
-      </aside>
-    </section>
-  )
 }
 
 function AgencyConsole({ section, go }: { section: 'clients' | 'billing'; go: (view: View) => void }) {
@@ -632,7 +647,7 @@ function SecurityView({ security, onExport, onManageAccount }: { security: Retur
     passkey_failed: 'Tentativa de autenticação por passkey falhou',
     recovery_failed: 'Tentativa de recuperação falhou',
   }
-  const loginMethod = (event: SecurityEvent) => {
+  const loginMethod = (event: Pick<SecurityEvent, 'event_type' | 'details'>) => {
     if (event.event_type !== 'login') return eventLabels[event.event_type] ?? 'Atividade de segurança'
     const method = event.details['method'] as string | undefined
     if (method === 'backup_code') return 'Sessão iniciada com código de recuperação'
@@ -679,6 +694,42 @@ function SecurityView({ security, onExport, onManageAccount }: { security: Retur
           </ul>
         )}
         <button className="button button-outline" type="button" onClick={onExport} disabled={security.events.length === 0}>Exportar registo</button>
+        {security.managerAgencies.length > 0 && (
+          <>
+            <h3>Alertas da equipa</h3>
+            <p>Visível apenas para proprietários e administradores da agência selecionada.</p>
+            <label className="agency-select-label" htmlFor="security-agency-select">Agência
+              <select
+                id="security-agency-select"
+                value={security.selectedAgencyId}
+                onChange={event => security.selectAgency(event.target.value)}
+                disabled={security.teamEventsLoading || security.managerAgencies.length === 1}
+              >
+                {security.managerAgencies.map(agency => (
+                  <option key={agency.id} value={agency.id}>{agency.name}</option>
+                ))}
+              </select>
+            </label>
+            {security.teamEventsLoading && <p role="status">A carregar os alertas da equipa…</p>}
+            {security.teamEventsError && <p className="assistant-error" role="alert">{security.teamEventsError}</p>}
+            {!security.teamEventsLoading && !security.teamEventsError && security.teamEvents.length === 0 && (
+              <p>Sem eventos de equipa registados para esta agência.</p>
+            )}
+            {!security.teamEventsLoading && security.teamEvents.length > 0 && (
+              <ul className="security-event-list">
+                {security.teamEvents.map(event => (
+                  <li key={event.id} className={event.severity === 'warning' ? 'security-event security-event--warning' : 'security-event'}>
+                    <strong>{loginMethod(event)} · {event.actor_name ?? 'Utilizador sem nome'}</strong>
+                    <span>{event.severity === 'warning' ? 'Alerta' : 'Informativo'}</span>
+                    <time dateTime={event.created_at ?? undefined}>
+                      {event.created_at ? new Date(event.created_at).toLocaleString('pt-PT') : 'Data indisponível'}
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </div>
     )}
 
@@ -705,169 +756,10 @@ function SecurityView({ security, onExport, onManageAccount }: { security: Retur
   </section>
 }
 
-function MarketsView() {
-  return <MarketDiscoveryPanel />
-}
-
-function IntelligenceView({ openIntegration }: { openIntegration: (name: string) => void }) {
-  const firstIntegration = INTEGRATIONS[0]
-  return <section className="aegis-panel"><p>As integrações de inteligência não estão configuradas.</p>{firstIntegration && <button onClick={() => openIntegration(firstIntegration.name)}>Ver integração</button>}</section>
-}
-
-function MarketDiscoveryPanel({ hidden = false }: { hidden?: boolean }) {
-  const [query, setQuery] = useState('')
-  const [search, setSearch] = useState('')
-  const links = marketSearchLinks(search)
-
-  return <section className="aegis-panel discovery-panel" hidden={hidden}>
-    <p className="eyebrow">MERCADO E COMPARAÇÃO</p>
-    <h2>Pesquisa de produtos e preços</h2>
-    <p>Pesquisa um produto para abrir resultados atuais em lojas e comparadores. O Aegis não recolhe nem valida preços, stock ou promoções.</p>
-    <form className="agency-form" onSubmit={event => { event.preventDefault(); setSearch(query.trim()) }}>
-      <label htmlFor="market-query">Produto, categoria ou livro</label>
-      <input id="market-query" value={query} onChange={event => setQuery(event.target.value)} maxLength={120} required placeholder="Ex.: Bíblia para crianças" />
-      <button className="button button-dark" type="submit" disabled={!query.trim()}>Pesquisar mercado</button>
-    </form>
-    {links.length > 0 && <div className="discovery-results" aria-live="polite">
-      <h3>Consultar resultados externos</h3>
-      <div className="discovery-links">{links.map(link => <External key={link.label} href={link.href}>{link.label}</External>)}</div>
-      <p>Os resultados, preços e condições são da responsabilidade dos sites de destino. A pesquisa só é partilhada com cada site quando abres a respetiva ligação.</p>
-    </div>}
-  </section>
-}
-
-function ShopFinderPanel({ hidden = false }: { hidden?: boolean }) {
-  const [query, setQuery] = useState('')
-  const [location, setLocation] = useState('')
-  const [search, setSearch] = useState<{ query: string; location: string } | null>(null)
-  const links = search ? shopSearchLinks(search.query, search.location) : []
-
-  return <section className="aegis-panel discovery-panel" hidden={hidden}>
-    <p className="eyebrow">PESQUISA DE LOJAS EM PORTUGAL</p>
-    <h2>Encontra lojas e serviços</h2>
-    <p>Indica o que procuras e uma cidade ou código postal. As ligações abrem mapas e pesquisa externa; não guardamos nem enviamos a localização antes de escolheres um destino.</p>
-    <form className="agency-form" onSubmit={event => { event.preventDefault(); setSearch({ query: query.trim(), location: location.trim() }) }}>
-      <label htmlFor="shop-query">Tipo de loja ou serviço</label>
-      <input id="shop-query" value={query} onChange={event => setQuery(event.target.value)} maxLength={120} required placeholder="Ex.: livraria, farmácia, oficina" />
-      <label htmlFor="shop-location">Cidade ou código postal em Portugal</label>
-      <input id="shop-location" value={location} onChange={event => setLocation(event.target.value)} maxLength={120} required placeholder="Ex.: Porto ou 4000-008" />
-      <button className="button button-dark" type="submit" disabled={!query.trim() || !location.trim()}>Procurar lojas</button>
-    </form>
-    {links.length > 0 && <div className="discovery-results" aria-live="polite">
-      <h3>Escolhe onde pesquisar</h3>
-      <div className="discovery-links">{links.map(link => <External key={link.label} href={link.href}>{link.label}</External>)}</div>
-      <p>Horários, contactos, avaliações e disponibilidade podem estar desatualizados; confirma-os diretamente com a loja.</p>
-    </div>}
-  </section>
-}
-
-function BibleAssistantPanel({ hidden = false }: { hidden?: boolean }) {
-  const [turns, setTurns] = useState<AssistantTurn[]>([
-    { role: 'assistant', text: 'Pergunta sobre a Bíblia, os Evangelhos, Noé ou outros temas bíblicos. Posso resumir passagens e explicar diferentes interpretações.' },
-  ])
-  const [message, setMessage] = useState('')
-  const [bookQuery, setBookQuery] = useState('')
-  const [bookSearch, setBookSearch] = useState('')
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState('')
-  const bookLinks = bibleBookSearchLinks(bookSearch)
-
-  const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const question = message.trim()
-    if (!question || sending) return
-    setTurns(current => [...current, { role: 'user', text: question }])
-    setMessage('')
-    setError('')
-    setSending(true)
-    try {
-      const history = turns.slice(-10).map(turn => ({ role: turn.role, content: turn.text }))
-      const reply = await apiClient.askBibleAssistant(question, history)
-      setTurns(current => [...current, { role: 'assistant', text: reply.answer }])
-    } catch (cause) {
-      setError(cause instanceof ApiError ? cause.message : 'Não foi possível contactar o assistente bíblico.')
-    } finally {
-      setSending(false)
-    }
-  }
-
-  return <section className="aegis-panel discovery-panel bible-panel" hidden={hidden}>
-    <p className="eyebrow">ESTUDO BÍBLICO COM IA</p>
-    <h2>Conversa sobre a Bíblia</h2>
-    <p className="assistant-disclaimer">Grátis para quem utiliza. A pergunta e até 10 mensagens anteriores desta conversa são enviadas ao fornecedor de IA configurado, que poderá cobrar ao operador do Aegis; o Aegis não guarda este histórico. As respostas podem conter erros e não representam a única interpretação cristã.</p>
-    <div className="assistant-transcript" aria-live="polite" aria-label="Conversa sobre a Bíblia">
-      {turns.map((turn, index) => <article className={`assistant-turn ${turn.role}`} key={`${turn.role}-${index}`}>
-        <strong>{turn.role === 'assistant' ? 'Assistente bíblico' : 'Tu'}</strong>
-        <p>{turn.text}</p>
-      </article>)}
-      {sending && <p className="assistant-pending" role="status">A preparar uma resposta…</p>}
-    </div>
-    <form className="assistant-compose" onSubmit={event => void sendMessage(event)}>
-      <label htmlFor="bible-message">A tua pergunta</label>
-      <textarea id="bible-message" value={message} onChange={event => setMessage(event.target.value)} maxLength={2000} rows={3} required
-        placeholder="Ex.: O que conta a Bíblia sobre a arca de Noé?" />
-      <div className="assistant-compose-footer">
-        <small>Não incluas dados pessoais. Confirma as referências numa tradução bíblica.</small>
-        <button className="button button-dark" type="submit" disabled={sending || !message.trim()}>{sending ? 'A responder…' : 'Perguntar'}</button>
-      </div>
-    </form>
-    {error && <p className="assistant-error" role="alert">{error}</p>}
-    <div className="bible-resources">
-      <div>
-        <h3>Bíblias e editoras</h3>
-        <div className="discovery-links">
-          <External href="https://www.bible.com/pt/languages/por_pt">Bíblias em português — YouVersion</External>
-          <External href="https://www.sociedade-biblica.pt/loja/catalogo">Sociedade Bíblica de Portugal</External>
-          <External href="https://www.biblica.com/">Biblica</External>
-        </div>
-      </div>
-      <form className="agency-form" onSubmit={event => { event.preventDefault(); setBookSearch(bookQuery.trim()) }}>
-        <label htmlFor="bible-book-query">Procurar livros e estudos</label>
-        <input id="bible-book-query" value={bookQuery} onChange={event => setBookQuery(event.target.value)} maxLength={120} placeholder="Ex.: Evangelhos, estudo de Noé" />
-        <button className="button button-outline" type="submit" disabled={!bookQuery.trim()}>Pesquisar editoras e livrarias</button>
-        {bookLinks.length > 0 && <div className="discovery-links" aria-live="polite">
-          {bookLinks.map(link => <External key={link.label} href={link.href}>{link.label}</External>)}
-        </div>}
-      </form>
-    </div>
-  </section>
-}
-
 type AssistantTurn = {
   role: 'assistant' | 'user'
   text: string
   sources?: AssistantSource[]
-}
-
-function AssistantView() {
-  const [tool, setTool] = useState<'market' | 'shops' | 'bible' | 'aegis'>('market')
-  const tools = [
-    { id: 'market', label: 'Mercado' },
-    { id: 'shops', label: 'Lojas' },
-    { id: 'bible', label: 'Bíblia' },
-    { id: 'aegis', label: 'Suporte Aegis' },
-  ] as const
-
-  return <section className="assistant-tools">
-    <div className="assistant-tool-tabs" role="group" aria-label="Assistentes e pesquisa">
-      {tools.map(item => <button key={item.id} type="button" aria-pressed={tool === item.id}
-        aria-controls={`assistant-panel-${item.id}`} id={`assistant-tab-${item.id}`} onClick={() => setTool(item.id)}>
-        {item.label}
-      </button>)}
-    </div>
-    <div id="assistant-panel-market" role="region" aria-labelledby="assistant-tab-market" hidden={tool !== 'market'}>
-      <MarketDiscoveryPanel />
-    </div>
-    <div id="assistant-panel-shops" role="region" aria-labelledby="assistant-tab-shops" hidden={tool !== 'shops'}>
-      <ShopFinderPanel />
-    </div>
-    <div id="assistant-panel-bible" role="region" aria-labelledby="assistant-tab-bible" hidden={tool !== 'bible'}>
-      <BibleAssistantPanel />
-    </div>
-    <div id="assistant-panel-aegis" role="region" aria-labelledby="assistant-tab-aegis" hidden={tool !== 'aegis'}>
-      <AegisSupportPanel />
-    </div>
-  </section>
 }
 
 function AegisSupportPanel() {
@@ -1089,35 +981,81 @@ function IntegrationsView({ openIntegration }: { openIntegration: (name: string)
   </section>
 }
 
-function EducationView() {
-  return <section className="aegis-panel"><p>Não existem conteúdos educativos disponíveis.</p></section>
-}
-
-function PrivacyView({ onExport }: { security: ReturnType<typeof useSecurity>; onExport: () => void; notify: (message: string) => void }) {
-  return <section className="aegis-panel"><p>Os controlos de privacidade estão ativos.</p><button onClick={onExport}>Exportar registo</button></section>
+function PrivacyView({ security, onExport }: { security: ReturnType<typeof useSecurity>; onExport: () => void }) {
+  return <section className="aegis-panel"><p className="eyebrow">CONTROLO E TRANSPARÊNCIA</p><h2>Os teus dados, sem promessas vagas.</h2><p>As reflexões privadas do feed ficam apenas na memória desta área. Sair ou recarregar elimina-as. Os tokens de sessão continuam em cookies httpOnly, não no armazenamento JavaScript.</p><p>O estudo com IA encaminha a pergunta ao fornecedor configurado. A consulta bíblica pode carregar a medição de utilização exigida pelo fornecedor. Consulta os detalhes antes de usar estas ferramentas.</p>
+    {security.loading ? <p role="status">A consultar a tua sessão…</p> : security.error ? <p role="alert" className="assistant-error">{security.error}</p> : <p>{security.user ? `${security.sessions.length} sessão(ões) devolvida(s) pela API. Gere os dispositivos na tua conta.` : 'Inicia sessão para consultar os registos da tua conta.'}</p>}
+    <div className="button-row"><button className="button button-outline" onClick={onExport} disabled={security.loading || !!security.error || !security.events.length}>Exportar registo de segurança</button><a className="button button-outline" href="#account">Gerir sessões</a><a href="/legal/privacy.html">Política de privacidade</a></div>
+  </section>
 }
 
 const TOAST_MS = 5000
 
 function readHashView(): View {
   const hash = (window.location.hash.replace(/^#\/?/, '').split(/[/?]/, 1)[0] ?? '').trim()
-  return isView(hash) ? hash : 'overview'
+  if (isView(hash)) return hash
+  return LEGACY_VIEWS[hash] ?? 'overview'
 }
 
 function readInviteToken(): string {
   return window.location.hash.match(/^#\/invite\/([A-Za-z0-9_-]{32,128})(?:\?.*)?$/)?.[1] ?? ''
 }
 
-const normalize = (text: string) => text.trim().toLocaleLowerCase('pt')
+// Pesquisa tolerante a acentos: "biblia" encontra "Bíblia".
+const normalize = (text: string) => text.trim().toLocaleLowerCase('pt').normalize('NFD').replace(/\p{Diacritic}/gu, '')
+
+const BOTTOM_NAV: { id: View; short: string }[] = [
+  { id: 'overview', short: 'Início' },
+  { id: 'chat', short: 'Chat' },
+  { id: 'trading', short: 'Trading' },
+  { id: 'news', short: 'Notícias' },
+]
+
+function useTheme() {
+  const [preference, setPreference] = useState<ThemePreference>(readStoredPreference)
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => applyTheme(resolveTheme(preference, media.matches))
+    sync()
+    if (preference !== 'system') return
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [preference])
+  const cycle = () => {
+    const next = nextThemePreference(preference)
+    storePreference(next)
+    setPreference(next)
+  }
+  return { preference, cycle }
+}
+
+function ThemeToggle({ preference, onToggle }: { preference: ThemePreference; onToggle: () => void }) {
+  const icon = preference === 'dark' ? 'moon' : preference === 'light' ? 'sun' : 'auto'
+  return <button type="button" className="theme-toggle" onClick={onToggle} aria-label={`${themeLabel(preference)}. Mudar tema`} title={themeLabel(preference)}>
+    <Icon name={icon} size={18} />
+  </button>
+}
+
+function greeting(date = new Date()): string {
+  const hour = date.getHours()
+  if (hour < 6) return 'BOA NOITE'
+  if (hour < 13) return 'BOM DIA'
+  if (hour < 20) return 'BOA TARDE'
+  return 'BOA NOITE'
+}
 
 export default function WorkspaceApp() {
   const [view, setView] = useState<View>(readHashView)
   const [search, setSearch] = useState('')
   const [detail, setDetail] = useState<string | null>(null)
   const [toast, setToast] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [showTop, setShowTop] = useState(false)
+  const [chatSeed, setChatSeed] = useState<ChatSeed | null>(null)
+  const theme = useTheme()
   const security = useSecurity(view)
   const heading = useRef<HTMLHeadingElement>(null)
   const dialog = useRef<HTMLDialogElement>(null)
+  const searchInput = useRef<HTMLInputElement>(null)
   const isFirstView = useRef(true)
 
   const current = AREAS.find(a => a.id === view) ?? (view === 'invite'
@@ -1125,17 +1063,22 @@ export default function WorkspaceApp() {
     : undefined)
   const integration = INTEGRATIONS.find(i => i.name === detail)
   const query = normalize(search)
-  const matches = useMemo(() => (query ? AREAS.filter(a => normalize(a.label).includes(query)) : []), [query])
+  const matches = useMemo(() => (query
+    ? AREAS.filter(a => normalize(`${a.label} ${a.title} ${a.subtitle}`).includes(query))
+      .sort((a, b) => Number(!normalize(a.label).includes(query)) - Number(!normalize(b.label).includes(query)))
+    : []), [query])
 
   const go = (next: View) => {
     if (window.location.hash !== `#${next}`) window.location.hash = next
     setView(next)
     setSearch('')
+    setMenuOpen(false)
     window.scrollTo({ top: 0 })
   }
-  const openIntegration = (name: string) => {
-    go('integrations')
-    setDetail(name)
+  // Abre o Chat IA a partir de outra área, opcionalmente com pergunta e dados de contexto.
+  const openChat = (seed: Omit<ChatSeed, 'id'> | null) => {
+    setChatSeed(seed ? { ...seed, id: Date.now() } : null)
+    go('chat')
   }
   const exportJournal = () => {
     const exportableEvents = security.events.map(({ event_type, severity, created_at }) => ({
@@ -1152,7 +1095,7 @@ export default function WorkspaceApp() {
   }
 
   useEffect(() => {
-    const onHashChange = () => setView(readHashView())
+    const onHashChange = () => { setView(readHashView()); setMenuOpen(false); setSearch(''); window.scrollTo({ top: 0 }) }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
@@ -1181,34 +1124,60 @@ export default function WorkspaceApp() {
     return () => window.clearTimeout(timer)
   }, [toast])
 
+  // Atalhos: "/" ou Ctrl/⌘+K focam a pesquisa; Escape fecha o menu móvel.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      const typing = !!target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      if ((event.key === 'k' && (event.ctrlKey || event.metaKey)) || (event.key === '/' && !typing)) {
+        event.preventDefault()
+        setMenuOpen(false)
+        searchInput.current?.focus()
+      } else if (event.key === 'Escape') {
+        setMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  useEffect(() => {
+    let frame = 0
+    const onScroll = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => setShowTop(window.scrollY > 700))
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', onScroll) }
+  }, [])
+
   if (view === 'invite') return <InvitePage />
 
   return (
     <div className="aegis-frame">
       <a className="skip-link" href="#workspace" onClick={e => { e.preventDefault(); document.getElementById('workspace')?.focus() }}>Saltar para o conteúdo</a>
 
-      <aside className="aegis-sidebar">
-        <button className="aegis-brand" onClick={() => go('overview')} aria-label="Aegis, comunidade"><span>Λ</span>AEGIS<i /></button>
-        <div className="workspace-label">
-        <span className="workspace-avatar">A</span>
-        <span>Agência Aegis<small>Gestão isolada por cliente</small></span>
-          <b>⌄</b>
-        </div>
-        <p className="nav-label">WORKSPACE</p>
-        <nav aria-label="Navegação principal">
-          {AREAS.map(a => (
-            <button key={a.id} className={`aegis-nav ${view === a.id ? 'active' : ''}`} aria-current={view === a.id ? 'page' : undefined} onClick={() => go(a.id)}>
-              <Icon name={a.icon} />
-              {a.label}
-              {a.id === 'security' && <span className="nav-count">{security.alertCount || '—'}</span>}
-            </button>
-          ))}
+      <aside className={`aegis-sidebar ${menuOpen ? 'menu-open' : ''}`}>
+        <button className="aegis-brand aegis-brand--ai" onClick={() => go('overview')} aria-label="Aegis, início"><span className="brand-orb" aria-hidden="true" />aegis<small>IA · mercados · organização</small></button>
+        <button className="new-chat-button" type="button" onClick={() => openChat(null)}><Icon name="chat" size={17} />Nova conversa<kbd aria-hidden="true">IA</kbd></button>
+        <button className="mobile-menu-toggle" aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}>{menuOpen ? 'Fechar menu' : 'Explorar áreas'} <Icon name={menuOpen ? 'close' : 'community'} size={18} /></button>
+        <nav id="primary-navigation" aria-label="Navegação principal">
+          {(['ai', 'tools', 'account'] as const).map(group => <div className="nav-group" key={group}>
+            <p className="nav-label">{{ ai: 'ASSISTENTE', tools: 'FERRAMENTAS', account: 'CONTA E EQUIPA' }[group]}</p>
+            {AREAS.filter(a => a.group === group).map(a => (
+              <button key={a.id} className={`aegis-nav ${view === a.id ? 'active' : ''}`} aria-current={view === a.id ? 'page' : undefined} onClick={() => go(a.id)}>
+                <Icon name={a.icon} />
+                {a.label}
+                {a.id === 'security' && security.alertCount > 0 && <span className="nav-count">{security.alertCount}</span>}
+              </button>
+            ))}
+          </div>)}
         </nav>
         <div className="sidebar-bottom">
           <div className="privacy-note">
             <Icon name="lock" size={17} />
-            <strong>O teu espaço. Os teus dados.</strong>
-            <p>Sem publicidade comportamental.<br />Sem tracking nesta interface.</p>
+            <strong>Os teus dados, sob controlo.</strong>
+            <p>As conversas não ficam guardadas no Aegis. Sem publicidade comportamental.</p>
             <button onClick={() => go('privacy')}>Ver os controlos <span>↗</span></button>
           </div>
           <button className="account-button" onClick={() => go('account')}>
@@ -1221,11 +1190,12 @@ export default function WorkspaceApp() {
 
       <div className="main-column">
         <header className="aegis-topbar">
-          <div className="breadcrumb">Workspace <span>/</span> <b>{current?.label ?? 'Conta'}</b></div>
+          <div className="breadcrumb">Aegis <span>/</span> <b>{current?.label ?? 'Conta'}</b></div>
           <div className="top-actions">
             <div className="search-wrap">
               <Icon name="search" size={17} />
-              <input type="search" aria-label="Pesquisar áreas" placeholder="Explorar o workspace" autoComplete="off" value={search} onChange={e => setSearch(e.target.value)} />
+              <input ref={searchInput} type="search" aria-label="Pesquisar áreas" placeholder="Encontra o teu caminho" autoComplete="off" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={event => { if (event.key === 'Escape') { setSearch(''); event.currentTarget.blur() } if (event.key === 'Enter' && matches[0]) go(matches[0].id) }} />
+              {!query && <kbd className="search-kbd" aria-hidden="true">/</kbd>}
               {query && (
                 <div className="search-results">
                   {matches.length
@@ -1234,32 +1204,33 @@ export default function WorkspaceApp() {
                 </div>
               )}
             </div>
-            <button className="private-badge" onClick={() => go('privacy')}><span />Privado</button>
+            <ThemeToggle preference={theme.preference} onToggle={theme.cycle} />
+            <button className="private-badge" onClick={() => go('privacy')}><Icon name="lock" size={14} />Privacidade</button>
             <button className="button button-quiet mobile-account" onClick={() => go('account')} aria-label="Abrir a tua conta"><Icon name="lock" size={17} />Conta</button>
           </div>
         </header>
 
         <main tabIndex={-1} id="workspace" className="workspace-main">
-          <div className="page-heading">
+          <div className={view === 'chat' ? 'page-heading page-heading--compact' : 'page-heading'}>
             <div>
-              <p className="eyebrow">{view === 'overview' ? 'COMUNIDADE AEGIS' : 'AEGIS / WORKSPACE DA AGÊNCIA'}</p>
+              <p className="eyebrow">{view === 'overview' ? `${greeting()} · AEGIS` : `AEGIS / ${(current?.label ?? 'Conta').toLocaleUpperCase('pt')}`}</p>
               <h1 tabIndex={-1} ref={heading}>{current?.title ?? 'Acesso ao teu espaço.'}</h1>
               <p className="page-subtitle">{current?.subtitle ?? 'A autenticação precisa de uma API configurada.'}</p>
             </div>
-            <span className="edition">MSP EDITION <b>01</b></span>
           </div>
 
-          <Suspense fallback={<p role="status" className="muted">A carregar…</p>}>
-            {view === 'overview' && <OverviewView go={go} />}
+          <Suspense fallback={<div className="view-loading" role="status"><span className="typing"><i /><i /><i /></span>A carregar…</div>}>
+            {view === 'overview' && <HomeView go={go} openChat={openChat} />}
+            {view === 'chat' && <ChatView seed={chatSeed} onSeedUsed={() => setChatSeed(null)} supportPanel={<AegisSupportPanel />} />}
+            {view === 'trading' && <TradingView openChat={openChat} />}
+            {view === 'news' && <NewsView openChat={openChat} />}
+            {view === 'courses' && <CoursesView openChat={openChat} />}
+            {view === 'organize' && <OrganizeView openChat={openChat} goAccount={() => go('account')} />}
             {view === 'clients' && <AgencyConsole key="clients" section="clients" go={go} />}
             {view === 'billing' && <AgencyConsole key="billing" section="billing" go={go} />}
-            {view === 'security' && <SecurityView security={security} onExport={exportJournal} onManageAccount={() => go('account')} />}
-            {view === 'markets' && <MarketsView />}
-            {view === 'intelligence' && <IntelligenceView openIntegration={openIntegration} />}
-            {view === 'assistant' && <AssistantView />}
+            {view === 'security' && <><SecurityCenter /><SecurityView security={security} onExport={exportJournal} onManageAccount={() => go('account')} /></>}
             {view === 'integrations' && <IntegrationsView openIntegration={setDetail} />}
-            {view === 'education' && <EducationView />}
-            {view === 'privacy' && <PrivacyView security={security} onExport={exportJournal} notify={setToast} />}
+            {view === 'privacy' && <PrivacyView security={security} onExport={exportJournal} />}
             {view === 'account' && <section className="aegis-panel account-panel"><LoginTab /></section>}
           </Suspense>
 
@@ -1290,6 +1261,25 @@ export default function WorkspaceApp() {
           </>
         )}
       </dialog>
+
+      {menuOpen && <div className="nav-backdrop" aria-hidden="true" onClick={() => setMenuOpen(false)} />}
+
+      <nav className="bottom-nav" aria-label="Navegação rápida">
+        {BOTTOM_NAV.map(({ id, short }) => {
+          const area = AREAS.find(a => a.id === id)
+          if (!area) return null
+          return <button key={id} type="button" className={view === id && !menuOpen ? 'active' : ''} aria-current={view === id ? 'page' : undefined} aria-label={area.label} onClick={() => go(id)}>
+            <Icon name={area.icon} size={20} />
+            <span aria-hidden="true">{short}</span>
+          </button>
+        })}
+        <button type="button" className={menuOpen || !BOTTOM_NAV.some(item => item.id === view) ? 'active' : ''} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}>
+          <Icon name={menuOpen ? 'close' : 'menu'} size={20} />
+          <span>{menuOpen ? 'Fechar' : 'Mais'}</span>
+        </button>
+      </nav>
+
+      {showTop && <button className="back-to-top" type="button" aria-label="Voltar ao topo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><Icon name="up" size={18} /></button>}
 
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>

@@ -1,0 +1,242 @@
+/*
+ * Aegis — modo escuro.
+ * Ativo quando <html data-theme="dark"> (definido por public/theme-init.js e
+ * src/lib/theme.ts). Redefine os tokens e substitui as cores fixas das camadas
+ * anteriores. Contraste mínimo pretendido: 4.5:1 para texto normal.
+ */
+
+:root[data-theme="dark"] { color-scheme: dark; color: #e8ece4; background: #111511; }
+:root[data-theme="dark"] body { background: #111511; }
+
+:root[data-theme="dark"] .aegis-frame {
+  --bg: #111511;
+  --panel: #191e19;
+  --panel-muted: #222822;
+  --panel-tint: #263024;
+  --line: #2c352b;
+  --line-strong: #3d483b;
+  --ink: #e8ece4;
+  --ink-soft: #b4bdad;
+  --ink-faint: #8f9989;
+  --brand: #a7c58e;
+  --brand-strong: #c6dfb1;
+  --brand-soft: #253122;
+  --accent: #e3a782;
+  --accent-soft: #3a2a20;
+  --ok: #86cf9e;
+  --ok-soft: #1b3123;
+  --warn: #eaa56c;
+  --warn-soft: #36261a;
+  --danger: #f29393;
+  --shadow: 0 12px 32px rgb(0 0 0 / 35%);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%), 0 2px 8px rgb(0 0 0 / 20%);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 30%), 0 12px 32px rgb(0 0 0 / 35%);
+  --shadow-lg: 0 6px 16px rgb(0 0 0 / 35%), 0 24px 56px rgb(0 0 0 / 45%);
+  background:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(62 82 52 / 22%), transparent 60%),
+    radial-gradient(40rem 24rem at -10% 110%, rgb(110 70 45 / 14%), transparent 60%),
+    var(--bg);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .aegis-frame ::selection { background: #3a4d30; color: #fff; }
+
+/* ---------- Estrutura ---------- */
+:root[data-theme="dark"] .aegis-frame .aegis-sidebar { background: rgb(22 27 22 / 86%); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .aegis-brand { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .aegis-brand > span { color: var(--brand); }
+:root[data-theme="dark"] .aegis-frame .workspace-label,
+:root[data-theme="dark"] .aegis-frame .privacy-note { background: var(--panel-muted); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .workspace-avatar,
+:root[data-theme="dark"] .aegis-frame .account-avatar { background: var(--brand-soft); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .privacy-note strong,
+:root[data-theme="dark"] .aegis-frame .privacy-note button,
+:root[data-theme="dark"] .aegis-frame .privacy-note > svg { color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .privacy-note p,
+:root[data-theme="dark"] .aegis-frame .workspace-label small,
+:root[data-theme="dark"] .aegis-frame .account-button small { color: var(--ink-faint); }
+:root[data-theme="dark"] .aegis-frame .account-button { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .aegis-nav { color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame .aegis-nav:hover { background: var(--panel-muted); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .aegis-nav.active { background: var(--brand-soft); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .nav-count { background: var(--panel-tint); color: var(--brand-strong); }
+
+:root[data-theme="dark"] .aegis-frame .aegis-topbar { background: rgb(17 21 17 / 72%); border-color: rgb(44 53 43 / 80%); }
+:root[data-theme="dark"] .aegis-frame .search-wrap { background: rgb(30 36 30 / 92%); border-color: var(--line); color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame .search-wrap input { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .search-wrap input::placeholder { color: var(--ink-faint); }
+:root[data-theme="dark"] .aegis-frame .search-results { background: var(--panel); border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame .search-results button { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .search-results p { color: var(--ink-faint); }
+:root[data-theme="dark"] .aegis-frame .private-badge { background: var(--brand-soft); border-color: var(--line-strong); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .mobile-account { color: var(--ink); }
+
+:root[data-theme="dark"] .aegis-frame .page-heading h1 { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .edition b { color: var(--ink-soft); }
+
+/* ---------- Painéis, texto e formulários ---------- */
+:root[data-theme="dark"] .aegis-frame :where(.aegis-panel, .integration-dialog) { background: var(--panel); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame :where(h1, h2, h3, h4, strong, legend) { color: inherit; }
+:root[data-theme="dark"] .aegis-frame .aegis-panel h2,
+:root[data-theme="dark"] .aegis-frame .aegis-panel h3 { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .aegis-panel p,
+:root[data-theme="dark"] .aegis-frame .aegis-panel li { color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame a { color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .eyebrow { color: var(--ink-faint); }
+:root[data-theme="dark"] .aegis-frame .page-heading .eyebrow { color: var(--accent); }
+
+:root[data-theme="dark"] .aegis-frame :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+  background: #141914;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .aegis-frame :where(input, textarea)::placeholder { color: #7d8778; }
+:root[data-theme="dark"] .aegis-frame :where(input, select, textarea):focus-visible { border-color: var(--brand); box-shadow: 0 0 0 4px rgb(167 197 142 / 18%); }
+:root[data-theme="dark"] .aegis-frame :where(button, a, [role="button"], summary):focus-visible { outline-color: rgb(167 197 142 / 55%); }
+
+:root[data-theme="dark"] .aegis-frame .button-dark { background: var(--brand); color: #132011; box-shadow: 0 4px 14px rgb(0 0 0 / 35%); }
+:root[data-theme="dark"] .aegis-frame .button-dark:hover:not(:disabled) { background: var(--brand-strong); box-shadow: 0 8px 20px rgb(0 0 0 / 40%); }
+:root[data-theme="dark"] .aegis-frame .button-outline { background: transparent; border-color: var(--line-strong); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .button-outline:hover:not(:disabled) { background: var(--panel-muted); border-color: var(--brand); }
+:root[data-theme="dark"] .aegis-frame .button-quiet { color: var(--ink-soft); }
+
+:root[data-theme="dark"] .aegis-frame .assistant-error { background: #3a1d1d; color: var(--danger); border-color: #5a2a2a; }
+:root[data-theme="dark"] .aegis-frame .assistant-success { background: var(--ok-soft); color: var(--ok); border-color: #2a4a35; }
+:root[data-theme="dark"] .aegis-frame .assistant-pending { color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame .toast { background: var(--panel); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .icon-box { background: var(--brand-soft); color: var(--brand); }
+:root[data-theme="dark"] .aegis-frame hr { border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame code { background: var(--panel-muted); color: var(--ink); }
+
+/* Abas, ligações externas e conversas */
+:root[data-theme="dark"] .aegis-frame .assistant-tool-tabs { background: rgb(25 30 25 / 80%); border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame .assistant-tool-tabs button { color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame .assistant-tool-tabs button[aria-pressed="true"] { background: var(--brand); color: #132011; }
+:root[data-theme="dark"] .aegis-frame .discovery-links a { background: transparent; border-color: var(--line-strong); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .discovery-links a:hover { background: var(--panel-muted); }
+:root[data-theme="dark"] .aegis-frame .assistant-transcript { background: #141914; border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame .skip-link { background: var(--panel); border-color: var(--line-strong); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .workspace-footer { border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame .workspace-footer b { color: var(--brand); }
+:root[data-theme="dark"] .aegis-frame .workspace-footer i { color: var(--ink-faint); }
+:root[data-theme="dark"] .aegis-frame .assistant-turn { background: var(--panel-muted); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .assistant-turn.user { background: var(--brand-soft); border-color: #33432d; }
+:root[data-theme="dark"] .aegis-frame .assistant-turn p { color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .assistant-badge,
+:root[data-theme="dark"] .aegis-frame .integration-state { background: var(--panel-muted); border-color: var(--line); color: var(--ink-soft); }
+:root[data-theme="dark"] .aegis-frame .integration-symbol { background: var(--brand-soft); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .security-event { background: var(--panel-muted); border-color: var(--line); }
+:root[data-theme="dark"] .aegis-frame .security-event--warning { background: var(--warn-soft); border-color: #5a3d22; }
+:root[data-theme="dark"] .aegis-frame .lead-receipt,
+:root[data-theme="dark"] .aegis-frame .study-selected,
+:root[data-theme="dark"] .aegis-frame .client-empty,
+:root[data-theme="dark"] .aegis-frame .agency-invite-link,
+:root[data-theme="dark"] .aegis-frame .agency-client-list li { background: var(--panel-muted); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .client-avatar { background: var(--brand-soft); color: var(--brand-strong); }
+
+/* ---------- Inteligência e Mercados ---------- */
+:root[data-theme="dark"] .decision-item { background: var(--panel); border-color: var(--line); }
+:root[data-theme="dark"] .decision-item:hover { background: var(--panel-muted); }
+:root[data-theme="dark"] .decision-item.checked { background: #1d2a1f; border-color: #35503a; }
+:root[data-theme="dark"] .decision-result { background: var(--warn-soft); color: #f2c49c; }
+:root[data-theme="dark"] .decision-result--review { background: #332b16; color: #ecd38f; }
+:root[data-theme="dark"] .decision-result--ready { background: var(--ok-soft); color: #a8e0b9; }
+:root[data-theme="dark"] .decision-result p { color: inherit !important; }
+:root[data-theme="dark"] .decision-meter--review { --tone: #e2c26a; }
+:root[data-theme="dark"] .intel-tool { background: var(--panel); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .tip-list span { color: var(--ink-soft); }
+
+/* ---------- Elementos flutuantes ---------- */
+:root[data-theme="dark"] .back-to-top { background: rgb(30 36 30 / 92%); border-color: var(--line); color: var(--brand-strong); }
+:root[data-theme="dark"] .aegis-frame .dialog-close { background: var(--panel-muted); border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .dialog-close:hover { background: var(--panel-tint); }
+:root[data-theme="dark"] .aegis-frame .lead-receipt code { background: #141914; border-color: var(--line); color: var(--ink); }
+:root[data-theme="dark"] .aegis-frame .integration-dialog::backdrop { background: rgb(0 0 0 / 55%); }
+:root[data-theme="dark"] .search-kbd { background: var(--panel-muted); border-color: var(--line-strong); color: var(--ink-faint); }
+
+/* ---------- Botão de tema ---------- */
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line, #e3e7dc);
+  border-radius: 12px;
+  background: var(--panel, #fff);
+  color: var(--ink-soft, #5f6a5a);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background .16s ease, color .16s ease, border-color .16s ease;
+}
+.theme-toggle:hover { color: var(--ink, #222b20); border-color: var(--line-strong, #cfd8c4); }
+.theme-toggle svg { transition: transform .3s ease; }
+.theme-toggle:hover svg { transform: rotate(-15deg); }
+
+@media (max-width: 760px) {
+  :root[data-theme="dark"] .aegis-frame { background: var(--bg); }
+  :root[data-theme="dark"] .aegis-frame .aegis-sidebar { background: transparent; }
+  :root[data-theme="dark"] .aegis-frame .aegis-topbar { background: transparent; }
+  :root[data-theme="dark"] .aegis-frame .aegis-sidebar.menu-open nav { background: var(--panel); border-color: var(--line); }
+  :root[data-theme="dark"] .bottom-nav { background: rgb(22 27 22 / 92%); border-color: var(--line); }
+  :root[data-theme="dark"] .nav-backdrop { background: rgb(0 0 0 / 50%); }
+  .theme-toggle { width: 44px; height: 44px; }
+}
+
+/* ---------- Conta (LoginTab, carregado em diferido) ---------- */
+:root[data-theme="dark"] .login-tab { background: #191e19; border-color: #2c352b; color: #e8ece4; box-shadow: 0 12px 32px rgb(0 0 0 / 35%); }
+:root[data-theme="dark"] .login-tab__tabs { background: #222822; border-color: #2c352b; }
+:root[data-theme="dark"] .login-tab__tabs button { color: #b4bdad; background: transparent; border-color: transparent; }
+:root[data-theme="dark"] .login-tab__tabs button.active { background: #2c352b; border-color: #3d483b; color: #e8ece4; }
+:root[data-theme="dark"] .login-tab__sessions { background: #222822; border-color: #2c352b; }
+:root[data-theme="dark"] .login-tab__session,
+:root[data-theme="dark"] .login-tab__providers > p,
+:root[data-theme="dark"] .login-tab__recovery > p,
+:root[data-theme="dark"] .login-tab__legal { color: #b4bdad; border-color: #2c352b; }
+:root[data-theme="dark"] .login-tab__passkey label,
+:root[data-theme="dark"] .login-tab__recovery label,
+:root[data-theme="dark"] .login-tab__legal legend { color: #dfe5d9; }
+:root[data-theme="dark"] .login-tab input:not([type="checkbox"]) { background: #141914; border-color: #3d483b; color: #e8ece4; }
+:root[data-theme="dark"] .login-tab input:not([type="checkbox"])::placeholder { color: #7d8778; }
+:root[data-theme="dark"] .login-tab__provider-btn,
+:root[data-theme="dark"] .login-tab__passkey button,
+:root[data-theme="dark"] .login-tab__recovery button,
+:root[data-theme="dark"] .login-tab__actions button,
+:root[data-theme="dark"] .login-tab__session button { background: #1f251f; border-color: #3d483b; color: #c6dfb1; }
+:root[data-theme="dark"] .login-tab__provider-btn:hover:not(:disabled),
+:root[data-theme="dark"] .login-tab__passkey button:hover:not(:disabled),
+:root[data-theme="dark"] .login-tab__recovery button:hover:not(:disabled),
+:root[data-theme="dark"] .login-tab__actions button:hover:not(:disabled) { background: #263024; border-color: #a7c58e; }
+:root[data-theme="dark"] .login-tab__legal a { color: #c6dfb1; }
+:root[data-theme="dark"] .login-tab__legal input { accent-color: #a7c58e; }
+:root[data-theme="dark"] .login-tab__hint { background: #253122; color: #c6dfb1; }
+:root[data-theme="dark"] .login-tab__status,
+:root[data-theme="dark"] .login-tab__unavailable { background: #36221c; border-color: #5a3529; color: #f2b9a6; }
+:root[data-theme="dark"] .login-tab__unavailable button { color: #f2b9a6; }
+
+/* ---------- Página de convite ---------- */
+:root[data-theme="dark"] .invite-page {
+  --bg: #111511;
+  --panel: #191e19;
+  --line: #2c352b;
+  --ink: #e8ece4;
+  --ink-soft: #b4bdad;
+  --brand: #a7c58e;
+  --brand-2: #c6dfb1;
+  background: var(--bg);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .invite-page .aegis-panel { background: var(--panel); border-color: var(--line); }
+:root[data-theme="dark"] .invite-brand span { border-color: #3d483b; }
+:root[data-theme="dark"] .invite-panel__mark { background: #253122; border-color: #33432d; color: #c6dfb1; }
+:root[data-theme="dark"] .invite-panel__notice { background: #222822; border-color: #2c352b; border-left-color: #a7c58e; color: #e8ece4; }
+:root[data-theme="dark"] .invite-panel__notice p { color: #b4bdad; }
+:root[data-theme="dark"] .invite-page .button-dark { background: #a7c58e; color: #132011; }
+
+/* ---------- Ecrãs fora da moldura principal ---------- */
+:root[data-theme="dark"] .app-load-error { color: #e8ece4; }
+:root[data-theme="dark"] .app-load-error a { color: #c6dfb1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle, .theme-toggle svg { transition: none; }
+  .theme-toggle:hover svg { transform: none; }
+}

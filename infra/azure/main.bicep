@@ -30,7 +30,7 @@ param apiOrigin string = 'https://api.localhost'
 param tags object = {}
 
 var appToken = toLower(replace(appName, '-', ''))
-var registryName = take('${appToken}${environment}', 50)
+var registryName = take('${appToken}${environment}acr', 50)
 var logAnalyticsName = '${appName}-${environment}-law'
 var managedEnvironmentName = '${appName}-${environment}-cae'
 var containerAppNameFrontend = '${appName}-${environment}-frontend'
@@ -117,7 +117,7 @@ resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
         customerId: logAnalytics.properties.customerId
-        sharedKey: listKeys(logAnalytics.id, logAnalytics.apiVersion).primarySharedKey
+        sharedKey: logAnalytics.listKeys().primarySharedKey
       }
     }
   }

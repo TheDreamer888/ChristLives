@@ -1,9 +1,5 @@
-import { ApiError, request } from './http'
-export { ApiError } from './http'
-
-export type RiskScoreResponse = {
-  score: number
-}
+import { ApiError, request } from './http.ts'
+export { ApiError } from './http.ts'
 
 export type UrlCheckResponse = {
   verdict: 'blocked' | 'not_listed'
@@ -15,9 +11,76 @@ export type UrlCheckResponse = {
   notice: string
 }
 
-export type RiskScoreRequest = {
-  finding_ids: string[]
-  finding_count: number
+export type SecurityStatus = {
+  firewall: {
+    enabled: boolean
+    blocked_24h: number
+    by_rule: Record<string, number>
+    rules: string[]
+    limits: { requests_per_minute: number; burst: number; ban_threshold: number; ban_minutes: number; max_body_bytes: number }
+    active_blocks: number
+    threat_intel: { networks: number; sources: Record<string, number>; updated_at: string | null; error: string | null }
+  }
+  supervisor: { enabled: boolean; model: string | null }
+  admin_configured: boolean
+}
+
+export type FirewallEvent = { at: string; ip: string; method: string; path: string; rule: string; label: string; status: number; user_agent: string }
+export type FirewallBlock = { network: string; reason: string; source: string; created_at: string; expires_at: string | null }
+export type TriageReport = {
+  severity: 'baixa' | 'media' | 'alta' | 'critica'
+  summary: string
+  findings: { title: string; evidence: string; recommendation: string }[]
+  block_recommendations: { network: string; reason: string }[]
+  events_analyzed: number
+  model: string
+}
+
+function isObjectBody(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+/** Cliente do centro de segurança (firewall + IA supervisora). */
+export const securityClient = {
+  async status(): Promise<SecurityStatus> {
+    const { body, status } = await request('/api/security/status')
+    if (!isObjectBody(body) || !isObjectBody(body['firewall']) || !isObjectBody(body['supervisor'])) {
+      throw new ApiError('Resposta inválida do estado de segurança', status)
+    }
+    return body as unknown as SecurityStatus
+  },
+  async isAdmin(): Promise<boolean> {
+    const { body } = await request('/api/security/me')
+    return isObjectBody(body) && body['is_admin'] === true
+  },
+  async events(): Promise<FirewallEvent[]> {
+    const { body } = await request('/api/security/firewall/events?limit=200')
+    return isObjectBody(body) && Array.isArray(body['events']) ? body['events'] as FirewallEvent[] : []
+  },
+  async blocks(): Promise<FirewallBlock[]> {
+    const { body } = await request('/api/security/firewall/blocks')
+    return isObjectBody(body) && Array.isArray(body['blocks']) ? body['blocks'] as FirewallBlock[] : []
+  },
+  async addBlock(network: string, reason: string, minutes: number | null): Promise<void> {
+    await request('/api/security/firewall/blocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ network, reason, minutes }),
+    })
+  },
+  async removeBlock(network: string): Promise<void> {
+    await request(`/api/security/firewall/blocks?network=${encodeURIComponent(network)}`, { method: 'DELETE' })
+  },
+  async refreshFeeds(): Promise<void> {
+    await request('/api/security/firewall/refresh-feeds', { method: 'POST' })
+  },
+  async triage(): Promise<TriageReport> {
+    const { body, status } = await request('/api/security/supervisor/triage', { method: 'POST' })
+    if (!isObjectBody(body) || typeof body['summary'] !== 'string' || !Array.isArray(body['findings'])) {
+      throw new ApiError('Resposta inválida da IA supervisora', status)
+    }
+    return body as unknown as TriageReport
+  },
 }
 
 export type AssistantSource = {
@@ -30,11 +93,6 @@ export type AssistantSource = {
 export type AssistantReply = {
   answer: string
   sources: AssistantSource[]
-}
-
-export type BibleConversationTurn = {
-  role: 'assistant' | 'user'
-  content: string
 }
 
 export type SalesLeadInput = {
@@ -92,6 +150,10 @@ export type SecurityEvent = {
   severity: 'info' | 'warning'
   created_at: string | null
   details: Record<string, string>
+}
+
+export type TeamSecurityEvent = SecurityEvent & {
+  actor_name: string | null
 }
 
 function isAssistantSource(source: unknown): source is AssistantSource {
@@ -181,6 +243,45 @@ export const apiClient = {
     })
   },
 
+  async listAgencySecurityEvents(agencyId: string): Promise<TeamSecurityEvent[]> {
+    const { body, status } = await request('/api/agency/security/events', {
+      headers: { 'X-Agency-ID': agencyId },
+    })
+    const events = recordField(body, 'events')
+    if (!Array.isArray(events)) throw new ApiError('Resposta inválida dos alertas da equipa', status)
+    return events.map(event => {
+      const id = recordField(event, 'id')
+      const eventType = recordField(event, 'event_type')
+      const severity = recordField(event, 'severity')
+      const createdAt = recordField(event, 'created_at')
+      const details = recordField(event, 'details')
+      const actorName = recordField(event, 'actor_name')
+      if (
+        typeof id !== 'string' ||
+        typeof eventType !== 'string' ||
+        (severity !== 'info' && severity !== 'warning') ||
+        !(createdAt === null || typeof createdAt === 'string') ||
+        typeof details !== 'object' ||
+        details === null ||
+        !Object.values(details).every(value => typeof value === 'string') ||
+        !(actorName === null || typeof actorName === 'string')
+      ) {
+        throw new ApiError('Alerta de equipa inválido', status)
+      }
+      const safeDetails = Object.fromEntries(
+        Object.entries(details).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+      )
+      return {
+        id,
+        event_type: eventType,
+        severity,
+        created_at: createdAt,
+        details: safeDetails,
+        actor_name: actorName,
+      }
+    })
+  },
+
   async listAuthSessions(): Promise<AuthSession[]> {
     const { body, status } = await request('/api/auth/sessions')
     const sessions = recordField(body, 'sessions')
@@ -235,27 +336,6 @@ export const apiClient = {
       notice: requireString(recordField(body, 'notice'), 'Aviso de proteção inválido'),
     }
   },
-  async scoreRisk(payload: RiskScoreRequest): Promise<RiskScoreResponse> {
-    const result = await request('/api/protect/risk-score', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (
-      typeof result.body !== 'object' ||
-      result.body === null ||
-      !('score' in result.body) ||
-      typeof result.body.score !== 'number' ||
-      !Number.isFinite(result.body.score) ||
-      result.body.score < 0 ||
-      result.body.score > 1
-    ) {
-      throw new ApiError('Resposta inválida da API', result.status)
-    }
-
-    return { score: result.body.score }
-  },
 
   async askAssistant(message: string): Promise<AssistantReply> {
     const result = await request('/api/assistant/chat', {
@@ -275,24 +355,6 @@ export const apiClient = {
       throw new ApiError('Resposta inválida do assistente', result.status)
     }
     return { answer: result.body.answer, sources: result.body.sources }
-  },
-
-  async askBibleAssistant(message: string, history: BibleConversationTurn[] = []): Promise<{ answer: string }> {
-    const result = await request('/api/assistant/bible-chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, history }),
-    })
-    if (
-      typeof result.body !== 'object' ||
-      result.body === null ||
-      !('answer' in result.body) ||
-      typeof result.body.answer !== 'string' ||
-      !result.body.answer.trim()
-    ) {
-      throw new ApiError('Resposta inválida do assistente bíblico', result.status)
-    }
-    return { answer: result.body.answer }
   },
 
   async createSalesLead(input: SalesLeadInput): Promise<SalesLeadReceipt> {

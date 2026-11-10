@@ -1764,6 +1764,14 @@ a:focus-visible,
   font-size: 0.82rem;
 }
 
+.bible-passage-text {
+  white-space: pre-wrap;
+}
+
+.bible-passage-copyright {
+  font-size: 0.78rem !important;
+}
+
 .discovery-links {
   display: flex;
   flex-wrap: wrap;
@@ -1890,6 +1898,7 @@ a:focus-visible,
 }
 
 .assistant-compose textarea,
+.assistant-compose select,
 .sales-form input:not([type="checkbox"]) {
   width: 100%;
   border: 1px solid #bdc9bf;
@@ -1905,6 +1914,7 @@ a:focus-visible,
 }
 
 .assistant-compose textarea:focus-visible,
+.assistant-compose select:focus-visible,
 .sales-form input:focus-visible {
   outline: 3px solid rgba(41, 105, 73, 0.24);
   outline-offset: 2px;
@@ -1912,6 +1922,38 @@ a:focus-visible,
 
 .assistant-compose-footer {
   align-items: flex-end;
+}
+
+.study-plans {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.study-session-list {
+  padding-left: 1.3rem;
+}
+
+.study-session-list li + li {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.study-completion {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.study-selected {
+  padding: 1rem;
+  margin-block: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: var(--panel);
 }
 
 .assistant-pending {

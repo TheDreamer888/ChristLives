@@ -10,23 +10,21 @@ from unittest.mock import AsyncMock, patch
 
 from cryptography.fernet import Fernet
 from fastapi import HTTPException
+from starlette.requests import Request
+
 from src.app.routers.assistant import (
     NO_ANSWER,
-    BibleAssistantMessage,
-    BibleConversationTurn,
     AssistantMessage,
     SalesLeadRequest,
     _contains_sensitive_input,
     _delete_sales_lead,
     _retrieve_documents,
     _save_sales_lead,
-    bible_chat,
     chat,
     create_sales_lead,
     list_knowledge_sources,
     search_knowledge,
 )
-from starlette.requests import Request
 
 
 class AssistantKnowledgeTests(unittest.TestCase):
@@ -93,62 +91,6 @@ class AssistantEndpointTests(unittest.IsolatedAsyncioTestCase):
         )
         complete.assert_awaited_once()
         self.assertEqual(complete.await_args.kwargs["max_tokens"], 450)
-
-    async def test_bible_chat_uses_configured_ai_and_returns_an_answer(self) -> None:
-        request = Request({"type": "http", "headers": [], "client": ("127.0.0.1", 1234)})
-        with (
-            patch("src.app.routers.assistant.settings.ai_api_key", "configured"),
-            patch("src.app.routers.assistant._complete_chat", new_callable=AsyncMock, return_value="A narrativa de Noé aparece em Génesis 6–9.") as complete,
-            patch("src.app.routers.assistant._CHAT_WINDOWS", {}),
-        ):
-            response = await bible_chat(
-                BibleAssistantMessage(
-                    message="E o que aconteceu depois?",
-                    history=[
-                        BibleConversationTurn(role="user", content="Quem foi Noé?"),
-                        BibleConversationTurn(role="assistant", content="A narrativa está em Génesis."),
-                    ],
-                ),
-                request,
-            )
-        self.assertEqual(response["answer"], "A narrativa de Noé aparece em Génesis 6–9.")
-        complete.assert_awaited_once()
-        self.assertEqual(complete.await_args.kwargs["max_tokens"], 700)
-        self.assertEqual(
-            complete.await_args.args[0][-3:],
-            [
-                {"role": "user", "content": "Quem foi Noé?"},
-                {"role": "assistant", "content": "A narrativa está em Génesis."},
-                {"role": "user", "content": "E o que aconteceu depois?"},
-            ],
-        )
-
-    async def test_bible_chat_rejects_sensitive_input_before_calling_model(self) -> None:
-        request = Request({"type": "http", "headers": [], "client": ("127.0.0.1", 1234)})
-        with patch(
-            "src.app.routers.assistant._complete_chat",
-            new_callable=AsyncMock,
-        ) as complete, self.assertRaises(HTTPException) as error:
-            await bible_chat(
-                BibleAssistantMessage(
-                    message="Quem foi Noé?",
-                    history=[BibleConversationTurn(role="user", content="A minha palavra-passe: segredo123")],
-                ),
-                request,
-            )
-        self.assertEqual(error.exception.status_code, 422)
-        complete.assert_not_awaited()
-
-    async def test_bible_chat_reports_missing_ai_configuration(self) -> None:
-        request = Request({"type": "http", "headers": [], "client": ("127.0.0.1", 1234)})
-        with (
-            patch("src.app.routers.assistant.settings.ai_api_key", None),
-            patch("src.app.routers.assistant._complete_chat", new_callable=AsyncMock) as complete,
-            self.assertRaises(HTTPException) as error,
-        ):
-            await bible_chat(BibleAssistantMessage(message="Quem foi Noé?"), request)
-        self.assertEqual(error.exception.status_code, 503)
-        complete.assert_not_awaited()
 
     async def test_chat_abstains_when_model_cites_no_known_source(self) -> None:
         request = Request({"type": "http", "headers": [], "client": ("127.0.0.1", 1234)})

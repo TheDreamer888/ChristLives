@@ -1,4 +1,9 @@
-:root { font-family: 'Trebuchet MS', sans-serif; color: #18211b; background: #f5f7f5; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+:root { font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; color: #222b20; background: #f5f6f2; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: #f5f6f2; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 button { font: inherit; }
+.app-load-error { max-width: 640px; margin: 12vh auto; padding: 24px; line-height: 1.7; }
+.app-load-error button { padding: 12px 18px; border: 0; border-radius: 8px; color: #fff; background: #405336; cursor: pointer; }
+.app-load-error a { display: block; margin-top: 20px; color: #405336; }
