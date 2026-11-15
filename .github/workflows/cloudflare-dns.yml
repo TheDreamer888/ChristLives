@@ -13,14 +13,8 @@ on:
       dry_run:
         description: "Simular sem alterar o DNS"
         required: false
-        default: false
+        default: true
         type: boolean
-
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/cloudflare-dns.yml"
 
 permissions:
   contents: read
@@ -34,6 +28,7 @@ jobs:
     name: Sync DNS
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    environment: infra-production
 
     env:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -52,7 +47,7 @@ jobs:
       # true  = proxied
       DNS_PROXIED: ${{ vars.DNS_PROXIED || 'false' }}
 
-      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
 
     steps:
       - name: Validate configuration

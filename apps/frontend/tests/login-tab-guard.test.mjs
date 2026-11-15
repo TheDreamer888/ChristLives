@@ -45,6 +45,31 @@ test('does not start action when consent recording fails', async () => {
   assert.equal(actionStarted, false)
 })
 
+test('blocks unauthenticated action when mandatory consents are missing', async () => {
+  let consentCalls = 0
+  let actionStarted = false
+
+  await assert.rejects(
+    runUnauthenticatedGuard(
+      false,
+      true,
+      false,
+      async () => {
+        consentCalls += 1
+      },
+      async () => {
+        actionStarted = true
+      },
+    ),
+    {
+      message: 'Aceita os Termos e a Política de Privacidade para continuar.',
+    },
+  )
+
+  assert.equal(consentCalls, 0)
+  assert.equal(actionStarted, false)
+})
+
 test('does not record consent when session already exists', async () => {
   let consentCalls = 0
   let actionStarted = false

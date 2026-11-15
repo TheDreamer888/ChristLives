@@ -1,4 +1,4 @@
-# Security Policy
+# Política de segurança
 
 ## Supported versions
 
@@ -24,3 +24,15 @@ suggested mitigation. Do not include real user data, credentials, or secrets.
 There is currently no guaranteed response or remediation SLA. The maintainers
 will communicate triage status and coordinate disclosure through the private
 reporting channel.
+
+## Scope
+
+This policy covers application code in `apps/` and `services/`, workflows in
+`.github/workflows/`, and infrastructure secrets, variables, and integrations.
+
+## Minimum practices
+
+- Keep secret scanning and push protection enabled.
+- Review changes affecting authentication, CI, or infrastructure.
+- Validate workflow changes before merging.
+- Rotate any exposed secret immediately.

@@ -1,0 +1,8 @@
+# Revisão padrão do repositório.
+* @TheDreamer888
+
+# Áreas do monorepo.
+/apps/ @TheDreamer888
+/services/ @TheDreamer888
+/infra/ @TheDreamer888
+/.github/ @TheDreamer888

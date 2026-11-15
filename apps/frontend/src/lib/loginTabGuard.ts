@@ -6,6 +6,9 @@ export async function runUnauthenticatedGuard(
   action: () => Promise<void>,
 ): Promise<void> {
   if (!hasSession) {
+    if (!termsAccepted || !privacyAccepted) {
+      throw new Error("Aceita os Termos e a Política de Privacidade para continuar.");
+    }
     await recordConsent(termsAccepted, privacyAccepted);
   }
   await action();

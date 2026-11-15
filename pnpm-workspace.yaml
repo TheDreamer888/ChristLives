@@ -26,4 +26,3 @@ blockExoticSubdeps: true
 
 allowBuilds:
   esbuild: false
-

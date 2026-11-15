@@ -1,0 +1,68 @@
+name: Bug report
+description: Reportar um erro ou comportamento inesperado
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar o problema. Preencha o máximo de detalhes possível para acelerar a triagem.
+
+  - type: input
+    id: area
+    attributes:
+      label: Área afetada
+      description: "Ex.: frontend, api-python, api-rust, api-dotnet, workflows"
+      placeholder: frontend
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumo do problema
+      description: O que aconteceu?
+      placeholder: Descreva o erro observado.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Liste os passos mínimos para reproduzir.
+      placeholder: |
+        1. Ir para...
+        2. Executar...
+        3. Observar...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      placeholder: O que deveria acontecer?
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots ou contexto adicional
+      description: Remova segredos antes de enviar.
+      placeholder: Cole logs, stack traces ou contexto útil.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impacto
+      options:
+        - baixo
+        - médio
+        - alto
+        - crítico
+    validations:
+      required: true

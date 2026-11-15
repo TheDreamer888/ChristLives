@@ -2,13 +2,12 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "incremental": true,
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": ["vite/client"],
-
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
@@ -16,7 +15,6 @@
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -30,8 +28,10 @@
     "forceConsistentCasingInFileNames": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-
-    "paths": { "@/*": ["./src/*"] }
+    "exactOptionalPropertyTypes": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "coverage"],

@@ -123,3 +123,165 @@ services/api-rust/target/
 
 
 
+# ==========================================
+# BaseAppProtectIA
+# ==========================================
+
+# --- ENV / SECRETS ---
+.env
+.env.*
+*.env
+!.env.example
+
+secrets/
+keys/
+credentials/
+credentials.json
+
+secrets.json
+secret_*.json
+auth.json
+token.json
+tokens.json
+
+config.local.*
+config.local.json
+config/*.local.json
+*.local.json
+
+# --- CERTIFICATES / SSH KEYS ---
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# --- NODE / TYPESCRIPT ---
+node_modules/
+.pnpm-store/
+
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- BUILDS ---
+build/
+dist/
+out/
+.next/
+.nuxt/
+.turbo/
+.artifacts/
+*.tgz
+
+# Rust / compiled targets
+services/api-rust/target/
+**/target/
+**/obj/
+
+# --- PYTHON ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+*.egg
+*.whl
+*.spec
+
+# Python environments
+.venv/
+venv/
+env/
+env*/
+venv*/
+
+# Python tests / tooling
+.pytest_cache/
+pytest_cache/
+.mypy_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- LOGS / RUNTIME ---
+*.log
+logs/
+*.out
+*.err
+
+filtro.log
+filtro-deus.log
+
+# --- CACHE / TEMP ---
+.cache/
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+*.old
+*.swp
+
+# --- DATABASES ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- MACHINE LEARNING / AI ---
+models/
+checkpoints/
+artifacts/
+
+*.h5
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# --- LARGE DATASETS ---
+data/
+datasets/
+
+*.csv
+*.tsv
+*.parquet
+*.pickle
+*.joblib
+*.npy
+*.npz
+
+# --- JUPYTER ---
+.ipynb_checkpoints/
+*.ipynb~
+
+# --- TERMUX / ANDROID LOCAL ---
+storage/
+.termux/
+termux.properties
+
+# --- IDE ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+.idea/
+*.code-workspace
+
+# --- OS JUNK ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+Icon?
+
+# --- LOCAL DOCKER OVERRIDE ---
+docker-compose.override.yml

@@ -1,0 +1,54 @@
+name: Feature request
+description: Sugerir uma melhoria ou nova funcionalidade
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este formulário para propor melhorias de produto, plataforma ou automação.
+
+  - type: input
+    id: area
+    attributes:
+      label: Área alvo
+      description: "Ex.: frontend, api-python, api-rust, api-dotnet, workflows"
+      placeholder: api-python
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema a resolver
+      placeholder: Qual dor atual esta melhoria resolve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      placeholder: Descreva a mudança desejada.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      placeholder: Quais alternativas já foram pensadas?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade percebida
+      options:
+        - baixa
+        - média
+        - alta
+        - crítica
+    validations:
+      required: true
