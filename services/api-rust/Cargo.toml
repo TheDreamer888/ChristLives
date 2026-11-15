@@ -1,22 +1,26 @@
 [package]
 name = "api-rust"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+rust-version = "1.80"
+publish = false
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-axum = "0.7"
-reqwest = { version = "0.12", features = ["json"] }
+axum = "0.8"
+dotenvy = "0.15"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio"] }
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal", "time"] }
+tower-http = { version = "0.6", features = ["cors", "limit", "request-id", "set-header", "timeout", "trace", "util"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-thiserror = "1"
-sqlx = { version = "0.8", features = ["postgres", "runtime-tokio", "chrono", "uuid"] }
-jsonwebtoken = "9"
-argon2 = "0.5"
-uuid = { version = "1", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
-rand = "0.8"
-dotenvy = "0.15"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

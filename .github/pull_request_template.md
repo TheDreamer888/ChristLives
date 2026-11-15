@@ -1,5 +1,5 @@
 ## Resumo
-- 
+-
 
 ## Área afetada
 - [ ] Frontend
@@ -9,7 +9,7 @@
 - [ ] Infra / GitHub
 
 ## Alterações
-- 
+-
 
 ## Validação
 - [ ] Não aplicável

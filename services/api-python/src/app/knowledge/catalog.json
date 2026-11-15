@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-10",
+  "documents": [
+    {
+      "id": "terms",
+      "title": "Termos de Serviço do Aegis",
+      "url": "/legal/terms.html",
+      "authority": "Aegis",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["autenticacao", "passkey", "webauthn", "oauth", "sessao", "cookies", "educacao", "financeiro", "precos", "planos", "conta"],
+      "text": "O Aegis oferece autenticação por OAuth, passkeys/WebAuthn e códigos de recuperação. As sessões são guardadas em cookies httpOnly. O tutor é apoio educativo e não substitui professores, advogados, médicos ou consultores financeiros. Não introduzas dados pessoais, palavras-passe ou segredos. O treino financeiro não constitui recomendação nem garante rendimentos. Não há planos pagos ou checkout ativos; confirma preços e disponibilidade com a equipa. Utilizadores menores devem ter supervisão quando exigida por lei."
+    },
+    {
+      "id": "privacy",
+      "title": "Política de Privacidade do Aegis",
+      "url": "/legal/privacy.html",
+      "authority": "Aegis",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["privacidade", "rgpd", "dados", "consentimento", "acesso", "retificacao", "apagamento", "portabilidade", "titulares"],
+      "text": "A Política de Privacidade descreve dados de conta e credenciais WebAuthn, consentimento e direitos aplicáveis. O responsável deve publicar prazos concretos de conservação e contactos antes do lançamento. As mensagens do assistente são enviadas ao fornecedor de IA configurado; o Aegis não guarda o histórico do chat."
+    },
+    {
+      "id": "commercial-contact",
+      "title": "Contacto comercial e assistente",
+      "url": "/legal/privacy.html",
+      "authority": "Aegis",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["contacto", "comercial", "adultos", "idade", "consentimento", "cifra", "retencao", "eliminacao", "assistente", "fornecedor", "historico"],
+      "text": "O formulário comercial recolhe nome e email de adultos que confirmem ter pelo menos 18 anos e deem consentimento explícito. Os dados são cifrados, conservados pelo prazo configurado (30 dias por omissão) e podem ser apagados com o código de eliminação apresentado após o envio."
+    },
+    {
+      "id": "gdpr",
+      "title": "Regulamento Geral sobre a Proteção de Dados (RGPD)",
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "authority": "União Europeia — EUR-Lex",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["rgpd", "gdpr", "privacidade", "dados", "pessoais", "base", "juridica", "consentimento", "direitos", "titulares", "retencao"],
+      "text": "O Regulamento (UE) 2016/679 define regras para tratamento de dados pessoais. A aplicação concreta exige avaliar finalidade, base jurídica, transparência, minimização, segurança, conservação e direitos pertinentes. Consentimento é uma das bases possíveis, não uma solução universal."
+    },
+    {
+      "id": "ai-act",
+      "title": "Regulamento da Inteligência Artificial (UE) 2024/1689",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "authority": "União Europeia — EUR-Lex",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["ia", "inteligencia", "artificial", "ai", "act", "regulamento", "transparencia", "chatbot", "risco", "europeia"],
+      "text": "O Regulamento da IA estabelece regras harmonizadas na União Europeia e aplica-se faseadamente. A classificação e as obrigações dependem do sistema, função e contexto de utilização; não concluas a classificação sem analisar o texto oficial consolidado e as orientações aplicáveis."
+    },
+    {
+      "id": "ai-act-amendment",
+      "title": "Regulamento (UE) 2026/1744 — alteração ao quadro europeu de IA",
+      "url": "https://eur-lex.europa.eu/eli/reg/2026/1744/oj",
+      "authority": "União Europeia — EUR-Lex",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["ia", "inteligencia", "artificial", "alteracao", "digital", "omnibus", "prazos", "transparencia", "regulamento"],
+      "text": "O Regulamento (UE) 2026/1744 altera legislação harmonizada sobre IA. Consulta o diploma para alterações, datas, âmbito e disposições transitórias; não assumas que uma data de aplicação se aplica a todos os sistemas."
+    },
+    {
+      "id": "ai-transparency",
+      "title": "Obrigações de transparência para IA",
+      "url": "https://commission.europa.eu/news-and-media/news/safer-and-more-transparent-ai-2026-08-02_en",
+      "authority": "Comissão Europeia",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["ia", "inteligencia", "artificial", "transparencia", "chatbot", "interacao", "conteudo", "gerado", "deepfake", "rotulagem"],
+      "text": "A Comissão Europeia informa que novas regras de transparência produzem efeitos a partir de 2 de agosto de 2026. Incluem informar utilizadores quando interagem com determinados sistemas de IA e identificar determinadas imagens, áudio, vídeo ou texto gerados/manipulados por IA, nos termos e exceções aplicáveis."
+    },
+    {
+      "id": "nis2-portugal",
+      "title": "Decreto-Lei n.º 125/2025 — Regime Jurídico da Cibersegurança",
+      "url": "https://diariodarepublica.pt/dr/detalhe/decreto-lei/125-2025-962603401",
+      "authority": "Portugal — Diário da República",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["nis2", "ciberseguranca", "portugal", "decreto", "125", "2025", "entidades", "incidentes", "obrigações", "lei"],
+      "text": "O Decreto-Lei n.º 125/2025 transpõe a Diretiva (UE) 2022/2555 e estabelece o Regime Jurídico da Cibersegurança em Portugal. O âmbito e os deveres dependem dos critérios e disposições do diploma e respetiva regulamentação; verifica o texto e orientação atuais do CNCS."
+    },
+    {
+      "id": "cncs-nis2",
+      "title": "Orientação do CNCS sobre NIS2",
+      "url": "https://www.cncs.gov.pt/pt/diretiva-nis-2/",
+      "authority": "Portugal — Centro Nacional de Cibersegurança",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["nis2", "cncs", "ciberseguranca", "portugal", "registo", "incidente", "notificacao", "entidades"],
+      "text": "O CNCS publica informação e orientação sobre a transposição portuguesa da NIS2. Confirma diretamente no portal do CNCS as regras atuais, âmbito, prazos, registo e notificações; não infiras aplicabilidade a uma entidade sem avaliar o diploma."
+    },
+    {
+      "id": "edpb-ai-opinion",
+      "title": "Parecer 28/2024 do EDPB sobre modelos de IA",
+      "url": "https://www.edpb.europa.eu/our-work-tools/our-documents/opinion-board-art-64/opinion-282024-certain-data-protection-aspects_en",
+      "authority": "União Europeia — Comité Europeu para a Proteção de Dados",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["edpb", "dados", "pessoais", "modelos", "ia", "anonimizacao", "interesse", "legitimo", "rgpd", "parecer"],
+      "text": "O Parecer 28/2024 aborda anonimização de modelos de IA, bases jurídicas para desenvolvimento e utilização e consequências de tratamento ilícito. A avaliação de anonimização é caso a caso; o parecer não substitui o RGPD nem aconselhamento jurídico."
+    },
+    {
+      "id": "owasp-api",
+      "title": "OWASP API Security Top 10 — 2023",
+      "url": "https://api-security.owasp.org/editions/2023/en/0x11-t10/",
+      "authority": "OWASP",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["owasp", "api", "seguranca", "autorizacao", "autenticacao", "ssrf", "recursos", "validacao", "vulnerabilidades"],
+      "text": "O OWASP API Security Top 10 (2023) destaca riscos como autorização quebrada, autenticação fraca, consumo irrestrito de recursos, SSRF, configurações inseguras e consumo inseguro de APIs. É orientação técnica voluntária, não uma lei, certificação ou prova de segurança."
+    },
+    {
+      "id": "nist-csf",
+      "title": "NIST Cybersecurity Framework 2.0",
+      "url": "https://www.nist.gov/cyberframework",
+      "authority": "Estados Unidos — NIST",
+      "reviewed_at": "2026-10-10",
+      "keywords": ["nist", "framework", "ciberseguranca", "risco", "govern", "identify", "protect", "detect", "respond", "recover"],
+      "text": "O NIST Cybersecurity Framework 2.0 é um enquadramento voluntário de gestão do risco de cibersegurança com seis funções: Govern, Identify, Protect, Detect, Respond e Recover. Não é lei portuguesa nem certificação."
+    }
+  ]
+}

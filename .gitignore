@@ -1,3 +1,128 @@
+# ============================
+# PYTHON
+# ============================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+*.egg
+*.whl
+
+# ============================
+# BUILD / DIST
+# ============================
+build/
+dist/
+*.spec
+
+# ============================
+# VIRTUAL ENVIRONMENTS
+# ============================
+.venv/
+venv/
+env/
+env*/
+venv*/
+
+# ============================
+# ENVIRONMENT / SECRETS
+# ============================
+.env
+.env.*
+*.env
+secrets.json
+secret_*.json
+config.local.json
+config/*.local.json
+*.key
+*.pem
+*.crt
+*.pfx
+
+# ============================
+# LOGS / RUNTIME
+# ============================
+*.log
+logs/
+*.out
+*.err
+
+# ============================
+# CACHE / TEMP
+# ============================
+.cache/
+tmp/
+temp/
+*.tmp
+*.bak
+
+# ============================
+# JUPYTER / NOTEBOOKS
+# ============================
+.ipynb_checkpoints/
+*.ipynb~
+
+# ============================
+# EDITORS / IDEs
+# ============================
+.vscode/
+.vscode/.history/
+.idea/
+*.code-workspace
+
+# ============================
+# TESTS / COVERAGE
+# ============================
+.coverage
+coverage.xml
+htmlcov/
+pytest_cache/
+.tox/
+
+# ============================
+# MACHINE LEARNING / IA
+# ============================
+# Modelos pesados
+models/
+checkpoints/
+artifacts/
+*.h5
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# Dados grandes
+data/
+datasets/
+*.csv
+*.tsv
+*.parquet
+*.pickle
+*.joblib
+*.npy
+*.npz
+
+# ============================
+# ONE DRIVE / WINDOWS LIXO
+# ============================
+desktop.ini
+Thumbs.db
+ehthumbs.db
+Icon?
+node_modules/
+services/api-rust/target/
+**/obj/
+**/bin/
+**/target/
+.artifacts/
+*.tgz
+
+
+
+
 # ==========================================
 # BaseAppProtectIA
 # ==========================================

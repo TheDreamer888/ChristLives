@@ -88,8 +88,10 @@ unset.
 
 ### api-python is the real backend; api-rust/api-dotnet are skeletons
 `services/api-python` holds essentially all product logic: full auth stack, Cloudflare
-DNS management, and risk scoring. `api-rust` exposes only `/health` and a hello-world
-route wired to a Postgres pool; `api-dotnet` is the default ASP.NET minimal-API
+DNS management, and risk scoring. `api-rust` exposes only health probes
+(`/health/live`, `/health/ready`, `/health`), `/api/hello` and `/api/version` over a
+lazy Postgres pool (modules: `config.rs` env validation, `app.rs` router +
+middleware + tests, `error.rs` JSON errors); `api-dotnet` is the default ASP.NET minimal-API
 template plus `/health`. Don't assume feature parity across services — check
 `src/app/main.py` (Python) for the actual mounted routers before assuming a route
 exists elsewhere.
@@ -126,15 +128,65 @@ travel in a short-lived encrypted cookie, never in JS-readable storage.
   encrypted with a non-extractable (`extractable: false`) AES-GCM `CryptoKey`, so not
   even this module's own code can ever export the raw key material. Used as an
   offline fallback in `getSession()` only.
+- Styling is layered: `Workspace.css` → `WorkspaceTheme.css` → `WorkspaceModern.css`
+  (tokens, type scale, mobile bottom nav) → `WorkspaceDark.css` (dark mode, active on
+  `<html data-theme="dark">`). Theme preference (`src/lib/theme.ts`) lives in
+  localStorage as a purely visual setting and is applied pre-render by
+  `public/theme-init.js` (external file because CSP forbids inline scripts) — keep the
+  two in sync; `tests/theme.test.mjs` checks the shared key and colors.
 - `VITE_API_BASE_URL` selects the backend origin (defaults to
   `http://localhost:8000`).
 
-### Risk scoring / ML (services/api-python/src/ml/)
-`src/ml` is not on the main HTTP path except via `RiskModel` (used by
-`POST /api/protect/risk-score` in `main.py`). Current implementation is a
-deterministic heuristic (SHA-256 hash of the payload normalized to `[0, 1]`) — not a
-trained model. It's a placeholder that keeps the public API stable for a real model
-later; don't treat its scores as meaningful risk signal.
+### AI product surface (chat, markets, economy, organize)
+The site is an AI workspace (the earlier faith/Bible theme was replaced; old hashes
+`#assistant`, `#markets`, `#intelligence`, `#education`, `#worship` redirect via
+`LEGACY_VIEWS` in `WorkspaceApp.tsx`). Backend routers in `services/api-python/src/app/routers/`:
+- `chat.py` — `/api/chat` multi-provider chat. Claude via the official `anthropic` SDK
+  (`claude-opus-5-5`, `fallbacks="default"` server-side refusal fallback); ChatGPT and
+  Grok via OpenAI-compatible Chat Completions. A provider is listed only if its key is
+  set. Adult-content input filter, credential rejection, per-IP hourly limit, modes
+  `general|trading|tutor|organize`; client-sent context is wrapped as untrusted data.
+  History is never stored server-side.
+- `markets.py` — `/api/markets/news` (Finnhub if `FINNHUB_API_KEY`, else public RSS
+  feeds parsed with `defusedxml`, GDELT as a rate-limited fallback) and
+  `/api/markets/quotes` (Finnhub only, 503 without a key). In-memory TTL cache.
+- `economy.py` — `/api/economy/indicators`, World Bank WDI proxy with a closed
+  indicator allow-list.
+- `organize.py` — Notion task create/list (server token, requires session) and per-user
+  read-only mail (Gmail `gmail.readonly`, Outlook Graph `Mail.Read`): own OAuth+PKCE flow
+  in `auth/mail_connectors.py` (encrypted flow cookie bound to the session user, tokens
+  Fernet-encrypted with `MAIL_TOKEN_ENC_KEY` in `mail_connections`), mailbox reading and
+  plain-text normalization in `routers/mailbox.py`. `/status` reports
+  `connected`/`not-connected`/`not-configured` (+ missing env var names) per user.
+`main.py` calls `truststore.inject_into_ssl()` so outbound HTTPS trusts the OS store
+(needed behind TLS-intercepting AV/proxies). Frontend views live in
+`apps/frontend/src/components/ai/` (lazy-loaded), with testable logic in
+`src/lib/{aiApi,markdown,trading,courses,time}.ts`. AI answers render through the
+safe markdown parser — never `dangerouslySetInnerHTML`.
+
+### Firewall and AI supervisor (services/api-python/src/app/)
+- `firewall.py` — application WAF registered as middleware in `main.py` (order, outside
+  in: security headers → CORS → firewall → routes). Per request: allowlist → manual/auto
+  blocks → IP reputation from real public feeds (FireHOL level 1, Spamhaus DROP,
+  Emerging Threats; refreshed every 6 h, retried after 5 min on failure; bogons are
+  dropped) → method/body size → regex signatures on path + query + User-Agent → token
+  bucket per IP. Violations auto-ban after `FIREWALL_BAN_THRESHOLD` in 10 min. Request
+  bodies are deliberately not signature-scanned (chat text legitimately contains SQL or
+  code). State is per process. `X-Forwarded-For` is honoured only from `TRUSTED_PROXIES`.
+- `supervisor.py` — Claude as an independent reviewer: `review_answer` checks every chat
+  answer (from any provider) via structured output before it is returned
+  (`chat.py`); `triage` analyses firewall events and proposes IPs to block — never
+  applied automatically. If unconfigured or failing, answers are labelled
+  unsupervised, never "verified".
+- `routers/security_center.py` — `/api/security/status` (public, counts only) plus
+  admin-only events/blocklist/refresh/triage for verified emails in
+  `SECURITY_ADMIN_EMAILS`.
+- The old hash-based `RiskModel` / `POST /api/protect/risk-score` placeholder was removed
+  (nothing simulated is served).
+- Perimeter scripts in `infra/scripts/` (bash + curl/wget): `security-smoke.sh` (live
+  checks of headers and firewall blocks), `update-nginx-blocklist.sh` (feeds → nginx
+  `geo` include used by `apps/frontend/nginx.conf`), `cloudflare-waf.sh` (Rulesets API;
+  dry-run unless `--apply`, which replaces the zone's custom/ratelimit rules).
 
 ### Cloudflare DNS management (services/api-python/src/app/routers/dns.py)
 Thin proxy over the Cloudflare API v4 (`/zones/{zone_id}/dns_records`) requiring
@@ -161,6 +213,12 @@ when logging request/response bodies.
 - All service ports in `docker-compose.yml` bind to `127.0.0.1` only, and
   Postgres/Redis passwords have no defaults (`:?Set ... in .env`) — preserve
   both patterns when adding services.
+- The frontend nginx only serves GET/HEAD, hides dotfiles/config extensions, rate-limits
+  per IP, includes the IP blocklist and sends a strict CSP (`style-src 'unsafe-inline'`
+  is needed for React style attributes; `connect-src https:` allows a separate API
+  origin). Don't add inline scripts — CSP blocks them (hence `public/theme-init.js`).
+- Session DB access is `session_factory()()` (the function returns the sessionmaker);
+  `session_factory()` alone silently breaks session checks.
 
 ## CI (.github/workflows/ci.yml)
 

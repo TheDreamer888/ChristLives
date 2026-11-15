@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && tsc --noEmit -p convex/tsconfig.json && vite build",
     "lint": "oxlint",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "preview": "vite preview",
     "audit:security": "pnpm audit --audit-level high"
   },
   "dependencies": {
+    "convex": "1.46.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

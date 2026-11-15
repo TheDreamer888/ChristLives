@@ -1,0 +1,11 @@
+/* Opções do chat: estilo da resposta, exportar e selo da IA supervisora. */
+.style-picker { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.style-picker button { min-height: 32px; padding: 4px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink-soft); font: 600 12.5px var(--font-sans); cursor: pointer; }
+.style-picker button.selected { background: var(--panel-tint); color: var(--ink); }
+.chat-export { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink-soft); cursor: pointer; }
+.chat-export:hover { color: var(--ink); border-color: var(--line-strong); }
+.supervision-badge { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; padding: 2px 8px; border-radius: 99px; font: 600 11.5px var(--font-sans); background: var(--panel-muted); color: var(--ink-faint); }
+.supervision-badge--approved { background: var(--up-soft, #e5f5ec); color: var(--up, #138a4c); }
+.supervision-badge--blocked { background: var(--warn-soft); color: var(--warn); }
+.supervision-badge--unavailable { background: var(--panel-muted); color: var(--ink-soft); }
+@media (max-width: 760px) { .style-picker { order: 4; } }

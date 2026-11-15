@@ -1,24 +1,38 @@
 # Política de segurança
 
-## Reportar uma vulnerabilidade
+## Supported versions
 
-Se encontrar uma vulnerabilidade, exposição de segredo ou falha de configuração sensível:
+ProtectIA has no published production release or defined security-support
+window yet. Until a release policy is published, no version should be assumed
+to receive security updates.
 
-- não abra issue pública com detalhes exploráveis
-- use o fluxo privado de segurança do GitHub, se estiver ativo
-- caso necessário, contacte o mantenedor do repositório em canal privado
+| Version | Support status |
+| --- | --- |
+| Unreleased development builds | No support commitment |
 
-## Escopo
+## Reporting a vulnerability
 
-Esta política cobre:
+Please do not disclose exploitable vulnerabilities in public issues or
+discussions. Use GitHub's **Report a vulnerability** option in this
+repository's Security tab to send a private report, if private vulnerability
+reporting is enabled. If it is unavailable, contact the repository owner
+privately before sharing technical details publicly.
 
-- código das aplicações em `apps/` e `services/`
-- workflows em `.github/workflows/`
-- segredos, variáveis e integrações de infraestrutura
+Include the affected version or commit, impact, reproduction steps, and any
+suggested mitigation. Do not include real user data, credentials, or secrets.
 
-## Boas práticas mínimas
+There is currently no guaranteed response or remediation SLA. The maintainers
+will communicate triage status and coordinate disclosure through the private
+reporting channel.
 
-- manter secret scanning e push protection ativos
-- rever PRs com impacto em autenticação, CI e infraestrutura
-- validar alterações em workflows antes do merge
-- remover ou rodar qualquer segredo exposto imediatamente
+## Scope
+
+This policy covers application code in `apps/` and `services/`, workflows in
+`.github/workflows/`, and infrastructure secrets, variables, and integrations.
+
+## Minimum practices
+
+- Keep secret scanning and push protection enabled.
+- Review changes affecting authentication, CI, or infrastructure.
+- Validate workflow changes before merging.
+- Rotate any exposed secret immediately.

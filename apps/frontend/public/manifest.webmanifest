@@ -1,0 +1,14 @@
+{
+  "name": "Aegis · IA para decidir, aprender e organizar",
+  "short_name": "Aegis",
+  "description": "Chat com IA, trading com dados, notícias globais, cursos de economia e organização.",
+  "lang": "pt",
+  "start_url": "/#overview",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f2",
+  "theme_color": "#f5f6f2",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

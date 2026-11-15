@@ -1,58 +1,142 @@
-use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
-use serde::Serialize;
-use sqlx::PgPool;
-use std::net::SocketAddr;
+//! api-rust — serviço Axum com Postgres.
+//!
+//! Arranca mesmo que o Postgres ainda não esteja pronto (pool "lazy"): a liveness
+//! responde logo e a readiness devolve 503 até a base de dados aceitar ligações.
+//! Termina de forma ordenada com Ctrl+C ou SIGTERM, deixando os pedidos em curso
+//! acabar.
+//!
+//! `api-rust --healthcheck` faz um pedido a `/health/live` no próprio contentor e
+//! sai com 0/1 — usado pelo HEALTHCHECK do Dockerfile, sem precisar de curl/wget.
+
+mod app;
+mod config;
+mod error;
+
+use std::io::{Read, Write};
+use std::net::{Ipv4Addr, SocketAddr, TcpStream};
+use std::process::ExitCode;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-#[derive(Serialize)]
-struct Message {
-    text: String,
-}
+use sqlx::postgres::PgPoolOptions;
+use tracing_subscriber::EnvFilter;
 
-#[derive(Clone)]
-struct AppState {
-    db: PgPool,
-}
+use crate::app::{router, AppState};
+use crate::config::Config;
 
-async fn hello() -> Json<Message> {
-    Json(Message { text: "Olá do backend Rust!".to_string() })
-}
+fn main() -> ExitCode {
+    if std::env::args().nth(1).as_deref() == Some("--healthcheck") {
+        return healthcheck();
+    }
 
-/// Liveness/readiness probe — confirma que a ligação à base de dados está viva.
-async fn health(State(state): State<Arc<AppState>>) -> (StatusCode, Json<serde_json::Value>) {
-    match sqlx::query("SELECT 1").execute(&state.db).await {
-        Ok(_) => (StatusCode::OK, Json(serde_json::json!({ "status": "healthy" }))),
-        Err(e) => {
-            tracing::error!(error = %e, "health check falhou: base de dados indisponível");
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                Json(serde_json::json!({ "status": "unhealthy" })),
-            )
+    dotenvy::dotenv().ok();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("api_rust=info,tower_http=info")),
+        )
+        .init();
+
+    let config = match Config::from_env() {
+        Ok(config) => config,
+        Err(error) => {
+            tracing::error!(%error, "configuração inválida");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime,
+        Err(error) => {
+            tracing::error!(%error, "não foi possível iniciar o runtime");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    match runtime.block_on(serve(config)) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            tracing::error!(%error, "o servidor terminou com erro");
+            ExitCode::FAILURE
         }
     }
 }
 
-#[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
-    dotenvy::dotenv().ok();
-    tracing_subscriber::fmt::init();
+async fn serve(config: Config) -> Result<(), Box<dyn std::error::Error>> {
+    let db = PgPoolOptions::new()
+        .max_connections(config.db_max_connections)
+        .acquire_timeout(config.db_acquire_timeout)
+        .connect_lazy(&config.database_url)?;
 
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL não definida");
-    let pool = PgPool::connect(&database_url).await?;
-    let state = Arc::new(AppState { db: pool });
+    let state = Arc::new(AppState {
+        db: db.clone(),
+        started_at: Instant::now(),
+    });
+    let app = router(state, &config);
 
-    let app = Router::new()
-        .route("/api/hello", get(hello))
-        .route("/health", get(health))
-        .with_state(state);
+    let listener = tokio::net::TcpListener::bind(config.addr()).await?;
+    tracing::info!(addr = %listener.local_addr()?, version = env!("CARGO_PKG_VERSION"), "servidor Rust à escuta");
 
-    let port: u16 = std::env::var("PORT").ok().and_then(|p| p.parse().ok()).unwrap_or(3000);
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    tracing::info!("Servidor Rust em http://{}", addr);
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
-    let listener = tokio::net::TcpListener::bind(addr).await.expect("falha ao vincular porta");
-    axum::serve(listener, app).await.expect("erro no servidor");
-
+    db.close().await;
+    tracing::info!("servidor terminado");
     Ok(())
 }
 
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        if let Err(error) = tokio::signal::ctrl_c().await {
+            tracing::warn!(%error, "não foi possível escutar Ctrl+C");
+            std::future::pending::<()>().await;
+        }
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut signal) => {
+                signal.recv().await;
+            }
+            Err(error) => {
+                tracing::warn!(%error, "não foi possível escutar SIGTERM");
+                std::future::pending::<()>().await;
+            }
+        }
+    };
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        () = ctrl_c => {},
+        () = terminate => {},
+    }
+    tracing::info!("sinal de paragem recebido; a terminar pedidos em curso");
+}
+
+/// Sonda HTTP mínima, só com a biblioteca padrão (a imagem final não tem curl/wget).
+fn healthcheck() -> ExitCode {
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.trim().parse().ok())
+        .unwrap_or(3000);
+    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+    let probe = || -> std::io::Result<bool> {
+        let timeout = Duration::from_secs(3);
+        let mut stream = TcpStream::connect_timeout(&addr, timeout)?;
+        stream.set_read_timeout(Some(timeout))?;
+        stream.set_write_timeout(Some(timeout))?;
+        stream.write_all(
+            b"GET /health/live HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n",
+        )?;
+        let mut head = Vec::with_capacity(64);
+        stream.take(64).read_to_end(&mut head)?;
+        Ok(head.starts_with(b"HTTP/1.1 200"))
+    };
+    match probe() {
+        Ok(true) => ExitCode::SUCCESS,
+        _ => ExitCode::FAILURE,
+    }
+}
