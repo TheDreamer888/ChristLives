@@ -303,7 +303,7 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'REDIS_URL'
-              value: 'redis://:${redis.listKeys().primaryKey}@${redis.properties.hostName}:${redis.properties.sslPort}'
+              secretRef: 'redis-url'
             }
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
