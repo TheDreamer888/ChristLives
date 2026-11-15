@@ -168,7 +168,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: 80
+        targetPort: 8080
         allowInsecure: false
         transport: 'auto'
       }
@@ -197,7 +197,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: environment
             }
             {
-              name: 'VITE_API_BASE_URL'
+              name: 'API_BASE_URL'
               value: apiOrigin
             }
             {
@@ -214,7 +214,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
               type: 'Liveness'
               httpGet: {
                 path: '/'
-                port: 80
+                port: 8080
                 scheme: 'HTTP'
               }
               initialDelaySeconds: 30
@@ -224,7 +224,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
               type: 'Readiness'
               httpGet: {
                 path: '/'
-                port: 80
+                port: 8080
                 scheme: 'HTTP'
               }
               initialDelaySeconds: 20

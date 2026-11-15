@@ -8,6 +8,7 @@ test('development uses the frontend origin while explicit API origins stay uncha
   assert.equal(resolveApiBase('https://api.example.test///', true), 'https://api.example.test')
   assert.equal(resolveApiBase('https://api.example.test/', false), 'https://api.example.test')
   assert.equal(resolveApiBase(undefined, false), 'http://localhost:8000')
+  assert.equal(resolveApiBase('https://build-api.example.test', false, 'https://runtime-api.example.test/'), 'https://runtime-api.example.test')
 })
 
 test('concurrent reads share one request but subsequent reads revalidate the session', async t => {

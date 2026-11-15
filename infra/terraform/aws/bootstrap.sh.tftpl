@@ -11,7 +11,7 @@ cat > /usr/local/sbin/aegis-cloudflared <<'SCRIPT'
 #!/bin/bash
 set -Eeuo pipefail
 
-TOKEN=$$(aws ssm get-parameter \
+TOKEN=$(aws ssm get-parameter \
   --name "${cloudflare_tunnel_token_parameter_name}" \
   --with-decryption \
   --region "${region}" \

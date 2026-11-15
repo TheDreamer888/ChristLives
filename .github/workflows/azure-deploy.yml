@@ -55,6 +55,7 @@ jobs:
             --template-file infra/azure/main.bicep \
             --parameters \
               location="$AZURE_LOCATION" \
+              environment="${{ inputs.environment == 'production' && 'prod' || inputs.environment }}" \
               appName="$AZURE_APP_NAME" \
               frontendImage="$FRONTEND_IMAGE" \
               apiImage="$API_IMAGE" \

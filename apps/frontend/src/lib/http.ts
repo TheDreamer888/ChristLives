@@ -1,8 +1,9 @@
-export function resolveApiBase(configured: string | undefined, development: boolean): string {
-  return (configured ?? (development ? '' : 'http://localhost:8000')).replace(/\/+$/, '')
+export function resolveApiBase(configured: string | undefined, development: boolean, runtimeConfigured?: string): string {
+  return (runtimeConfigured ?? configured ?? (development ? '' : 'http://localhost:8000')).replace(/\/+$/, '')
 }
 
-const API_BASE = resolveApiBase(import.meta.env?.['VITE_API_BASE_URL'], import.meta.env?.DEV ?? false)
+const runtimeApiBase = (globalThis as typeof globalThis & { __APP_CONFIG__?: { apiBaseUrl?: string } }).__APP_CONFIG__?.apiBaseUrl
+const API_BASE = resolveApiBase(import.meta.env?.['VITE_API_BASE_URL'], import.meta.env?.DEV ?? false, runtimeApiBase)
 
 export class ApiError extends Error {
   readonly status: number
