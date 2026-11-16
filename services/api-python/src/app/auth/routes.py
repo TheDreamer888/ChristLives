@@ -30,12 +30,11 @@ import time
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from passlib.hash import bcrypt
 from pydantic import BaseModel, Field
 
 from src.app.auth.providers import PROVIDERS, enabled_providers
 from src.app.auth.ratelimit import limiter
-from src.app.auth.recovery import generate_backup_codes, verify_backup_code
+from src.app.auth.recovery import check_code, generate_backup_codes, hash_code, verify_backup_code
 from src.app.auth.schemas import (
     BackupCodesResponse,
     ConsentRequest,
@@ -57,7 +56,7 @@ _STEP_UP_SECONDS = int(os.getenv("AUTH_STEP_UP_SECONDS", "900"))
 _ENUM_SECRET = (os.getenv("AUTH_ENUM_SECRET") or secrets.token_hex(32)).encode()
 _GENERIC_RECOVERY_ERROR = "Código inválido ou já utilizado."
 _GENERIC_PASSKEY_ERROR = "Chave de segurança inválida ou desafio expirado."
-_DUMMY_HASH = bcrypt.hash("dummy-code-for-timing-parity")  # igualar tempo quando o email não existe
+_DUMMY_HASH = hash_code("dummy-code-for-timing-parity")  # igualar tempo quando o email não existe
 _REDEEM_LOCK = threading.Lock()  # consumo atómico dos códigos (store em memória, uma instância)
 
 # Campo "email verificado" devolvido por cada provedor no userinfo.
@@ -156,11 +155,20 @@ def _session_claims(request: Request) -> dict | None:
     return claims
 
 
+def _session_usable(claims: dict, user: UserRecord | None) -> bool:
+    """Conta suspensa ou sessões revogadas pelo admin deixam de valer de imediato."""
+    if user is None or user.suspended:
+        return False
+    iat = claims.get("iat")
+    return isinstance(iat, (int, float)) and iat >= user.sessions_valid_after
+
+
 def _current_user(request: Request) -> UserRecord | None:
     claims = _session_claims(request)
     if not claims:
         return None
-    return store.users.get(claims["sub"])
+    user = store.users.get(claims["sub"])
+    return user if _session_usable(claims, user) else None
 
 
 def _require_user(request: Request) -> UserRecord:
@@ -174,7 +182,7 @@ def _require_fresh_user(request: Request) -> UserRecord:
     """Step-up: alterações que dão acesso duradouro exigem sessão recente."""
     claims = _session_claims(request)
     user = store.users.get(claims["sub"]) if claims else None
-    if not claims or not user:
+    if not claims or not _session_usable(claims, user):
         raise HTTPException(401, "Autentica-te primeiro.")
     iat = claims.get("iat")
     if not isinstance(iat, (int, float)) or time.time() - iat > _STEP_UP_SECONDS:
@@ -185,8 +193,12 @@ def _require_fresh_user(request: Request) -> UserRecord:
     return user
 
 
-def _start_session(user: UserRecord, response: Response) -> None:
-    token = issue_session_token(user.id, list(user.linked_methods))
+def _start_session(user: UserRecord, response: Response, method: str) -> None:
+    if user.suspended:
+        raise HTTPException(403, "Esta conta está suspensa. Contacta o administrador.")
+    # amr = método usado NESTE login (não todos os ligados): o admin exige passkey.
+    user.last_login_at = time.time()
+    token = issue_session_token(user.id, [method])
     _set_secure_cookie(response, SESSION_COOKIE_NAME, token, max_age=8 * 3600)
 
 
@@ -355,7 +367,7 @@ def oauth_callback(
         email_verified=email_verified,
     )
 
-    _start_session(user, response)
+    _start_session(user, response, provider)
     response.delete_cookie(_OAUTH_FLOW_COOKIE, path="/")
 
     frontend_url = os.getenv("PUBLIC_FRONTEND_URL", "http://localhost:5173")
@@ -462,7 +474,7 @@ def webauthn_login_verify(body: WebAuthnLoginVerify, response: Response) -> dict
         raise HTTPException(400, _GENERIC_PASSKEY_ERROR) from exc
     cred["sign_count"] = verification.new_sign_count
 
-    _start_session(user, response)
+    _start_session(user, response, "passkey")
     return {"ok": True}
 
 
@@ -488,7 +500,7 @@ def redeem_code(body: RedeemBody, response: Response) -> dict:
     _rate_limit_account("rc", body.email, limit=5, window_seconds=900)
     user = _find_user_by_email(body.email)
     if not user:
-        bcrypt.verify(body.code, _DUMMY_HASH)  # igualar o tempo de resposta
+        check_code(body.code, _DUMMY_HASH)  # igualar o tempo de resposta
         raise HTTPException(400, _GENERIC_RECOVERY_ERROR)
     with _REDEEM_LOCK:
         idx = verify_backup_code(body.code, user.backup_code_hashes)
@@ -496,7 +508,7 @@ def redeem_code(body: RedeemBody, response: Response) -> dict:
             raise HTTPException(400, _GENERIC_RECOVERY_ERROR)
         user.backup_code_hashes.pop(idx)  # one-time use
         remaining = len(user.backup_code_hashes)
-    _start_session(user, response)
+    _start_session(user, response, "backup_code")
     return {"ok": True, "remaining_codes": remaining}
 
 

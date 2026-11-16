@@ -21,6 +21,12 @@ class UserRecord:
     webauthn_credentials: dict[str, dict] = field(default_factory=dict)  # cred_id(b64) -> {public_key, sign_count, label}
     backup_code_hashes: list[str] = field(default_factory=list)
     consent: dict | None = None
+    # Administração (RBAC). Nunca vem do cliente: só o módulo admin altera isto.
+    roles: set[str] = field(default_factory=set)
+    suspended: bool = False
+    sessions_valid_after: float = 0.0  # tokens com iat anterior deixam de valer
+    created_at: float = field(default_factory=time.time)
+    last_login_at: float | None = None
 
 
 class _TTLCache:

@@ -47,6 +47,7 @@ jobs:
           virtualenvs-create: true
       - run: poetry install --no-interaction
       - run: poetry run python -m compileall -q src
+      - run: poetry run pytest -q
 
   rust:
     name: Rust API
