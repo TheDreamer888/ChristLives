@@ -15,6 +15,7 @@ agir sobre a própria conta e proteção do último proprietário.
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import ipaddress
 import os
@@ -30,6 +31,7 @@ from src.app.admin.approvals import ApprovalConflict, approvals, two_person_rule
 from src.app.admin.audit import audit_log
 from src.app.auth import routes as auth_routes
 from src.app.auth.store import ConcurrentUpdate, UserRecord, store
+from src.app import waitlist as wl
 
 
 
@@ -521,3 +523,70 @@ def decide(
         details={"request": req.id, "role": req.role, "approved": body.approve},
     )
     return {"ok": True, "request": req.public()}
+
+
+# ---- Lista de espera ------------------------------------------------------------
+
+class WaitlistDeleteBody(ReasonBody):
+    email: str = Field(min_length=3, max_length=254)
+
+
+def _email_ref(email: str) -> str:
+    """Referência ao email na auditoria sem o guardar (a auditoria não se apaga)."""
+    return "wl:" + hashlib.sha256(email.strip().lower().encode()).hexdigest()[:16]
+
+
+@router.get("/waitlist")
+def waitlist_overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
+    wl.purge_expired()
+    entries = wl.waitlist.all()
+    now = time.time()
+    pii = rbac.USERS_READ_PII in ctx.permissions
+    days = []
+    for d in range(13, -1, -1):  # últimos 14 dias, do mais antigo para hoje
+        start = now - (d + 1) * 86400
+        end = now - d * 86400
+        days.append(sum(1 for e in entries if start <= e.created_at < end))
+    return {
+        "total": len(entries),
+        "last_7_days": sum(1 for e in entries if now - e.created_at <= 7 * 86400),
+        "by_interest": {k: sum(1 for e in entries if e.interest == k) for k in wl.INTERESTS},
+        "daily_14d": days,
+        "retention_days": int(wl._retention_seconds() // 86400),
+        "consent_version": wl.CONSENT_VERSION,
+        "items": [
+            {
+                "email": e.email if pii else _mask_email(e.email),
+                "interest": e.interest,
+                "consent_version": e.consent_version,
+                "created_at": e.created_at,
+            }
+            for e in entries[:200]
+        ],
+    }
+
+
+@router.get("/waitlist/export")
+def waitlist_export(ctx: AdminContext = Depends(require(rbac.WAITLIST_EXPORT))) -> StreamingResponse:
+    entries = wl.waitlist.all()
+    ctx.audit("waitlist.export", details={"rows": len(entries)})
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["email", "interesse", "versao_consentimento", "inscrito_em_utc"])
+    for e in entries:
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(e.created_at))
+        writer.writerow([_csv_safe(v) for v in (e.email, e.interest, e.consent_version, ts)])
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="aegis-lista-espera.csv"', "Cache-Control": "no-store"},
+    )
+
+
+@router.post("/waitlist/delete")
+def waitlist_delete(body: WaitlistDeleteBody, ctx: AdminContext = Depends(require_write(rbac.WAITLIST_DELETE))) -> dict:
+    removed = wl.waitlist.delete(body.email.strip().lower())
+    ctx.audit("waitlist.delete", "success" if removed else "error", target=_email_ref(body.email), reason=body.reason)
+    if not removed:
+        raise HTTPException(404, "Esse email não está na lista.")
+    return {"ok": True}

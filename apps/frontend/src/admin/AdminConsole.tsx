@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { AdminError, adminClient } from './adminClient'
-import type { Approval, AuditItem, Me, Overview, Posture, RoleInfo } from './adminClient'
+import type { Approval, AuditItem, Me, Overview, Posture, RoleInfo, WaitlistData } from './adminClient'
 import './admin.css'
 
-type Section = 'overview' | 'users' | 'approvals' | 'roles' | 'audit' | 'security'
+type Section = 'overview' | 'users' | 'waitlist' | 'approvals' | 'roles' | 'audit' | 'security'
 
 const SECTIONS: { id: Section; label: string; perm?: string }[] = [
   { id: 'overview', label: 'Visão geral', perm: 'users.read' },
   { id: 'users', label: 'Utilizadores', perm: 'users.read' },
+  { id: 'waitlist', label: 'Lista de espera', perm: 'users.read' },
   { id: 'approvals', label: 'Aprovações', perm: 'users.read' },
   { id: 'roles', label: 'Funções e permissões' },
   { id: 'audit', label: 'Registo de auditoria', perm: 'audit.read' },
@@ -32,6 +33,8 @@ const ACTION_LABEL: Record<string, string> = {
   'approval.decide': 'Pedido decidido',
   'audit.export': 'Auditoria exportada',
   'audit.verify': 'Integridade verificada',
+  'waitlist.export': 'Lista de espera exportada',
+  'waitlist.delete': 'Inscrição apagada (RGPD)',
   'admin.access': 'Acesso à consola',
   'admin.permission': 'Permissão em falta',
   'admin.bootstrap_owner': 'Primeiro proprietário',
@@ -377,6 +380,76 @@ function UserDrawer({ id, me, roles, onClose, onChanged, onConfirm }: { id: stri
   )
 }
 
+const INTEREST_LABEL: Record<string, string> = { familias: 'Famílias', escolas: 'Escolas', empresas: 'Empresas', outro: 'Outro' }
+
+function WaitlistView({ me, onConfirm }: { me: Me; onConfirm: (s: ConfirmSpec) => Promise<boolean> }) {
+  const { data, error, reload } = useLoad<WaitlistData>(() => adminClient.waitlist(), [])
+  const [q, setQ] = useState('')
+  const [msg, setMsg] = useState<string | null>(null)
+  if (error) return <p className="adm-error">{error}</p>
+  if (!data) return <p className="adm-muted">A carregar…</p>
+  const max = Math.max(1, ...data.daily_14d)
+  const interestMax = Math.max(1, ...Object.values(data.by_interest))
+  const canDelete = me.permissions.includes('waitlist.delete')
+  const items = data.items.filter((i) => i.email.toLowerCase().includes(q.trim().toLowerCase()))
+  return (
+    <>
+      <div className="adm-kpis">
+        <div className="adm-kpi"><span>Inscritos</span><strong>{data.total.toLocaleString('pt-PT')}</strong><small>Retenção: {data.retention_days} dias</small></div>
+        <div className="adm-kpi"><span>Últimos 7 dias</span><strong>{data.last_7_days.toLocaleString('pt-PT')}</strong><small>Novas inscrições</small></div>
+        <div className="adm-kpi"><span>Consentimento</span><strong className="adm-kpi-small">{data.consent_version}</strong><small>Versão do texto aceite</small></div>
+      </div>
+      <div className="adm-grid-2">
+        <section className="adm-card">
+          <header><h3>Inscrições por dia</h3><span className="adm-muted">últimos 14 dias</span></header>
+          <div className="adm-spark" role="img" aria-label={`Inscrições por dia: ${data.daily_14d.join(', ')}`}>
+            {data.daily_14d.map((n, i) => <span key={i} style={{ height: `${Math.max(4, (100 * n) / max)}%` }} title={`${n}`} />)}
+          </div>
+          <h4>Por interesse</h4>
+          <ul className="adm-hbars">
+            {Object.entries(data.by_interest).map(([k, n]) => (
+              <li key={k}><span>{INTEREST_LABEL[k] ?? k}</span><i style={{ width: `${(100 * n) / interestMax}%` }} /><b>{n}</b></li>
+            ))}
+          </ul>
+        </section>
+        <section className="adm-card">
+          <div className="adm-toolbar">
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Procurar email" aria-label="Procurar na lista de espera" />
+            {me.permissions.includes('waitlist.export') && (
+              <button type="button" className="adm-btn adm-btn-primary" onClick={() => adminClient.exportWaitlist().catch((e: Error) => setMsg(e.message))}>Exportar CSV</button>
+            )}
+          </div>
+          {msg && <p className="adm-notice" role="status">{msg}</p>}
+          {items.length ? (
+            <div className="adm-table-wrap">
+              <table className="adm-table">
+                <thead><tr><th>Email</th><th>Interesse</th><th>Inscrito</th>{canDelete && <th />}</tr></thead>
+                <tbody>
+                  {items.map((i) => (
+                    <tr key={i.email}>
+                      <td>{i.email}</td>
+                      <td>{INTEREST_LABEL[i.interest] ?? i.interest}</td>
+                      <td>{fmtDate(i.created_at)}</td>
+                      {canDelete && <td className="adm-row-actions"><button type="button" className="adm-btn" onClick={() => onConfirm({
+                        title: 'Apagar inscrição',
+                        body: `Remove ${i.email} da lista (direito ao apagamento). A auditoria guarda só uma referência, não o email.`,
+                        confirmLabel: 'Apagar',
+                        danger: true,
+                        run: (reason) => adminClient.deleteWaitlist(i.email, reason),
+                      }).then((d) => { if (d) { setMsg('Inscrição apagada.'); reload() } })}>Apagar</button></td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : <Empty>{data.total ? 'Nenhum email corresponde à pesquisa.' : 'Ainda não há inscrições.'}</Empty>}
+          <p className="adm-muted adm-small">Só se guarda email, interesse e versão do consentimento. Sem IP nem rastreio.</p>
+        </section>
+      </div>
+    </>
+  )
+}
+
 function ApprovalsView({ me, onConfirm }: { me: Me; onConfirm: (s: ConfirmSpec) => Promise<boolean> }) {
   const { data, error, reload } = useLoad(() => adminClient.approvals(), [])
   const canDecide = me.permissions.includes('approvals.decide')
@@ -628,6 +701,7 @@ export default function AdminConsole() {
         <div className="adm-content">
           {current?.id === 'overview' && <OverviewView go={go} />}
           {current?.id === 'users' && <UsersView me={me} roles={roles} onConfirm={onConfirm} />}
+          {current?.id === 'waitlist' && <WaitlistView me={me} onConfirm={onConfirm} />}
           {current?.id === 'approvals' && <ApprovalsView me={me} onConfirm={onConfirm} />}
           {current?.id === 'roles' && <RolesView roles={roles} twoPerson={twoPerson} />}
           {current?.id === 'audit' && <AuditView me={me} />}

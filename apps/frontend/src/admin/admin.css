@@ -114,6 +114,14 @@
 .adm-ring-warn { --c: var(--a-warn); }
 .adm-ring-bad { --c: var(--a-bad); }
 
+.adm-spark { display: flex; align-items: flex-end; gap: 4px; height: 120px; padding: 8px 0; border-bottom: 1px solid var(--a-line); }
+.adm-spark span { flex: 1; background: var(--a-accent); border-radius: 3px 3px 0 0; opacity: .85; }
+.adm-hbars { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.adm-hbars li { display: grid; grid-template-columns: 90px 1fr 36px; align-items: center; gap: 10px; }
+.adm-hbars i { display: block; height: 8px; border-radius: 4px; background: var(--a-info); min-width: 2px; }
+.adm-hbars b { text-align: right; font-variant-numeric: tabular-nums; }
+.adm-kpi-small { font-size: 18px !important; }
+.adm-small { font-size: 12px; margin: 12px 0 0; }
 .adm-muted { color: var(--a-muted); }
 .adm-block { display: block; }
 .adm-empty { padding: 28px; text-align: center; color: var(--a-muted); border: 1px dashed var(--a-line); border-radius: 8px; }

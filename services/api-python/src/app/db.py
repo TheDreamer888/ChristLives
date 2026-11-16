@@ -85,6 +85,16 @@ approvals = Table(
 )
 
 
+waitlist = Table(
+    "waitlist",
+    metadata,
+    Column("email", String(320), primary_key=True),
+    Column("interest", String(32), nullable=False),
+    Column("consent_version", String(32), nullable=False),
+    Column("created_at", Float, nullable=False, index=True),
+)
+
+
 def database_url() -> str | None:
     url = (os.getenv("DATABASE_URL") or "").strip()
     if not url:

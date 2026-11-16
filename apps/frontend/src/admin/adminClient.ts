@@ -110,6 +110,27 @@ export interface Posture {
   checks: { id: string; label: string; ok: boolean }[]
 }
 
+export interface WaitlistData {
+  total: number
+  last_7_days: number
+  by_interest: Record<string, number>
+  daily_14d: number[]
+  retention_days: number
+  consent_version: string
+  items: { email: string; interest: string; consent_version: string; created_at: number }[]
+}
+
+async function download(path: string, filename: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/admin${path}`, { credentials: 'include', cache: 'no-store' })
+  if (!res.ok) throw new AdminError(res.status, `Falha na exportação (${res.status})`)
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export const adminClient = {
   me: () => call<Me>('/me'),
   overview: () => call<Overview>('/overview'),
@@ -136,14 +157,8 @@ export const adminClient = {
   decide: (id: string, approve: boolean, note: string) =>
     post(`/approvals/${encodeURIComponent(id)}/decide`, { approve, note }),
 
-  async exportAudit(): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/admin/audit/export`, { credentials: 'include', cache: 'no-store' })
-    if (!res.ok) throw new AdminError(res.status, `Falha na exportação (${res.status})`)
-    const url = URL.createObjectURL(await res.blob())
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `aegis-auditoria-${new Date().toISOString().slice(0, 10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  },
+  exportAudit: () => download('/audit/export', `aegis-auditoria-${new Date().toISOString().slice(0, 10)}.csv`),
+  waitlist: () => call<WaitlistData>('/waitlist'),
+  exportWaitlist: () => download('/waitlist/export', `aegis-lista-espera-${new Date().toISOString().slice(0, 10)}.csv`),
+  deleteWaitlist: (email: string, reason: string) => post('/waitlist/delete', { email, reason }),
 }

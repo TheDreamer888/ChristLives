@@ -18,6 +18,8 @@ APPROVALS_DECIDE = "approvals.decide"
 AUDIT_READ = "audit.read"
 AUDIT_EXPORT = "audit.export"
 SECURITY_READ = "security.read"
+WAITLIST_EXPORT = "waitlist.export"  # emails completos em CSV
+WAITLIST_DELETE = "waitlist.delete"  # direito ao apagamento (RGPD art. 17)
 
 ALL_PERMISSIONS = frozenset(
     {
@@ -31,6 +33,8 @@ ALL_PERMISSIONS = frozenset(
         AUDIT_READ,
         AUDIT_EXPORT,
         SECURITY_READ,
+        WAITLIST_EXPORT,
+        WAITLIST_DELETE,
     }
 )
 
@@ -68,6 +72,8 @@ ROLES: dict[str, Role] = {
                     ROLES_REQUEST_PRIVILEGED,
                     AUDIT_READ,
                     SECURITY_READ,
+                    WAITLIST_EXPORT,
+                    WAITLIST_DELETE,
                 }
             ),
             privileged=True,

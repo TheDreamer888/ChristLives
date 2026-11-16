@@ -5,6 +5,7 @@ from src.app.config import settings
 from src.app.routers.dns import router as dns_router
 from src.app.auth.routes import router as auth_router
 from src.app.admin.routes import router as admin_router
+from src.app.waitlist import router as waitlist_router
 from src.ml.model import RiskModel
 from src.pylibrary.logging import get_logger
 
@@ -37,6 +38,7 @@ app.add_middleware(
 app.include_router(dns_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
+app.include_router(waitlist_router)
 
 risk_model = RiskModel()
 
