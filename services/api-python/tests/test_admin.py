@@ -33,9 +33,7 @@ REASON = "Pedido do ticket SEC-1234 aprovado"
 def _clean(monkeypatch):
     for var in ("ADMIN_IP_ALLOWLIST", "ADMIN_BOOTSTRAP_EMAILS", "ADMIN_REQUIRE_PASSKEY", "ADMIN_TWO_PERSON_RULE"):
         monkeypatch.delenv(var, raising=False)
-    store.users.clear()
-    store.email_index.clear()
-    store.oauth_index.clear()
+    store.clear()
     auth_routes.limiter._hits.clear()
     audit_log.clear()
     approvals.clear()
@@ -96,7 +94,7 @@ def test_support_sees_masked_emails_and_cannot_write():
     items = client.get("/api/admin/users").json()["items"]
     emails = {u["email"] for u in items}
     assert "v***@example.com" in emails and "victim@example.com" not in emails
-    target = store.email_index["victim@example.com"]
+    target = store.find_by_email("victim@example.com").id
     r = client.post(f"/api/admin/users/{target}/suspend", json={"reason": REASON}, headers=ORIGIN)
     assert r.status_code == 403
     assert audit_log.entries()[-1].outcome == "denied"

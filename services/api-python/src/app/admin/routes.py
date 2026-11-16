@@ -26,10 +26,10 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.app.admin import rbac
-from src.app.admin.approvals import approvals, two_person_rule_enabled
+from src.app.admin.approvals import ApprovalConflict, approvals, two_person_rule_enabled
 from src.app.admin.audit import audit_log
 from src.app.auth import routes as auth_routes
-from src.app.auth.store import UserRecord, store
+from src.app.auth.store import ConcurrentUpdate, UserRecord, store
 
 
 
@@ -90,7 +90,7 @@ def _client_ip(request: Request) -> str | None:
 
 
 def _owners() -> list[UserRecord]:
-    return [u for u in store.users.values() if "owner" in u.roles and not u.suspended]
+    return [u for u in store.all_users() if "owner" in u.roles and not u.suspended]
 
 
 def _maybe_bootstrap(user: UserRecord, ip: str | None) -> None:
@@ -100,13 +100,14 @@ def _maybe_bootstrap(user: UserRecord, ip: str | None) -> None:
         return
     if user.email.lower() in _bootstrap_emails():
         user.roles.add("owner")
+        store.save(user)
         audit_log.record("admin.bootstrap_owner", "success", user.id, target=user.id, ip=ip)
 
 
 def _admin_context(request: Request) -> AdminContext:
     ip = _client_ip(request)
     claims = auth_routes._session_claims(request)
-    user = store.users.get(claims["sub"]) if claims else None
+    user = store.get_user(claims["sub"]) if claims else None
     if not claims or not auth_routes._session_usable(claims, user):
         raise HTTPException(401, "Autentica-te primeiro.")
     assert user is not None
@@ -219,10 +220,17 @@ def _entry_view(e) -> dict:
 
 
 def _get_target(user_id: str) -> UserRecord:
-    user = store.users.get(user_id)
+    user = store.get_user(user_id)
     if not user:
         raise HTTPException(404, "Utilizador não encontrado.")
     return user
+
+
+def _save(user: UserRecord) -> None:
+    try:
+        store.save(user)
+    except ConcurrentUpdate as exc:
+        raise HTTPException(409, "A conta foi alterada entretanto. Atualiza e tenta de novo.") from exc
 
 
 def _guard_target(ctx: AdminContext, target: UserRecord, action: str) -> None:
@@ -251,6 +259,7 @@ def me(ctx: AdminContext = Depends(_admin_context)) -> dict:
 
 @router.get("/roles")
 def roles(ctx: AdminContext = Depends(_admin_context)) -> dict:
+    all_users = store.all_users()
     return {
         "roles": [
             {
@@ -259,7 +268,7 @@ def roles(ctx: AdminContext = Depends(_admin_context)) -> dict:
                 "description": r.description,
                 "privileged": r.privileged,
                 "permissions": sorted(r.permissions),
-                "members": sum(1 for u in store.users.values() if r.id in u.roles),
+                "members": sum(1 for u in all_users if r.id in u.roles),
             }
             for r in rbac.ROLES.values()
         ],
@@ -270,7 +279,7 @@ def roles(ctx: AdminContext = Depends(_admin_context)) -> dict:
 @router.get("/overview")
 def overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
     now = time.time()
-    users = list(store.users.values())
+    users = store.all_users()
     entries = audit_log.entries()
     day = [e for e in entries if now - e.ts <= 86400]
     return {
@@ -298,7 +307,7 @@ def list_users(
 ) -> dict:
     needle = q.strip().lower()
     items = []
-    for user in store.users.values():
+    for user in store.all_users():
         if role and role not in user.roles:
             continue
         if status == "suspended" and not user.suspended or status == "active" and user.suspended:
@@ -390,7 +399,7 @@ def security_posture(ctx: AdminContext = Depends(require(rbac.SECURITY_READ))) -
 
 @router.get("/approvals")
 def list_approvals(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
-    return {"items": [vars(r) for r in approvals.all()[:100]]}
+    return {"items": [r.public() for r in approvals.all()[:100]]}
 
 
 # ---- Endpoints de escrita -------------------------------------------------------
@@ -403,6 +412,7 @@ def suspend(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_
         raise HTTPException(409, "Não podes suspender o último proprietário.")
     target.suspended = True
     target.sessions_valid_after = time.time()
+    _save(target)
     ctx.audit("user.suspend", target=target.id, reason=body.reason)
     return {"ok": True, "user": _user_view(target, ctx)}
 
@@ -412,6 +422,7 @@ def reactivate(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(requi
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.reactivate")
     target.suspended = False
+    _save(target)
     ctx.audit("user.reactivate", target=target.id, reason=body.reason)
     return {"ok": True, "user": _user_view(target, ctx)}
 
@@ -423,6 +434,7 @@ def revoke_sessions(
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.revoke_sessions")
     target.sessions_valid_after = time.time()
+    _save(target)
     ctx.audit("user.revoke_sessions", target=target.id, reason=body.reason)
     return {"ok": True}
 
@@ -460,6 +472,7 @@ def set_roles(user_id: str, body: RolesBody, ctx: AdminContext = Depends(require
     target.roles = (target.roles - removed) | added
     if added or removed:
         target.sessions_valid_after = time.time()  # novas permissões exigem novo login
+        _save(target)
         ctx.audit(
             "user.roles",
             target=target.id,
@@ -487,13 +500,18 @@ def decide(
         target = _get_target(req.target_user_id)
         req.status = "approved" if body.approve else "rejected"
         req.decided_by, req.decided_at, req.decision_note = ctx.user.id, time.time(), body.note or None
+        try:
+            approvals.save(req)  # falha se outro proprietário decidiu primeiro
+        except ApprovalConflict as exc:
+            raise HTTPException(409, "Este pedido acabou de ser decidido por outra pessoa.") from exc
         if body.approve:
             target.roles.add(req.role)
             target.sessions_valid_after = time.time()
+            _save(target)
     ctx.audit(
         "approval.decide",
         target=req.target_user_id,
         reason=body.note or None,
         details={"request": req.id, "role": req.role, "approved": body.approve},
     )
-    return {"ok": True, "request": vars(req)}
+    return {"ok": True, "request": req.public()}

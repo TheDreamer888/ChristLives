@@ -43,7 +43,7 @@ from src.app.auth.schemas import (
     WebAuthnLoginVerify,
     WebAuthnRegisterVerify,
 )
-from src.app.auth.store import UserRecord, store
+from src.app.auth.store import ConcurrentUpdate, UserRecord, store
 from src.app.auth.tokens import SESSION_COOKIE_NAME, issue_session_token, verify_session_token
 from src.app.auth import webauthn as wa
 
@@ -155,6 +155,13 @@ def _session_claims(request: Request) -> dict | None:
     return claims
 
 
+def _save(user: UserRecord) -> None:
+    try:
+        store.save(user)
+    except ConcurrentUpdate as exc:
+        raise HTTPException(409, "A conta foi alterada noutro pedido. Tenta de novo.") from exc
+
+
 def _session_usable(claims: dict, user: UserRecord | None) -> bool:
     """Conta suspensa ou sessões revogadas pelo admin deixam de valer de imediato."""
     if user is None or user.suspended:
@@ -167,7 +174,7 @@ def _current_user(request: Request) -> UserRecord | None:
     claims = _session_claims(request)
     if not claims:
         return None
-    user = store.users.get(claims["sub"])
+    user = store.get_user(claims["sub"])
     return user if _session_usable(claims, user) else None
 
 
@@ -181,7 +188,7 @@ def _require_user(request: Request) -> UserRecord:
 def _require_fresh_user(request: Request) -> UserRecord:
     """Step-up: alterações que dão acesso duradouro exigem sessão recente."""
     claims = _session_claims(request)
-    user = store.users.get(claims["sub"]) if claims else None
+    user = store.get_user(claims["sub"]) if claims else None
     if not claims or not _session_usable(claims, user):
         raise HTTPException(401, "Autentica-te primeiro.")
     iat = claims.get("iat")
@@ -198,6 +205,7 @@ def _start_session(user: UserRecord, response: Response, method: str) -> None:
         raise HTTPException(403, "Esta conta está suspensa. Contacta o administrador.")
     # amr = método usado NESTE login (não todos os ligados): o admin exige passkey.
     user.last_login_at = time.time()
+    _save(user)
     token = issue_session_token(user.id, [method])
     _set_secure_cookie(response, SESSION_COOKIE_NAME, token, max_age=8 * 3600)
 
@@ -208,8 +216,7 @@ def _fake_credential_ids(email: str) -> list[bytes]:
 
 
 def _find_user_by_email(email: str) -> UserRecord | None:
-    user_id = store.email_index.get(email) or store.email_index.get(_norm_email(email))
-    return store.users.get(user_id) if user_id else None
+    return store.find_by_email(email) or store.find_by_email(_norm_email(email))
 
 
 def _subject(info: dict, id_field: str) -> str | None:
@@ -429,6 +436,7 @@ def webauthn_register_verify(body: WebAuthnRegisterVerify, request: Request) -> 
         "label": (body.device_label or "Chave de segurança").strip()[:64],
     }
     user.linked_methods.add("passkey")
+    _save(user)
     return {"ok": True}
 
 
@@ -459,7 +467,7 @@ def webauthn_login_verify(body: WebAuthnLoginVerify, response: Response) -> dict
     if not entry:
         raise HTTPException(400, _GENERIC_PASSKEY_ERROR)
     user_id, challenge = entry
-    user = store.users.get(user_id) if user_id else None
+    user = store.get_user(user_id) if user_id else None
     if not user:
         raise HTTPException(400, _GENERIC_PASSKEY_ERROR)
     cred_id_b64 = body.credential.get("id") if isinstance(body.credential, dict) else None
@@ -489,6 +497,7 @@ def generate_codes(request: Request) -> BackupCodesResponse:
     user = _require_fresh_user(request)
     plaintext, hashes = generate_backup_codes()
     user.backup_code_hashes = hashes
+    _save(user)
     return BackupCodesResponse(codes=plaintext)  # shown once, never stored/logged in plaintext
 
 
@@ -507,6 +516,10 @@ def redeem_code(body: RedeemBody, response: Response) -> dict:
         if idx is None:
             raise HTTPException(400, _GENERIC_RECOVERY_ERROR)
         user.backup_code_hashes.pop(idx)  # one-time use
+        try:
+            store.save(user)  # outra instância consumiu o mesmo código? então falha aqui
+        except ConcurrentUpdate as exc:
+            raise HTTPException(400, _GENERIC_RECOVERY_ERROR) from exc
         remaining = len(user.backup_code_hashes)
     _start_session(user, response, "backup_code")
     return {"ok": True, "remaining_codes": remaining}
@@ -520,4 +533,5 @@ def record_consent(body: ConsentRequest, request: Request) -> dict:
     if not (body.terms_accepted and body.privacy_accepted):
         raise HTTPException(400, "É necessário aceitar os Termos e a Política de Privacidade.")
     user.consent = {**body.model_dump(), "recorded_at": time.time()}
+    _save(user)
     return {"ok": True}

@@ -52,8 +52,27 @@ Abre em `/#admin` no frontend. A API está em `/api/admin/*`.
 3. Sai e volta a entrar **com a passkey**. Abre `/#admin`.
 4. Nomeia um segundo proprietário (a postura de segurança pede-o).
 
+## Base de dados
+
+Define `DATABASE_URL` (por exemplo `postgresql://aegis:SENHA@host:5432/aegis`).
+Com `ENV=production` a API **não arranca** sem `DATABASE_URL` e `AUDIT_HMAC_KEY`.
+
+As tabelas são criadas no primeiro arranque. Ficam guardados os utilizadores, as
+identidades OAuth, os desafios das passkeys, as aprovações e a auditoria, e várias
+instâncias da API podem partilhá-los. As escritas usam concorrência otimista:
+dois pedidos simultâneos nunca se sobrepõem em silêncio.
+
+Para que nem uma API comprometida consiga reescrever a auditoria, cria as tabelas
+com um papel dono e dá à API um papel com permissões mínimas:
+
+```sql
+CREATE ROLE aegis_api LOGIN PASSWORD '...';
+GRANT SELECT, INSERT, UPDATE, DELETE ON users, oauth_identities, auth_ephemeral, admin_approvals TO aegis_api;
+GRANT SELECT, INSERT ON audit_log TO aegis_api;   -- sem UPDATE nem DELETE
+```
+
 ## Limites conhecidos
 
-O `Store` ainda é em memória, numa só instância. Para produção com várias instâncias,
-utilizadores, aprovações e auditoria têm de passar para Postgres (com a auditoria
-numa tabela só de inserção) e os limites de ritmo para Redis.
+Os limites de ritmo ainda são por instância (em memória). Com várias instâncias
+atrás de um balanceador, o limite efetivo multiplica-se pelo número de instâncias;
+o passo seguinte é passá-los para Redis.

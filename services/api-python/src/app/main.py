@@ -10,6 +10,20 @@ from src.pylibrary.logging import get_logger
 
 logger = get_logger(__name__)
 settings.require_secret_key()
+
+
+def _require_production_storage() -> None:
+    """Em produção, memória perde contas e auditoria a cada reinício: não arranca."""
+    import os
+
+    if os.getenv("ENV", "development").lower() != "production":
+        return
+    missing = [name for name in ("DATABASE_URL", "AUDIT_HMAC_KEY") if not os.getenv(name)]
+    if missing:
+        raise RuntimeError(f"Em produção é obrigatório definir: {', '.join(missing)}.")
+
+
+_require_production_storage()
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
 app.add_middleware(

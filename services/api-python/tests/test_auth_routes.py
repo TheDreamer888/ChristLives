@@ -26,9 +26,7 @@ app.include_router(routes.router)
 
 @pytest.fixture(autouse=True)
 def _clean():
-    store.users.clear()
-    store.email_index.clear()
-    store.oauth_index.clear()
+    store.clear()
     routes.limiter._hits.clear()
     yield
 
