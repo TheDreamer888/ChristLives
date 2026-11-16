@@ -34,7 +34,7 @@ def _clean(monkeypatch):
     for var in ("ADMIN_IP_ALLOWLIST", "ADMIN_BOOTSTRAP_EMAILS", "ADMIN_REQUIRE_PASSKEY", "ADMIN_TWO_PERSON_RULE"):
         monkeypatch.delenv(var, raising=False)
     store.clear()
-    auth_routes.limiter._hits.clear()
+    auth_routes.limiter.clear()
     audit_log.clear()
     approvals.clear()
     yield

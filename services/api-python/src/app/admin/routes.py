@@ -392,6 +392,12 @@ def security_posture(ctx: AdminContext = Depends(require(rbac.SECURITY_READ))) -
         ("audit_export", "Auditoria copiada para ficheiro/SIEM", bool(os.getenv("AUDIT_LOG_PATH"))),
         ("short_admin_sessions", "Sessões de admin com no máximo 1 h", _session_max_age() <= 3600),
         ("multiple_owners", "Pelo menos 2 proprietários (sem ponto único de falha)", len(_owners()) >= 2),
+        ("persistent_storage", "Dados guardados em base de dados (não em memória)", store.persistent),
+        (
+            "shared_rate_limits",
+            "Limites de pedidos partilhados entre instâncias (Redis)",
+            getattr(auth_routes.limiter, "shared", False) and not getattr(auth_routes.limiter, "degraded", False),
+        ),
     ]
     items = [{"id": cid, "label": label, "ok": ok} for cid, label, ok in checks]
     return {"score": round(100 * sum(c["ok"] for c in items) / len(items)), "checks": items}

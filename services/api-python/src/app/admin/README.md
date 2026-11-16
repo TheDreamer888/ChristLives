@@ -44,6 +44,8 @@ Abre em `/#admin` no frontend. A API está em `/api/admin/*`.
 | `ADMIN_ACTIONS_PER_MINUTE` | `20` | Limite de alterações por administrador. |
 | `AUDIT_HMAC_KEY` | aleatória | **Obrigatória em produção**, senão a cadeia não sobrevive a reinícios. |
 | `AUDIT_LOG_PATH` | — | Cópia JSONL para enviar a um SIEM ou armazenamento imutável. |
+| `DATABASE_URL` | — | Postgres (produção) ou SQLite. **Obrigatória em produção.** |
+| `REDIS_URL` | — | Limites de pedidos partilhados entre instâncias. |
 
 ## Primeiro acesso
 
@@ -71,8 +73,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON users, oauth_identities, auth_ephemeral,
 GRANT SELECT, INSERT ON audit_log TO aegis_api;   -- sem UPDATE nem DELETE
 ```
 
-## Limites conhecidos
+## Limites de pedidos (Redis)
 
-Os limites de ritmo ainda são por instância (em memória). Com várias instâncias
-atrás de um balanceador, o limite efetivo multiplica-se pelo número de instâncias;
-o passo seguinte é passá-los para Redis.
+Define `REDIS_URL` (por exemplo `redis://:SENHA@host:6379/0`). Os limites passam a ser
+partilhados por todas as instâncias da API: um atacante não ganha mais tentativas
+por cair noutra instância. A contagem é atómica (script Lua) e usa o relógio do
+Redis. Se o Redis falhar, a API continua a limitar com contadores locais e a página
+de postura de segurança mostra o controlo em falta até o Redis voltar.

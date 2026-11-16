@@ -27,7 +27,7 @@ app.include_router(routes.router)
 @pytest.fixture(autouse=True)
 def _clean():
     store.clear()
-    routes.limiter._hits.clear()
+    routes.limiter.clear()
     yield
 
 

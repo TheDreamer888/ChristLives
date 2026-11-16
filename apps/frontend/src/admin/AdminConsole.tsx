@@ -501,6 +501,8 @@ const REMEDIATION: Record<string, string> = {
   audit_export: 'Define AUDIT_LOG_PATH e envia o ficheiro para um SIEM ou armazenamento imutável.',
   short_admin_sessions: 'Mantém ADMIN_SESSION_MAX_AGE em 3600 segundos ou menos.',
   multiple_owners: 'Nomeia um segundo proprietário para não depender de uma só pessoa.',
+  persistent_storage: 'Define DATABASE_URL (Postgres) para não perder contas nem auditoria ao reiniciar.',
+  shared_rate_limits: 'Define REDIS_URL para os limites de pedidos valerem para todas as instâncias.',
 }
 
 function SecurityView() {

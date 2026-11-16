@@ -125,7 +125,7 @@ def test_admin_flow_persists_end_to_end(engine, monkeypatch):
     monkeypatch.setattr(admin_routes, "store", store)
     monkeypatch.setattr(admin_routes, "audit_log", audit)
     monkeypatch.setattr(admin_routes, "approvals", SqlApprovalQueue(engine))
-    auth_routes.limiter._hits.clear()
+    auth_routes.limiter.clear()
 
     app = FastAPI()
     app.include_router(auth_routes.router)
