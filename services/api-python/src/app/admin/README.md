@@ -56,7 +56,7 @@ Abre em `/#admin` no frontend. A API está em `/api/admin/*`.
 
 ## Base de dados
 
-Define `DATABASE_URL` (por exemplo `postgresql://aegis:SENHA@host:5432/aegis`).
+Define `DATABASE_URL` (por exemplo `postgresql://lusorbe:SENHA@host:5432/lusorbe`).
 Com `ENV=production` a API **não arranca** sem `DATABASE_URL` e `AUDIT_HMAC_KEY`.
 
 As tabelas são criadas no primeiro arranque. Ficam guardados os utilizadores, as
@@ -68,9 +68,9 @@ Para que nem uma API comprometida consiga reescrever a auditoria, cria as tabela
 com um papel dono e dá à API um papel com permissões mínimas:
 
 ```sql
-CREATE ROLE aegis_api LOGIN PASSWORD '...';
-GRANT SELECT, INSERT, UPDATE, DELETE ON users, oauth_identities, auth_ephemeral, admin_approvals TO aegis_api;
-GRANT SELECT, INSERT ON audit_log TO aegis_api;   -- sem UPDATE nem DELETE
+CREATE ROLE lusorbe_api LOGIN PASSWORD '...';
+GRANT SELECT, INSERT, UPDATE, DELETE ON users, oauth_identities, auth_ephemeral, admin_approvals TO lusorbe_api;
+GRANT SELECT, INSERT ON audit_log TO lusorbe_api;   -- sem UPDATE nem DELETE
 ```
 
 ## Limites de pedidos (Redis)

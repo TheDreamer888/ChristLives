@@ -1,8 +1,8 @@
 """Base de dados (SQLAlchemy Core, síncrono).
 
 `DATABASE_URL` escolhe o motor:
-  * `postgresql://utilizador:senha@host:5432/aegis` (produção; usa o driver psycopg)
-  * `sqlite:///./aegis.db` (local)
+  * `postgresql://utilizador:senha@host:5432/lusorbe` (produção; usa o driver psycopg)
+  * `sqlite:///./lusorbe.db` (local)
 Sem `DATABASE_URL` a API usa memória (só desenvolvimento).
 
 As tabelas são criadas no arranque se não existirem. A aplicação só insere em

@@ -31,5 +31,5 @@ export function simulatePosition(capital: number, entry: number, exit: number, f
 export type LocalEvent = { id: number; at: string; rules: string[]; count: number }
 export function exportEvents(events: LocalEvent[]) {
   // Explicit allowlist: never include source text, file names, IPs or credentials.
-  return JSON.stringify({ format: 'aegis-local-review-v1', kind: 'user-submitted-static-review', events: events.map(({ at, rules, count }) => ({ at, rules, count })) }, null, 2)
+  return JSON.stringify({ format: 'lusorbe-local-review-v1', kind: 'user-submitted-static-review', events: events.map(({ at, rules, count }) => ({ at, rules, count })) }, null, 2)
 }

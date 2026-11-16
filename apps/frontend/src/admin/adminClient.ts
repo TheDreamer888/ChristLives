@@ -157,8 +157,8 @@ export const adminClient = {
   decide: (id: string, approve: boolean, note: string) =>
     post(`/approvals/${encodeURIComponent(id)}/decide`, { approve, note }),
 
-  exportAudit: () => download('/audit/export', `aegis-auditoria-${new Date().toISOString().slice(0, 10)}.csv`),
+  exportAudit: () => download('/audit/export', `lusorbe-auditoria-${new Date().toISOString().slice(0, 10)}.csv`),
   waitlist: () => call<WaitlistData>('/waitlist'),
-  exportWaitlist: () => download('/waitlist/export', `aegis-lista-espera-${new Date().toISOString().slice(0, 10)}.csv`),
+  exportWaitlist: () => download('/waitlist/export', `lusorbe-lista-espera-${new Date().toISOString().slice(0, 10)}.csv`),
   deleteWaitlist: (email: string, reason: string) => post('/waitlist/delete', { email, reason }),
 }

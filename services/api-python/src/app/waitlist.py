@@ -26,7 +26,7 @@ from src.app.auth import routes as auth_routes
 
 CONSENT_VERSION = "2026-11-v1"
 CONSENT_TEXT = (
-    "Aceito que a Aegis guarde o meu email apenas para me avisar do lançamento. "
+    "Aceito que a Lusorbe guarde o meu email apenas para me avisar do lançamento. "
     "Posso pedir a remoção a qualquer momento."
 )
 Interest = Literal["familias", "escolas", "empresas", "outro"]

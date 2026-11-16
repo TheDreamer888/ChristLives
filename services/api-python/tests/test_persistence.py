@@ -29,7 +29,7 @@ REASON = "Ticket SEC-1 conta comprometida"
 @pytest.fixture(params=["sqlite", "postgres"])
 def engine(request, tmp_path):
     if request.param == "sqlite":
-        eng = create_engine(f"sqlite:///{tmp_path / 'aegis.db'}")
+        eng = create_engine(f"sqlite:///{tmp_path / 'lusorbe.db'}")
     else:
         url = os.getenv("TEST_DATABASE_URL")
         if not url:

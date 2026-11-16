@@ -1,4 +1,4 @@
-# Aegis API (Python)
+# Lusorbe API (Python)
 
 API principal em FastAPI: autenticação, DNS (Cloudflare) e scoring de risco (ver `src/ml`).
 

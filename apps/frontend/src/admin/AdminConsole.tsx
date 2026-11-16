@@ -654,7 +654,7 @@ export default function AdminConsole() {
     return (
       <main className="adm-gate">
         <div className="adm-card">
-          <p className="adm-eyebrow">Aegis · Administração</p>
+          <p className="adm-eyebrow">Lusorbe · Administração</p>
           <h1>Acesso restrito</h1>
           <p>{msg}</p>
           {fatal.status === 403 && <p className="adm-muted">Os administradores entram com chave de acesso (passkey), a partir de redes autorizadas.</p>}
@@ -672,7 +672,7 @@ export default function AdminConsole() {
   return (
     <div className="adm">
       <aside className="adm-side">
-        <a className="adm-brand" href="#overview">Λ <span>AEGIS</span> <small>Admin</small></a>
+        <a className="adm-brand" href="#overview">Λ <span>LUSORBE</span> <small>Admin</small></a>
         <nav aria-label="Administração">
           {visible.map((s) => (
             <button key={s.id} type="button" className={current?.id === s.id ? 'adm-nav adm-nav-on' : 'adm-nav'} aria-current={current?.id === s.id ? 'page' : undefined} onClick={() => go(s.id)}>

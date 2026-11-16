@@ -77,7 +77,7 @@ return 0
 class RedisRateLimiter:
     shared = True
 
-    def __init__(self, client, prefix: str = "aegis:rl:") -> None:
+    def __init__(self, client, prefix: str = "lusorbe:rl:") -> None:
         self._client = client
         self._prefix = prefix
         self._script = client.register_script(_SLIDING_WINDOW_LUA)

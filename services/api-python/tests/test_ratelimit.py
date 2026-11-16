@@ -61,4 +61,4 @@ def test_window_slides(redis_client):
     assert rl.hit("k", limit=1, window_seconds=1) == 1
     time.sleep(1.1)
     assert rl.hit("k", limit=1, window_seconds=1) is None
-    assert redis_client.pttl("aegis:rl:k") <= 1000  # as chaves expiram sozinhas
+    assert redis_client.pttl("lusorbe:rl:k") <= 1000  # as chaves expiram sozinhas

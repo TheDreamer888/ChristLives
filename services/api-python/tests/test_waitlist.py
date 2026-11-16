@@ -44,7 +44,7 @@ def _join(client, email="ana@example.com", **kw):
 
 
 def _staff(roles):
-    user = store.get_or_create_oauth_user("google", f"s-{'-'.join(roles)}", f"{roles[0]}@aegis.pt", "S", True)
+    user = store.get_or_create_oauth_user("google", f"s-{'-'.join(roles)}", f"{roles[0]}@lusorbe.pt", "S", True)
     user.roles = set(roles)
     store.save(user)
     c = TestClient(app)

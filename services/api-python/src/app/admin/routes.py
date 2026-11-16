@@ -378,7 +378,7 @@ def audit_export(ctx: AdminContext = Depends(require(rbac.AUDIT_EXPORT))) -> Str
     return StreamingResponse(
         iter([buf.getvalue()]),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="aegis-auditoria.csv"', "Cache-Control": "no-store"},
+        headers={"Content-Disposition": 'attachment; filename="lusorbe-auditoria.csv"', "Cache-Control": "no-store"},
     )
 
 
@@ -579,7 +579,7 @@ def waitlist_export(ctx: AdminContext = Depends(require(rbac.WAITLIST_EXPORT))) 
     return StreamingResponse(
         iter([buf.getvalue()]),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="aegis-lista-espera.csv"', "Cache-Control": "no-store"},
+        headers={"Content-Disposition": 'attachment; filename="lusorbe-lista-espera.csv"', "Cache-Control": "no-store"},
     )
 
 
