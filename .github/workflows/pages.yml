@@ -36,6 +36,28 @@ jobs:
           mkdir -p _site/app
           cp -R site/. _site/
           cp -R apps/frontend/dist/. _site/app/
+      - name: Ligar a lista de espera à API (se AEGIS_API_URL estiver definida)
+        env:
+          AEGIS_API_URL: ${{ vars.AEGIS_API_URL }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, urllib.parse
+          url = os.environ.get("AEGIS_API_URL", "").strip().rstrip("/")
+          if not url:
+              print("AEGIS_API_URL vazio: formulário da lista de espera fica desligado.")
+              raise SystemExit(0)
+          u = urllib.parse.urlsplit(url)
+          if u.scheme != "https" or not u.hostname or u.path not in ("", "/") or u.query or u.fragment:
+              raise SystemExit("AEGIS_API_URL tem de ser só a origem https, ex.: https://api.exemplo.pt")
+          origin = f"https://{u.netloc}"
+          page = pathlib.Path("_site/index.html")
+          html = page.read_text(encoding="utf-8")
+          html = html.replace('<meta name="aegis-api" content="" />', f'<meta name="aegis-api" content="{origin}" />', 1)
+          html, n = re.subn(r"connect-src 'none'", f"connect-src {origin}", html, count=1)
+          assert n == 1, "CSP connect-src não encontrado"
+          page.write_text(html, encoding="utf-8")
+          print("Lista de espera ligada a", origin)
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

@@ -7,6 +7,8 @@
     <meta name="theme-color" content="#000000" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
     <meta name="referrer" content="no-referrer" />
+    <!-- Preenchido no deploy (variável AEGIS_API_URL). Vazio = formulário desligado. -->
+    <meta name="aegis-api" content="" />
     <meta name="description" content="Aegis — segurança defensiva, mercados e conhecimento num workspace com privacidade por definição." />
     <meta property="og:title" content="Aegis — Defesa em órbita" />
     <meta property="og:description" content="Segurança defensiva, mercados e conhecimento num workspace com privacidade por definição." />
@@ -15,6 +17,7 @@
     <link rel="icon" type="image/svg+xml" href="hero.svg" />
     <link rel="stylesheet" href="landing.css" />
     <script src="motion.js" defer></script>
+    <script src="waitlist.js" defer></script>
     <title>Aegis</title>
   </head>
   <body>
@@ -31,6 +34,7 @@
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
           <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#lista">Lista</a></li>
         </ul>
       </nav>
       <a class="btn btn-ghost nav-cta" href="app/">Abrir workspace</a>
@@ -41,6 +45,7 @@
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
           <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#lista">Lista de espera</a></li>
           <li><a href="app/">Abrir workspace →</a></li>
         </ul>
       </details>
@@ -172,6 +177,43 @@
             <a class="btn btn-solid" href="app/">Lançar workspace</a>
             <a class="btn btn-ghost" href="app/legal/privacy.html">Política de privacidade</a>
           </div>
+        </div>
+      </section>
+      <!-- 06 · LISTA DE ESPERA -->
+      <section class="waitlist" id="lista" aria-labelledby="lista-title">
+        <div class="waitlist-inner">
+          <p class="kicker">Missão 06 · Lançamento</p>
+          <h2 id="lista-title" class="display">Entra na lista.</h2>
+          <p class="lead">Avisamos-te uma vez, quando abrirmos. Sem newsletter, sem partilha com terceiros.</p>
+
+          <form class="wl-form" id="wl-form" novalidate hidden>
+            <div class="wl-row">
+              <label class="wl-field">
+                <span>Email</span>
+                <input type="email" name="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="tu@exemplo.pt" />
+              </label>
+              <label class="wl-field">
+                <span>Para quem é</span>
+                <select name="interest">
+                  <option value="familias">Família</option>
+                  <option value="escolas">Escola</option>
+                  <option value="empresas">Empresa</option>
+                  <option value="outro" selected>Outro</option>
+                </select>
+              </label>
+            </div>
+            <!-- Isco para bots: invisível e fora da ordem de tabulação. -->
+            <div class="wl-hp" aria-hidden="true">
+              <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+            </div>
+            <label class="wl-consent">
+              <input type="checkbox" name="consent" required />
+              <span>Aceito que a Aegis guarde o meu email apenas para me avisar do lançamento. Posso pedir a remoção a qualquer momento. <a href="app/legal/privacy.html">Privacidade</a></span>
+            </label>
+            <button class="btn btn-solid" type="submit">Quero ser avisado</button>
+            <p class="wl-status" role="status" aria-live="polite"></p>
+          </form>
+          <p class="wl-soon" id="wl-soon">A lista abre assim que o serviço estiver online. Entretanto, segue o projeto no <a href="https://github.com/TheDreamer888/ChristLives">GitHub</a>.</p>
         </div>
       </section>
     </main>
