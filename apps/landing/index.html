@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <meta name="referrer" content="no-referrer" />
+    <!-- Preenchido no deploy (variável LUSORBE_API_URL). Vazio = formulário desligado. -->
+    <meta name="lusorbe-api" content="" />
+    <meta name="description" content="Lusorbe — segurança defensiva, mercados e conhecimento num espaço com privacidade por definição." />
+    <meta property="og:title" content="Lusorbe — Luz que guarda" />
+    <meta property="og:description" content="Segurança defensiva, mercados e conhecimento num espaço com privacidade por definição." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.35'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.4' stop-color='%235eead4'/%3E%3Cstop offset='1' stop-color='%23062a26'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='9' fill='url(%23g)'/%3E%3Cellipse cx='16' cy='16' rx='14' ry='4.5' fill='none' stroke='%23c9d2dc' stroke-width='1.2' transform='rotate(-20 16 16)'/%3E%3C/svg%3E" />
+    <title>Lusorbe</title>
+  </head>
+  <body>
+    <a class="skip" href="#main">Saltar para o conteúdo</a>
+
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <span class="loader-word">LUSORBE</span>
+      <span class="loader-bar"><i id="loader-bar"></i></span>
+    </div>
+
+    <header class="nav" id="top">
+      <a class="wordmark" href="./" aria-label="Lusorbe, início"><span class="mark" aria-hidden="true"></span>LUSORBE</a>
+      <nav aria-label="Principal">
+        <ul class="nav-links">
+          <li><a href="#defesa">Defesa</a></li>
+          <li><a href="#mercados">Mercados</a></li>
+          <li><a href="#educacao">Educação</a></li>
+          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#lista">Lista</a></li>
+        </ul>
+      </nav>
+      <a class="btn btn-ghost nav-cta" href="app/">Abrir espaço</a>
+      <details class="menu">
+        <summary aria-label="Abrir menu"><span></span><span></span></summary>
+        <ul>
+          <li><a href="#defesa">Defesa</a></li>
+          <li><a href="#mercados">Mercados</a></li>
+          <li><a href="#educacao">Educação</a></li>
+          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#lista">Lista de espera</a></li>
+          <li><a href="app/">Abrir espaço →</a></li>
+        </ul>
+      </details>
+    </header>
+
+    <main id="main">
+      <section class="panel hero" data-accent="#5eead4" aria-labelledby="hero-title">
+        <div class="copy">
+          <p class="kicker">Lusorbe · Missão 01</p>
+          <h1 id="hero-title" class="display">Luz que<br />guarda.</h1>
+          <p class="lead">Segurança defensiva, mercados e conhecimento num só espaço. Com privacidade por definição.</p>
+          <div class="actions">
+            <a class="btn btn-solid" href="#lista">Entrar na lista</a>
+            <a class="btn btn-ghost" href="app/">Abrir espaço</a>
+          </div>
+          <p class="hint" aria-hidden="true">Move o rato · arrasta para rodar · clica para pulsar</p>
+        </div>
+      </section>
+
+      <section class="panel right" id="defesa" data-accent="#38bdf8" aria-labelledby="defesa-title">
+        <div class="copy">
+          <p class="kicker">Missão 02 · Defesa</p>
+          <h2 id="defesa-title" class="display">Vê o sinal<br />antes do impacto.</h2>
+          <p class="lead">Revê scripts e texto suspeito antes de os correr. Sem executar nada, sem vigiar ninguém, sem retaliar.</p>
+          <ul class="specs">
+            <li><b>0</b><span>execuções</span></li>
+            <li><b>100%</b><span>local</span></li>
+            <li><b>FIDO2</b><span>login com passkey</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="panel" id="mercados" data-accent="#a78bfa" aria-labelledby="mercados-title">
+        <div class="copy">
+          <p class="kicker">Missão 03 · Mercados</p>
+          <h2 id="mercados-title" class="display">Simula a trajetória.<br />Antes do risco.</h2>
+          <p class="lead">Cenários educativos para perceber risco, prazo e custo. Sem ordens reais e sem promessas de retorno.</p>
+        </div>
+      </section>
+
+      <section class="panel right" id="educacao" data-accent="#fbbf24" aria-labelledby="educacao-title">
+        <div class="copy">
+          <p class="kicker">Missão 04 · Educação</p>
+          <h2 id="educacao-title" class="display">Do 5.º ano<br />à faculdade.</h2>
+          <p class="lead">Percursos ao teu ritmo, literacia financeira desde cedo e um tutor que não cria perfis publicitários.</p>
+        </div>
+      </section>
+
+      <section class="panel center" id="privacidade" data-accent="#f472b6" aria-labelledby="privacidade-title">
+        <div class="copy">
+          <p class="kicker">Missão 05 · Privacidade</p>
+          <h2 id="privacidade-title" class="display">O teu espaço.<br />Os teus dados.</h2>
+          <p class="lead">Sem analytics publicitários, sem pixels, sem gravação de sessões. Esta página não usa cookies.</p>
+        </div>
+      </section>
+
+      <section class="panel center waitlist" id="lista" data-accent="#5eead4" aria-labelledby="lista-title">
+        <div class="copy">
+          <p class="kicker">Missão 06 · Lançamento</p>
+          <h2 id="lista-title" class="display">Entra na lista.</h2>
+          <p class="lead">Avisamos-te uma vez, quando abrirmos. Sem newsletter, sem partilha com terceiros.</p>
+
+          <form class="wl-form" id="wl-form" novalidate hidden>
+            <div class="wl-row">
+              <label class="wl-field">
+                <span>Email</span>
+                <input type="email" name="email" autocomplete="email" inputmode="email" maxlength="254" required placeholder="tu@exemplo.pt" />
+              </label>
+              <label class="wl-field">
+                <span>Para quem é</span>
+                <select name="interest">
+                  <option value="familias">Família</option>
+                  <option value="escolas">Escola</option>
+                  <option value="empresas">Empresa</option>
+                  <option value="outro" selected>Outro</option>
+                </select>
+              </label>
+            </div>
+            <!-- Isco para bots: invisível e fora da ordem de tabulação. -->
+            <div class="wl-hp" aria-hidden="true">
+              <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+            </div>
+            <label class="wl-consent">
+              <input type="checkbox" name="consent" required />
+              <span>Aceito que a Lusorbe guarde o meu email apenas para me avisar do lançamento. Posso pedir a remoção a qualquer momento. <a href="app/legal/privacy.html">Privacidade</a></span>
+            </label>
+            <button class="btn btn-solid" type="submit">Quero ser avisado</button>
+            <p class="wl-status" role="status" aria-live="polite"></p>
+          </form>
+          <p class="wl-soon" id="wl-soon">A lista abre assim que o serviço estiver online. Entretanto, segue o projeto no <a href="https://github.com/TheDreamer888/ChristLives">GitHub</a>.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="wordmark small">LUSORBE</span>
+      <ul>
+        <li><a href="app/legal/privacy.html">Privacidade</a></li>
+        <li><a href="app/legal/terms.html">Termos</a></li>
+        <li><a href="https://github.com/TheDreamer888/ChristLives">GitHub</a></li>
+        <li><a href="#top">Voltar ao topo ↑</a></li>
+      </ul>
+      <small>© Lusorbe · Projeto em desenvolvimento · Modelo 3D gerado com Higgsfield</small>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

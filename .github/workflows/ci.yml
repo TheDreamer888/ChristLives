@@ -29,6 +29,7 @@ jobs:
       - run: pnpm --filter frontend lint
       - run: pnpm --filter frontend test
       - run: pnpm --filter frontend build
+      - run: pnpm --filter landing build
 
   python:
     name: Python API
