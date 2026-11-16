@@ -319,9 +319,9 @@ export function createScene(opts: Options): SceneHandle {
   // [x, y, z, escala] ao longo da página
   const path: [number, number, number, number][] = [
     [2.1, 0, 0, 1], // topo: texto à esquerda, orbe à direita
-    [-2.3, 0.1, -0.5, 0.85], // defesa: texto à direita
-    [2.3, -0.1, -0.6, 0.85], // mercados
-    [-2.2, 0.1, -0.6, 0.85], // educação
+    [-2.3, 0.1, -0.5, 0.78], // defesa: texto à direita
+    [2.3, -0.1, -0.6, 0.78], // mercados
+    [-2.3, 0.1, -0.6, 0.78], // educação
     [0, 2.3, -3.2, 0.6], // privacidade: texto ao centro, orbe recua para cima
     [0, 3.1, -4.5, 0.5], // lista de espera
   ]
@@ -373,6 +373,8 @@ export function createScene(opts: Options): SceneHandle {
 
     // posição pelo scroll
     let [px, py, pz, ps] = pathAt(progress)
+    // afasta o orbe do texto conforme a largura: mais ecrã, mais para o lado
+    px *= Math.min(1.45, Math.max(1, camera.aspect / 1.5))
     if (narrow) {
       // ecrã estreito: o texto fica em baixo, o orbe centrado em cima
       px = 0
