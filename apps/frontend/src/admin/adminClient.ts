@@ -1,129 +1,54 @@
 /**
- * Cliente da API de administração. A sessão é o cookie httpOnly; aqui nunca
- * há tokens. Os erros trazem o código HTTP para a consola reagir (401/403/404).
+ * Ponte entre a consola de administração e o SDK oficial (@lusorbe/sdk).
+ *
+ * A consola continua a usar esta interface; o HTTP, as novas tentativas, os
+ * tempos limite e os erros tipados vêm do SDK. Os erros são convertidos em
+ * `AdminError` com o código HTTP, para a consola reagir a 401/403/404.
  */
-const API_BASE = import.meta.env['VITE_API_BASE_URL'] ?? 'http://localhost:8000'
+import { ApiError, LusorbeError } from '@lusorbe/sdk'
+import type {
+  AdminMe,
+  AdminUser,
+  Approval,
+  AuditEntry,
+  ChainStatus,
+  Overview,
+  Posture,
+  RoleInfo,
+  WaitlistOverview,
+} from '@lusorbe/sdk'
+
+import { lusorbe } from '../lusorbe'
+
+export type { AdminUser, Approval, ChainStatus, Overview, Posture, RoleInfo }
+export type Me = AdminMe
+export type AuditItem = AuditEntry
+export type WaitlistData = WaitlistOverview
+
+export const PAGE_SIZE = 25
 
 export class AdminError extends Error {
-  constructor(public status: number, message: string) {
+  readonly status: number
+
+  constructor(status: number, message: string) {
     super(message)
+    this.status = status
   }
 }
 
-async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}/api/admin${path}`, {
-    credentials: 'include',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    const detail = typeof body.detail === 'string' ? body.detail : `Falha no pedido (${res.status})`
-    throw new AdminError(res.status, detail)
+/** Converte os erros do SDK no formato que a consola espera (status 0 = sem ligação). */
+async function wrap<T>(p: Promise<T>): Promise<T> {
+  try {
+    return await p
+  } catch (err) {
+    if (err instanceof ApiError) throw new AdminError(err.status, err.message)
+    if (err instanceof LusorbeError) throw new AdminError(0, err.message)
+    throw err
   }
-  return res.json() as Promise<T>
 }
 
-const post = <T>(path: string, body: unknown) => call<T>(path, { method: 'POST', body: JSON.stringify(body) })
-
-export interface Me {
-  id: string
-  name: string | null
-  roles: string[]
-  permissions: string[]
-  session_expires_in: number
-  step_up_valid_for: number
-}
-
-export interface AdminUser {
-  id: string
-  email: string | null
-  name: string | null
-  roles: string[]
-  status: 'active' | 'suspended'
-  methods: string[]
-  mfa: boolean
-  passkeys: number
-  created_at: number
-  last_login_at: number | null
-}
-
-export interface AuditItem {
-  seq: number
-  ts: number
-  actor_id: string | null
-  action: string
-  outcome: 'success' | 'denied' | 'error'
-  target: string | null
-  ip: string | null
-  reason: string | null
-  details: Record<string, unknown>
-  hash: string
-}
-
-export interface ChainStatus {
-  valid: boolean
-  checked: number
-  total: number
-  broken_at: number | null
-}
-
-export interface Overview {
-  users_total: number
-  users_active_24h: number
-  users_suspended: number
-  users_with_passkey: number
-  staff: Record<string, number>
-  approvals_pending: number
-  audit_events_24h: number
-  denied_24h: number
-  audit_chain: ChainStatus
-  recent: AuditItem[]
-}
-
-export interface RoleInfo {
-  id: string
-  label: string
-  description: string
-  privileged: boolean
-  permissions: string[]
-  members: number
-}
-
-export interface Approval {
-  id: string
-  action: string
-  target_user_id: string
-  role: string
-  requested_by: string
-  reason: string
-  created_at: number
-  status: 'pending' | 'approved' | 'rejected' | 'expired'
-  decided_by: string | null
-  decided_at: number | null
-  decision_note: string | null
-}
-
-export interface Posture {
-  score: number
-  checks: { id: string; label: string; ok: boolean }[]
-}
-
-export interface WaitlistData {
-  total: number
-  last_7_days: number
-  by_interest: Record<string, number>
-  daily_14d: number[]
-  retention_days: number
-  consent_version: string
-  items: { email: string; interest: string; consent_version: string; created_at: number }[]
-}
-
-async function download(path: string, filename: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/admin${path}`, { credentials: 'include', cache: 'no-store' })
-  if (!res.ok) throw new AdminError(res.status, `Falha na exportação (${res.status})`)
-  const url = URL.createObjectURL(await res.blob())
+function saveBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
@@ -131,34 +56,45 @@ async function download(path: string, filename: string): Promise<void> {
   URL.revokeObjectURL(url)
 }
 
-export const adminClient = {
-  me: () => call<Me>('/me'),
-  overview: () => call<Overview>('/overview'),
-  roles: () => call<{ roles: RoleInfo[]; two_person_rule: boolean }>('/roles'),
-  users: (params: { q?: string; role?: string; status?: string; page?: number }) => {
-    const qs = new URLSearchParams()
-    for (const [k, v] of Object.entries(params)) if (v) qs.set(k, String(v))
-    return call<{ total: number; page: number; page_size: number; items: AdminUser[] }>(`/users?${qs}`)
-  },
-  user: (id: string) => call<{ user: AdminUser; history: AuditItem[] }>(`/users/${encodeURIComponent(id)}`),
-  audit: (params: { action?: string; outcome?: string; actor?: string }) => {
-    const qs = new URLSearchParams()
-    for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v)
-    return call<{ total: number; items: AuditItem[] }>(`/audit?${qs}`)
-  },
-  verifyAudit: () => call<ChainStatus>('/audit/verify'),
-  approvals: () => call<{ items: Approval[] }>('/approvals'),
-  posture: () => call<Posture>('/security'),
-  suspend: (id: string, reason: string) => post(`/users/${encodeURIComponent(id)}/suspend`, { reason }),
-  reactivate: (id: string, reason: string) => post(`/users/${encodeURIComponent(id)}/reactivate`, { reason }),
-  revokeSessions: (id: string, reason: string) => post(`/users/${encodeURIComponent(id)}/revoke-sessions`, { reason }),
-  setRoles: (id: string, roles: string[], reason: string) =>
-    post<{ pending_approvals: string[] }>(`/users/${encodeURIComponent(id)}/roles`, { roles, reason }),
-  decide: (id: string, approve: boolean, note: string) =>
-    post(`/approvals/${encodeURIComponent(id)}/decide`, { approve, note }),
+const today = () => new Date().toISOString().slice(0, 10)
+const asStatus = (s?: string) => (s === 'active' || s === 'suspended' ? s : undefined)
+const asOutcome = (s?: string) => (s === 'success' || s === 'denied' || s === 'error' ? s : undefined)
 
-  exportAudit: () => download('/audit/export', `lusorbe-auditoria-${new Date().toISOString().slice(0, 10)}.csv`),
-  waitlist: () => call<WaitlistData>('/waitlist'),
-  exportWaitlist: () => download('/waitlist/export', `lusorbe-lista-espera-${new Date().toISOString().slice(0, 10)}.csv`),
-  deleteWaitlist: (email: string, reason: string) => post('/waitlist/delete', { email, reason }),
+export const adminClient = {
+  me: () => wrap(lusorbe.admin.me()),
+  overview: () => wrap(lusorbe.admin.overview()),
+  roles: () => wrap(lusorbe.admin.roles()),
+  posture: () => wrap(lusorbe.admin.securityPosture()),
+
+  /** Uma página da lista (a tabela da consola pagina por número). */
+  users: (params: { q?: string; role?: string; status?: string; page?: number }) =>
+    wrap(
+      (async () => {
+        const page = params.page ?? 1
+        const pages = lusorbe.admin.users
+          .list({ search: params.q, role: params.role, status: asStatus(params.status) })
+          .byPage({ continuationToken: String(page), maxPageSize: PAGE_SIZE })
+        const { value } = await pages.next()
+        const items: AdminUser[] = value?.items ?? []
+        return { total: value?.total ?? 0, page, page_size: PAGE_SIZE, items }
+      })(),
+    ),
+
+  user: (id: string) => wrap(lusorbe.admin.users.get(id)),
+  audit: (params: { action?: string; outcome?: string; actor?: string }) =>
+    wrap(lusorbe.admin.audit.list({ action: params.action, outcome: asOutcome(params.outcome), actorId: params.actor })),
+  verifyAudit: () => wrap(lusorbe.admin.audit.verify()),
+  approvals: async () => ({ items: await wrap(lusorbe.admin.approvals.list()) }),
+
+  suspend: (id: string, reason: string) => wrap(lusorbe.admin.users.suspend(id, { reason })),
+  reactivate: (id: string, reason: string) => wrap(lusorbe.admin.users.reactivate(id, { reason })),
+  revokeSessions: (id: string, reason: string) => wrap(lusorbe.admin.users.revokeSessions(id, { reason })),
+  setRoles: (id: string, roles: string[], reason: string) => wrap(lusorbe.admin.users.setRoles(id, { roles, reason })),
+  decide: (id: string, approve: boolean, note: string) => wrap(lusorbe.admin.approvals.decide(id, { approve, note })),
+
+  exportAudit: async () => saveBlob(await wrap(lusorbe.admin.audit.export()), `lusorbe-auditoria-${today()}.csv`),
+  waitlist: () => wrap(lusorbe.admin.waitlist.overview()),
+  exportWaitlist: async () =>
+    saveBlob(await wrap(lusorbe.admin.waitlist.export()), `lusorbe-lista-espera-${today()}.csv`),
+  deleteWaitlist: (email: string, reason: string) => wrap(lusorbe.admin.waitlist.delete({ email, reason })),
 }
