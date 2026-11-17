@@ -63,7 +63,7 @@ def main() -> int:
     args = parser.parse_args()
     text = json.dumps(build_spec(), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     if args.check:
-        current = TARGET.read_text(encoding="utf-8") if TARGET.exists() else ""
+        current = TARGET.read_text(encoding="utf-8").replace("\r\n", "\n") if TARGET.exists() else ""
         if current != text:
             print(f"{TARGET} está desatualizado. Corre: python scripts/export_openapi.py", file=sys.stderr)
             return 1

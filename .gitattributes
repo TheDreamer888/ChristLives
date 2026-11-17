@@ -1,0 +1,4 @@
+﻿
+# Ficheiros gerados: sempre LF, para as verificações de contrato não falharem em Windows.
+packages/sdk/openapi.json text eol=lf
+packages/sdk/src/generated/** text eol=lf
