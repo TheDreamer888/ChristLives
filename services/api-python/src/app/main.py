@@ -25,7 +25,18 @@ def _require_production_storage() -> None:
 
 
 _require_production_storage()
-app = FastAPI(title=settings.app_name, version="1.0.0")
+def _operation_id(route) -> str:
+    """operationId = <tag>_<função>, ex.: admin_list_users. Estável e legível no SDK."""
+    tag = route.tags[0] if route.tags else "default"
+    return f"{tag}_{route.name}"
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version="1.0.0",
+    description="API da Lusorbe: autenticação, lista de espera e administração.",
+    generate_unique_id_function=_operation_id,
+)
 
 app.add_middleware(
     CORSMiddleware,
