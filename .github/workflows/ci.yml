@@ -66,8 +66,10 @@ jobs:
           python-version: '3.12'
       - uses: snok/install-poetry@v1
         with:
-          version: 2.2.1
+          version: 2.5.1
           virtualenvs-create: true
+      # Falha se o poetry.lock não corresponder ao pyproject.toml (lock desatualizado).
+      - run: poetry check --lock
       - run: poetry install --no-interaction
       - run: poetry run python -m compileall -q src
       - run: poetry run pytest -q
