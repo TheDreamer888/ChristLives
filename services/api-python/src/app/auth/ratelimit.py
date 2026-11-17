@@ -24,18 +24,30 @@ _MAX_KEYS = 50_000
 
 
 class RateLimiter:
-    shared = False
+    """Janela deslizante em memória.
 
-    def __init__(self) -> None:
+    Cada chave guarda a sua própria janela. A cada minuto apagam-se as chaves
+    sem pedidos dentro da janela delas, para os IPs não ficarem em memória mais
+    tempo do que o necessário (a política de privacidade promete isto).
+    """
+
+    shared = False
+    PRUNE_EVERY = 60.0
+
+    def __init__(self, clock=time.monotonic) -> None:
+        self._clock = clock
         self._hits: dict[str, deque[float]] = defaultdict(deque)
+        self._windows: dict[str, int] = {}
         self._lock = threading.Lock()
+        self._last_prune = clock()
 
     def hit(self, key: str, limit: int, window_seconds: int) -> int | None:
         """Regista um pedido. Devolve os segundos de espera se o limite foi excedido."""
-        now = time.monotonic()
+        now = self._clock()
         with self._lock:
-            if len(self._hits) > _MAX_KEYS:
-                self._prune(now, window_seconds)
+            if now - self._last_prune >= self.PRUNE_EVERY or len(self._hits) > _MAX_KEYS:
+                self._prune(now)
+            self._windows[key] = max(window_seconds, self._windows.get(key, 0))
             hits = self._hits[key]
             while hits and now - hits[0] >= window_seconds:
                 hits.popleft()
@@ -44,13 +56,19 @@ class RateLimiter:
             hits.append(now)
             return None
 
-    def _prune(self, now: float, window_seconds: int) -> None:
-        for key in [k for k, v in self._hits.items() if not v or now - v[-1] >= window_seconds]:
+    def _prune(self, now: float) -> None:
+        self._last_prune = now
+        for key in [k for k, v in self._hits.items() if not v or now - v[-1] >= self._windows.get(k, 0)]:
             del self._hits[key]
+            self._windows.pop(key, None)
+
+    def __len__(self) -> int:
+        return len(self._hits)
 
     def clear(self) -> None:
         with self._lock:
             self._hits.clear()
+            self._windows.clear()
 
 
 # KEYS[1] = chave; ARGV = limite, janela (ms), id único do pedido.
