@@ -39,8 +39,12 @@ from src.app.auth.schemas import (
     BackupCodesResponse,
     ConsentRequest,
     OAuthStartResponse,
+    Ok,
+    ProvidersResponse,
+    RedeemResult,
     SessionUser,
     WebAuthnLoginVerify,
+    WebAuthnOptions,
     WebAuthnRegisterVerify,
 )
 from src.app.auth.store import ConcurrentUpdate, UserRecord, store
@@ -259,7 +263,7 @@ def _github_verified_email(client: httpx.Client, access_token: str) -> str | Non
 # ---- OAuth -----------------------------------------------------------------
 
 @router.get("/providers")
-def list_providers() -> dict:
+def list_providers() -> ProvidersResponse:  # type: ignore[return-value]
     """What the login tab renders — adapts automatically to configured env vars."""
     return {
         "oauth": [{"id": p.name, "name": p.display_name} for p in enabled_providers() if p.userinfo_url],
@@ -400,7 +404,7 @@ def session(request: Request):
 
 
 @router.post("/logout", dependencies=[Depends(_require_same_origin)])
-def logout(response: Response) -> dict:
+def logout(response: Response) -> Ok:  # type: ignore[return-value]
     # Sem lista de sessões no servidor não há revogação: o token expira em 8h.
     response.delete_cookie(SESSION_COOKIE_NAME, path="/")
     return {"ok": True}
@@ -409,7 +413,7 @@ def logout(response: Response) -> dict:
 # ---- WebAuthn passkeys / security keys ("keys/pen") ----
 
 @router.post("/webauthn/register/options", dependencies=[Depends(_require_same_origin)])
-def webauthn_register_options(request: Request) -> dict:
+def webauthn_register_options(request: Request) -> WebAuthnOptions:  # type: ignore[return-value]
     user = _require_fresh_user(request)
     existing_ids = [_b64url_decode(cid) for cid in user.webauthn_credentials]
     options, options_json = wa.build_registration_options(user.id, user.email or user.id, existing_ids)
@@ -419,7 +423,7 @@ def webauthn_register_options(request: Request) -> dict:
 
 
 @router.post("/webauthn/register/verify", dependencies=[Depends(_require_same_origin)])
-def webauthn_register_verify(body: WebAuthnRegisterVerify, request: Request) -> dict:
+def webauthn_register_verify(body: WebAuthnRegisterVerify, request: Request) -> Ok:  # type: ignore[return-value]
     user = _require_fresh_user(request)
     entry = store.webauthn_challenges.pop(body.challenge_id)
     if not entry or entry[0] != user.id:
@@ -444,7 +448,7 @@ def webauthn_register_verify(body: WebAuthnRegisterVerify, request: Request) -> 
     "/webauthn/login/options",
     dependencies=[Depends(_rate_limit_ip), Depends(_require_same_origin)],
 )
-def webauthn_login_options(body: EmailBody) -> dict:
+def webauthn_login_options(body: EmailBody) -> WebAuthnOptions:  # type: ignore[return-value]
     _rate_limit_account("pk", body.email, limit=10, window_seconds=60)
     user = _find_user_by_email(body.email)
     allowed_ids = [_b64url_decode(cid) for cid in user.webauthn_credentials] if user else []
@@ -462,7 +466,7 @@ def webauthn_login_options(body: EmailBody) -> dict:
     "/webauthn/login/verify",
     dependencies=[Depends(_rate_limit_ip), Depends(_require_same_origin)],
 )
-def webauthn_login_verify(body: WebAuthnLoginVerify, response: Response) -> dict:
+def webauthn_login_verify(body: WebAuthnLoginVerify, response: Response) -> Ok:  # type: ignore[return-value]
     entry = store.webauthn_challenges.pop(body.challenge_id)
     if not entry:
         raise HTTPException(400, _GENERIC_PASSKEY_ERROR)
@@ -505,7 +509,7 @@ def generate_codes(request: Request) -> BackupCodesResponse:
     "/recovery/backup-codes/redeem",
     dependencies=[Depends(_rate_limit_ip), Depends(_require_same_origin)],
 )
-def redeem_code(body: RedeemBody, response: Response) -> dict:
+def redeem_code(body: RedeemBody, response: Response) -> RedeemResult:  # type: ignore[return-value]
     _rate_limit_account("rc", body.email, limit=5, window_seconds=900)
     user = _find_user_by_email(body.email)
     if not user:
@@ -528,7 +532,7 @@ def redeem_code(body: RedeemBody, response: Response) -> dict:
 # ---- Legal / consent (GDPR Art. 7, LGPD Art. 8: freely given, recorded consent) ----
 
 @router.post("/consent", dependencies=[Depends(_require_same_origin)])
-def record_consent(body: ConsentRequest, request: Request) -> dict:
+def record_consent(body: ConsentRequest, request: Request) -> Ok:  # type: ignore[return-value]
     user = _require_user(request)
     if not (body.terms_accepted and body.privacy_accepted):
         raise HTTPException(400, "É necessário aceitar os Termos e a Política de Privacidade.")

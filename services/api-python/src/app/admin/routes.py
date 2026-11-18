@@ -27,6 +27,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.app.admin import rbac
+from src.app.admin import schemas as s
 from src.app.admin.approvals import ApprovalConflict, approvals, two_person_rule_enabled
 from src.app.admin.audit import audit_log
 from src.app.auth import routes as auth_routes
@@ -248,7 +249,7 @@ def _guard_target(ctx: AdminContext, target: UserRecord, action: str) -> None:
 # ---- Endpoints de leitura -------------------------------------------------------
 
 @router.get("/me")
-def me(ctx: AdminContext = Depends(_admin_context)) -> dict:
+def me(ctx: AdminContext = Depends(_admin_context)) -> s.Me:  # type: ignore[return-value]
     return {
         "id": ctx.user.id,
         "name": ctx.user.name,
@@ -260,7 +261,7 @@ def me(ctx: AdminContext = Depends(_admin_context)) -> dict:
 
 
 @router.get("/roles")
-def roles(ctx: AdminContext = Depends(_admin_context)) -> dict:
+def roles(ctx: AdminContext = Depends(_admin_context)) -> s.RolesResponse:  # type: ignore[return-value]
     all_users = store.all_users()
     return {
         "roles": [
@@ -279,7 +280,7 @@ def roles(ctx: AdminContext = Depends(_admin_context)) -> dict:
 
 
 @router.get("/overview")
-def overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
+def overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> s.Overview:  # type: ignore[return-value]
     now = time.time()
     users = store.all_users()
     entries = audit_log.entries()
@@ -306,7 +307,7 @@ def list_users(
     status: str = Query(default="", pattern="^(|active|suspended)$"),
     page: int = Query(default=1, ge=1, le=10_000),
     page_size: int = Query(default=25, ge=1, le=100),
-) -> dict:
+) -> s.UserPage:  # type: ignore[return-value]
     needle = q.strip().lower()
     items = []
     for user in store.all_users():
@@ -328,7 +329,7 @@ def list_users(
 
 
 @router.get("/users/{user_id}")
-def get_user(user_id: str, ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
+def get_user(user_id: str, ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> s.UserDetail:  # type: ignore[return-value]
     user = _get_target(user_id)
     history = [_entry_view(e) for e in audit_log.entries() if e.target == user_id][-20:][::-1]
     return {"user": _user_view(user, ctx), "history": history}
@@ -341,7 +342,7 @@ def audit(
     outcome: str = Query(default="", pattern="^(|success|denied|error)$"),
     actor: str = Query(default="", max_length=64),
     limit: int = Query(default=100, ge=1, le=500),
-) -> dict:
+) -> s.AuditPage:  # type: ignore[return-value]
     items = [
         e
         for e in audit_log.entries()
@@ -353,7 +354,7 @@ def audit(
 
 
 @router.get("/audit/verify")
-def audit_verify(ctx: AdminContext = Depends(require(rbac.AUDIT_READ))) -> dict:
+def audit_verify(ctx: AdminContext = Depends(require(rbac.AUDIT_READ))) -> s.ChainStatus:  # type: ignore[return-value]
     result = audit_log.verify()
     ctx.audit("audit.verify", details={"valid": result["valid"]})
     return result
@@ -365,7 +366,11 @@ def _csv_safe(value: object) -> str:
     return "'" + text if text[:1] in {"=", "+", "-", "@", "\t", "\r"} else text
 
 
-@router.get("/audit/export")
+@router.get(
+    "/audit/export",
+    responses={200: {"content": {"text/csv": {}}, "description": "CSV (UTF-8)."}},
+    response_class=StreamingResponse,
+)
 def audit_export(ctx: AdminContext = Depends(require(rbac.AUDIT_EXPORT))) -> StreamingResponse:
     entries = audit_log.entries()
     ctx.audit("audit.export", details={"rows": len(entries)})
@@ -383,7 +388,7 @@ def audit_export(ctx: AdminContext = Depends(require(rbac.AUDIT_EXPORT))) -> Str
 
 
 @router.get("/security")
-def security_posture(ctx: AdminContext = Depends(require(rbac.SECURITY_READ))) -> dict:
+def security_posture(ctx: AdminContext = Depends(require(rbac.SECURITY_READ))) -> s.Posture:  # type: ignore[return-value]
     production = os.getenv("ENV", "production").lower() not in {"development", "dev", "test"}
     checks = [
         ("env_production", "Ambiente em modo produção", production),
@@ -406,14 +411,14 @@ def security_posture(ctx: AdminContext = Depends(require(rbac.SECURITY_READ))) -
 
 
 @router.get("/approvals")
-def list_approvals(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
+def list_approvals(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> s.ApprovalList:  # type: ignore[return-value]
     return {"items": [r.public() for r in approvals.all()[:100]]}
 
 
 # ---- Endpoints de escrita -------------------------------------------------------
 
 @router.post("/users/{user_id}/suspend")
-def suspend(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_write(rbac.USERS_SUSPEND))) -> dict:
+def suspend(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_write(rbac.USERS_SUSPEND))) -> s.UserResult:  # type: ignore[return-value]
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.suspend")
     if "owner" in target.roles and len(_owners()) <= 1:
@@ -426,7 +431,7 @@ def suspend(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_
 
 
 @router.post("/users/{user_id}/reactivate")
-def reactivate(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_write(rbac.USERS_SUSPEND))) -> dict:
+def reactivate(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_write(rbac.USERS_SUSPEND))) -> s.UserResult:  # type: ignore[return-value]
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.reactivate")
     target.suspended = False
@@ -438,7 +443,7 @@ def reactivate(user_id: str, body: ReasonBody, ctx: AdminContext = Depends(requi
 @router.post("/users/{user_id}/revoke-sessions")
 def revoke_sessions(
     user_id: str, body: ReasonBody, ctx: AdminContext = Depends(require_write(rbac.USERS_REVOKE_SESSIONS))
-) -> dict:
+) -> s.Ok:  # type: ignore[return-value]
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.revoke_sessions")
     target.sessions_valid_after = time.time()
@@ -448,7 +453,7 @@ def revoke_sessions(
 
 
 @router.post("/users/{user_id}/roles")
-def set_roles(user_id: str, body: RolesBody, ctx: AdminContext = Depends(require_write(rbac.ROLES_ASSIGN))) -> dict:
+def set_roles(user_id: str, body: RolesBody, ctx: AdminContext = Depends(require_write(rbac.ROLES_ASSIGN))) -> s.RolesResult:  # type: ignore[return-value]
     target = _get_target(user_id)
     _guard_target(ctx, target, "user.roles")
     wanted = set(body.roles)
@@ -493,7 +498,7 @@ def set_roles(user_id: str, body: RolesBody, ctx: AdminContext = Depends(require
 @router.post("/approvals/{request_id}/decide")
 def decide(
     request_id: str, body: DecisionBody, ctx: AdminContext = Depends(require_write(rbac.APPROVALS_DECIDE))
-) -> dict:
+) -> s.DecisionResult:  # type: ignore[return-value]
     with approvals.lock:
         req = approvals.get(request_id)
         if not req:
@@ -537,7 +542,7 @@ def _email_ref(email: str) -> str:
 
 
 @router.get("/waitlist")
-def waitlist_overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> dict:
+def waitlist_overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> s.WaitlistOverview:  # type: ignore[return-value]
     wl.purge_expired()
     entries = wl.waitlist.all()
     now = time.time()
@@ -566,7 +571,11 @@ def waitlist_overview(ctx: AdminContext = Depends(require(rbac.USERS_READ))) -> 
     }
 
 
-@router.get("/waitlist/export")
+@router.get(
+    "/waitlist/export",
+    responses={200: {"content": {"text/csv": {}}, "description": "CSV (UTF-8)."}},
+    response_class=StreamingResponse,
+)
 def waitlist_export(ctx: AdminContext = Depends(require(rbac.WAITLIST_EXPORT))) -> StreamingResponse:
     entries = wl.waitlist.all()
     ctx.audit("waitlist.export", details={"rows": len(entries)})
@@ -584,7 +593,7 @@ def waitlist_export(ctx: AdminContext = Depends(require(rbac.WAITLIST_EXPORT))) 
 
 
 @router.post("/waitlist/delete")
-def waitlist_delete(body: WaitlistDeleteBody, ctx: AdminContext = Depends(require_write(rbac.WAITLIST_DELETE))) -> dict:
+def waitlist_delete(body: WaitlistDeleteBody, ctx: AdminContext = Depends(require_write(rbac.WAITLIST_DELETE))) -> s.Ok:  # type: ignore[return-value]
     removed = wl.waitlist.delete(body.email.strip().lower())
     ctx.audit("waitlist.delete", "success" if removed else "error", target=_email_ref(body.email), reason=body.reason)
     if not removed:

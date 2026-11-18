@@ -26,6 +26,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      # SDK: tipos gerados em dia com o contrato, testes, tipos e build.
+      - run: pnpm --filter @lusorbe/sdk check:generated
+      - run: pnpm --filter @lusorbe/sdk typecheck
+      - run: pnpm --filter @lusorbe/sdk test
       - run: pnpm --filter frontend lint
       - run: pnpm --filter frontend test
       - run: pnpm --filter frontend build
@@ -72,6 +76,8 @@ jobs:
       - run: poetry check --lock
       - run: poetry install --no-interaction
       - run: poetry run python -m compileall -q src
+      # O contrato OpenAPI do SDK tem de corresponder à API.
+      - run: poetry run python scripts/export_openapi.py --check
       - run: poetry run pytest -q
         env:
           TEST_DATABASE_URL: postgresql://lusorbe:lusorbe-ci-only@localhost:5432/lusorbe_test

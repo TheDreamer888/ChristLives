@@ -128,6 +128,17 @@ class JoinBody(BaseModel):
     website: str = Field(default="", max_length=200)  # isco: humanos não veem este campo
 
 
+class JoinResult(BaseModel):
+    ok: Literal[True] = True
+    message: str
+
+
+class ConsentInfo(BaseModel):
+    version: str
+    text: str
+    interests: dict[str, str]
+
+
 def _limit(request: Request) -> None:
     ip = request.client.host if request.client else "unknown"
     for key, limit, window in ((f"wl:ip:{ip}", 5, 3600), ("wl:global", 500, 3600)):
@@ -137,12 +148,12 @@ def _limit(request: Request) -> None:
 
 
 @router.get("/consent")
-def consent_text() -> dict:
+def consent_text() -> ConsentInfo:  # type: ignore[return-value]
     return {"version": CONSENT_VERSION, "text": CONSENT_TEXT, "interests": INTERESTS}
 
 
 @router.post("", status_code=202, dependencies=[Depends(auth_routes._require_same_origin), Depends(_limit)])
-def join(body: JoinBody) -> dict:
+def join(body: JoinBody) -> JoinResult:  # type: ignore[return-value]
     if not body.consent:
         raise HTTPException(422, "É preciso aceitar para entrar na lista.")
     if not body.website:  # bots preenchem o isco; respondem igual mas nada é guardado
