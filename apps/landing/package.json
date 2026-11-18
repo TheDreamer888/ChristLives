@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lusorbe/core": "workspace:*",
     "three": "0.187.0"
   },
   "devDependencies": {

@@ -12,6 +12,7 @@
     "audit:security": "pnpm audit --audit-level high"
   },
   "dependencies": {
+    "@lusorbe/core": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

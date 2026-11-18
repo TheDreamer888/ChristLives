@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { authClient, type ProviderInfo, type SessionUser } from "../auth/authClient";
 import { runUnauthenticatedGuard } from "../lib/loginTabGuard";
 import "./LoginTab.css";
+import { links } from '../lib/links'
 
 const PROVIDER_ICONS: Record<string, string> = {
   google: "🟢",
@@ -173,11 +174,11 @@ export default function LoginTab() {
       <fieldset className="login-tab__legal">
         <label>
           <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-          Li e aceito os <a href="/legal/terms.html" target="_blank" rel="noreferrer">Termos de Serviço</a>
+          Li e aceito os <a href={links.terms} target="_blank" rel="noreferrer">Termos de Serviço</a>
         </label>
         <label>
           <input type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />
-          Li e aceito a <a href="/legal/privacy.html" target="_blank" rel="noreferrer">Política de Privacidade</a>{" "}
+          Li e aceito a <a href={links.privacy} target="_blank" rel="noreferrer">Política de Privacidade</a>{" "}
           (RGPD/LGPD)
         </label>
       </fieldset>

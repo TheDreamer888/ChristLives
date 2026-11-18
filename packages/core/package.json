@@ -1,0 +1,9 @@
+{
+  "name": "@lusorbe/core",
+  "version": "0.1.0",
+  "description": "Lógica partilhada entre a app e o site da Lusorbe (revisão local de texto e simulador). Sem dependências.",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": { ".": "./src/index.ts" }
+}

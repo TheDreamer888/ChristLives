@@ -49,6 +49,8 @@ import { hopf, rotation4D, tesseract } from './hyper'
 
 export interface SceneHandle {
   setProgress(p: number): void
+  /** Posição pelo índice de zona (0…STAGES-1), fracionário para transições. */
+  setStage(stage: number): void
   setAccent(hex: string): void
   pulse(): void
   dispose(): void
@@ -324,6 +326,7 @@ export function createScene(opts: Options): SceneHandle {
     [-2.3, 0.1, -0.5, 0.78], // defesa: texto à direita
     [2.3, -0.1, -0.6, 0.78], // mercados
     [-2.3, 0.1, -0.6, 0.78], // educação
+    [2.9, 1.9, -6.5, 0.5], // conteúdo (como funciona, segurança, FAQ…): recua para o canto
     [0, 2.3, -3.2, 0.6], // privacidade: texto ao centro, orbe recua para cima
     [0, 3.1, -4.5, 0.5], // lista de espera
   ]
@@ -496,6 +499,10 @@ export function createScene(opts: Options): SceneHandle {
   return {
     setProgress(p) {
       progress = p
+      invalidate()
+    },
+    setStage(stage) {
+      progress = Math.min(1, Math.max(0, stage / (path.length - 1)))
       invalidate()
     },
     setAccent(hex) {

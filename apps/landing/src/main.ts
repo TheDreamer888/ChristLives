@@ -1,13 +1,18 @@
 import './style.css'
+import { initDemos } from './demos'
 import { initWaitlist } from './waitlist'
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
 const loader = document.getElementById('loader')!
 const bar = document.getElementById('loader-bar')!
 const canvas = document.getElementById('scene') as HTMLCanvasElement
-const panels = [...document.querySelectorAll<HTMLElement>('.panel')]
+const panels = [...document.querySelectorAll<HTMLElement>('.panel, .content')]
+// Cada zona marcada com data-orb corresponde a uma posição do orbe (ver scene.ts).
+const stages = [...document.querySelectorAll<HTMLElement>('[data-orb]')]
+const accents = [...document.querySelectorAll<HTMLElement>('[data-accent]')]
 
 initWaitlist()
+initDemos()
 
 function hideLoader() {
   loader.classList.add('done')
@@ -63,13 +68,25 @@ async function boot3d() {
   let ticking = false
   const update = () => {
     ticking = false
-    const max = document.documentElement.scrollHeight - innerHeight
-    scene.setProgress(max > 0 ? scrollY / max : 0)
     const mid = innerHeight / 2
-    const active = panels.find((p) => {
-      const r = p.getBoundingClientRect()
+    const contains = (el: HTMLElement) => {
+      const r = el.getBoundingClientRect()
       return r.top <= mid && r.bottom >= mid
-    })
+    }
+    // Posição do orbe: zona visível + quanto dela já passou (transição suave entre zonas).
+    const zone = stages.find(contains)
+    if (zone) {
+      const r = zone.getBoundingClientRect()
+      const within = Math.min(1, Math.max(0, (mid - r.top) / r.height))
+      const index = Number(zone.dataset['orb'])
+      const next = stages[stages.indexOf(zone) + 1]
+      const span = next ? Number(next.dataset['orb']) - index : 0
+      // Só se aproxima da posição seguinte na metade final da zona.
+      const t = within < 0.5 ? 0 : (within - 0.5) * 2
+      scene.setStage(index + span * t * t * (3 - 2 * t))
+    }
+    // Cor: a secção mais específica (dentro da zona de conteúdo há várias).
+    const active = accents.filter(contains).pop()
     if (active?.dataset.accent) {
       scene.setAccent(active.dataset.accent)
       document.documentElement.style.setProperty('--accent', active.dataset.accent)
