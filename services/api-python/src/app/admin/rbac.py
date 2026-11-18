@@ -20,6 +20,7 @@ AUDIT_EXPORT = "audit.export"
 SECURITY_READ = "security.read"
 WAITLIST_EXPORT = "waitlist.export"  # emails completos em CSV
 WAITLIST_DELETE = "waitlist.delete"  # direito ao apagamento (RGPD art. 17)
+DNS_MANAGE = "dns.manage"  # controla o domínio: só proprietários
 
 ALL_PERMISSIONS = frozenset(
     {
@@ -35,6 +36,7 @@ ALL_PERMISSIONS = frozenset(
         SECURITY_READ,
         WAITLIST_EXPORT,
         WAITLIST_DELETE,
+        DNS_MANAGE,
     }
 )
 
