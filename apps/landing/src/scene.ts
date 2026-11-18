@@ -45,6 +45,8 @@ import {
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+import { hopf, rotation4D, tesseract } from './hyper'
+
 export interface SceneHandle {
   setProgress(p: number): void
   setAccent(hex: string): void
@@ -55,6 +57,8 @@ export interface SceneHandle {
 interface Options {
   canvas: HTMLCanvasElement
   modelUrl: string
+  /** Versão com texturas de 2048 px, para ecrãs de 2560 px reais ou mais (QHD, 4K). */
+  modelUrl4k?: string
   reducedMotion: boolean
   onProgress?: (ratio: number) => void
   onReady?: () => void
@@ -133,30 +137,6 @@ function starfield(count: number, radius: number): Points {
   return new Points(geo, mat)
 }
 
-/** Escudo: partículas numa esfera que se afastam do cursor. */
-function shield(count: number): { points: Points; base: Float32Array } {
-  const base = new Float32Array(count * 3)
-  // espiral de Fibonacci: distribuição uniforme e bonita
-  const golden = Math.PI * (3 - Math.sqrt(5))
-  for (let i = 0; i < count; i++) {
-    const y = 1 - (i / (count - 1)) * 2
-    const r = Math.sqrt(1 - y * y)
-    const t = golden * i
-    base.set([Math.cos(t) * r * 2.3, y * 2.3, Math.sin(t) * r * 2.3], i * 3)
-  }
-  const geo = new BufferGeometry()
-  geo.setAttribute('position', new BufferAttribute(base.slice(), 3))
-  const mat = new PointsMaterial({
-    size: 0.025,
-    color: 0x5eead4,
-    transparent: true,
-    opacity: 0.55,
-    depthWrite: false,
-    blending: AdditiveBlending,
-  })
-  return { points: new Points(geo, mat), base }
-}
-
 export function createScene(opts: Options): SceneHandle {
   const { canvas, reducedMotion } = opts
   const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' })
@@ -165,7 +145,9 @@ export function createScene(opts: Options): SceneHandle {
   renderer.toneMappingExposure = 1.05
   renderer.setClearColor(0x000000, 1)
 
-  const maxDpr = Math.min(window.devicePixelRatio || 1, 1.75)
+  // Até 2x: num monitor 4K a 150-200 % desenha à resolução nativa. A resolução
+  // adaptativa baixa sozinha se a placa gráfica não acompanhar.
+  const maxDpr = Math.min(window.devicePixelRatio || 1, 2)
   let dpr = maxDpr
   renderer.setPixelRatio(dpr)
 
@@ -227,8 +209,20 @@ export function createScene(opts: Options): SceneHandle {
   const coreLight = new PointLight(accent, 30, 12, 2)
   tilt.add(coreLight)
 
-  const { points: shieldPts, base: shieldBase } = shield(reducedMotion ? 900 : 2200)
-  tilt.add(shieldPts)
+  // --- 4D: fibração de Hopf (escudo) e hipercubo, rodados e projetados no shader ---
+  const hopfObj = hopf(reducedMotion ? 48 : 72, reducedMotion ? 32 : 44)
+  hopfObj.material.uniforms['uScale']!.value = 1.55
+  hopfObj.material.uniforms['uSize']!.value = 0.05
+  const tess = tesseract(reducedMotion ? 16 : 26)
+  tess.material.uniforms['uScale']!.value = 0.85
+  tess.material.uniforms['uSize']!.value = 0.04
+  // O hipercubo é uma "lua" em 4D que orbita o orbe: pequeno o suficiente para se ler a forma.
+  const moon = new Group()
+  moon.add(tess.points)
+  tilt.add(hopfObj.points, moon)
+  const hyperMats = [hopfObj.material, tess.material]
+  let wAngle = 0 // rotação extra na 4.ª dimensão ao arrastar
+  const colorB = new Color()
 
   // ondas de choque (clique)
   const waves: { mesh: Mesh; age: number }[] = []
@@ -251,8 +245,10 @@ export function createScene(opts: Options): SceneHandle {
   }
 
   // --- Modelo do Higgsfield ---------------------------------------------------------
+  const physical = Math.max(screen.width, screen.height) * (window.devicePixelRatio || 1)
+  const modelUrl = opts.modelUrl4k && physical >= 2560 ? opts.modelUrl4k : opts.modelUrl
   new GLTFLoader().load(
-    opts.modelUrl,
+    modelUrl,
     (gltf) => {
       const model = gltf.scene
       // normaliza: centra e ajusta ao tamanho do orbe procedimental
@@ -260,6 +256,12 @@ export function createScene(opts: Options): SceneHandle {
         const mat = (o as Mesh).material as MeshStandardMaterial | undefined
         if (mat && 'envMapIntensity' in mat) mat.envMapIntensity = 1.3
         if (mat?.emissiveMap) glowMats.push(mat)
+        if (mat) {
+          const aniso = renderer.capabilities.getMaxAnisotropy()
+          for (const tex of [mat.map, mat.emissiveMap, mat.metalnessMap, mat.roughnessMap, mat.normalMap]) {
+            if (tex) tex.anisotropy = aniso
+          }
+        }
       })
       const bounds = new Box3().setFromObject(model)
       const box = bounds.getSize(new Vector3())
@@ -340,13 +342,13 @@ export function createScene(opts: Options): SceneHandle {
   let running = false
   let frameAvg = 16
   let narrow = false
-  const tmp = new Vector3()
 
   // --- Ciclo -----------------------------------------------------------------------
   function resize() {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
     renderer.setSize(w, h, false)
+    syncViewHalf()
     camera.aspect = w / h
     // em ecrãs estreitos afasta a câmara para o orbe caber
     narrow = w / h < 0.8
@@ -357,6 +359,11 @@ export function createScene(opts: Options): SceneHandle {
   const ro = new ResizeObserver(resize)
   ro.observe(canvas)
   resize()
+
+  function syncViewHalf() {
+    const half = renderer.getDrawingBufferSize(new Vector2()).y / 2
+    for (const m of hyperMats) m.uniforms['uViewHalf']!.value = half
+  }
 
   function invalidate() {
     if (!running && !document.hidden) start()
@@ -412,27 +419,24 @@ export function createScene(opts: Options): SceneHandle {
     coreLight.intensity = 30 * (1 + kick)
     for (const m of glowMats) m.emissiveIntensity = (1.1 + kick * 1.6) * breathe
 
-    // escudo: repele as partículas da direção do cursor
-    const attr = shieldPts.geometry.getAttribute('position') as BufferAttribute
-    const arr = attr.array as Float32Array
-    tmp.set(pointer.x * 2.3, pointer.y * 2.3, 1.6)
-    for (let i = 0; i < arr.length; i += 3) {
-      const bx = shieldBase[i]!
-      const by = shieldBase[i + 1]!
-      const bz = shieldBase[i + 2]!
-      const dx = bx - tmp.x
-      const dy = by - tmp.y
-      const dz = bz - tmp.z
-      const d2 = dx * dx + dy * dy + dz * dz
-      const push = 0.9 / (1 + d2 * 2.2) + kick * 0.25
-      const wobble = reducedMotion ? 0 : Math.sin(t * 2 + i) * 0.015
-      arr[i] = bx * (1 + push * 0.18) + wobble
-      arr[i + 1] = by * (1 + push * 0.18)
-      arr[i + 2] = bz * (1 + push * 0.18)
+    // 4D: só se atualizam uniforms; cada ponto é rodado e projetado no shader
+    const r = reducedMotion ? 0 : t
+    wAngle += velX * dt * 0.8
+    colorB.copy(accent).offsetHSL(0.17, 0, 0.06)
+    for (const m of hyperMats) {
+      const u = m.uniforms
+      u['uTime']!.value = r
+      u['uKick']!.value = kick
+      ;(u['uPointer']!.value as Vector3).set(pointer.x * 2.6, pointer.y * 2.6, 1.8)
+      ;(u['uColorA']!.value as Color).copy(accent)
+      ;(u['uColorB']!.value as Color).copy(colorB)
     }
-    attr.needsUpdate = true
-    ;(shieldPts.material as PointsMaterial).color.copy(accent)
-    shieldPts.rotation.y += dt * 0.05
+    rotation4D(hopfObj.material.uniforms['uRot']!.value, r * 0.11 + pointer.x * 0.9 + wAngle, r * 0.07 + pointer.y * 0.9, progress * Math.PI * 1.5 + r * 0.05, r * 0.03)
+    const orbit = r * 0.22 + progress * Math.PI
+    // órbita elíptica: quando passa para o lado do texto vai por trás (z negativo) e fica mais pequena
+    moon.position.set(Math.cos(orbit) * 2.3, 0.9 + Math.sin(orbit * 0.7) * 0.5, Math.sin(orbit) * 1.2)
+    ;(tess.material.uniforms['uPointer']!.value as Vector3).set(0, 0, 100) // a lua não se deforma com o cursor
+    rotation4D(tess.material.uniforms['uRot']!.value, r * 0.31 + pointer.x * 1.2 + wAngle * 1.5, r * 0.23 - pointer.y * 1.2, r * 0.17 + progress * Math.PI * 2, r * 0.13)
 
     // ondas
     for (const w of waves) {
@@ -458,10 +462,12 @@ export function createScene(opts: Options): SceneHandle {
     if (frameAvg > 14 && dpr > 1) {
       dpr = Math.max(1, dpr - 0.25)
       renderer.setPixelRatio(dpr)
+      syncViewHalf()
       frameAvg = 10
     } else if (frameAvg < 6 && dpr < maxDpr) {
       dpr = Math.min(maxDpr, dpr + 0.25)
       renderer.setPixelRatio(dpr)
+      syncViewHalf()
       frameAvg = 10
     }
 

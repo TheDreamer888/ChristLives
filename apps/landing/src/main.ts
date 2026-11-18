@@ -52,6 +52,7 @@ async function boot3d() {
   const scene = createScene({
     canvas,
     modelUrl: `${import.meta.env.BASE_URL}3d/lusorbe.glb`,
+    modelUrl4k: `${import.meta.env.BASE_URL}3d/lusorbe-4k.glb`,
     reducedMotion,
     onProgress: (r) => (bar.style.transform = `scaleX(${r})`),
     onReady: hideLoader,
