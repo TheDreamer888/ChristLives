@@ -129,6 +129,7 @@ h2.display { font-size: clamp(2.2rem, 5.6vw, 4.6rem); }
 .wl-form { display: grid; gap: 18px; text-align: left; margin-top: 8px; padding: 28px; border: 1px solid var(--line); background: rgba(0,0,0,.55); backdrop-filter: blur(12px); }
 .wl-form[hidden], .wl-soon[hidden] { display: none; }
 .wl-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.wl-row-single { grid-template-columns: 1fr; }
 .wl-field { display: grid; gap: 6px; font-size: .85rem; color: var(--muted); letter-spacing: .04em; }
 .wl-field input, .wl-field select { font: 16px/1.4 var(--font-body); color: var(--fg); background: #0a0d12; border: 1px solid var(--line); border-radius: 0; padding: 14px 16px; width: 100%; }
 .wl-field input:focus, .wl-field select:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }

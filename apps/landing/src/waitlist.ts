@@ -45,7 +45,7 @@ export function initWaitlist(): void {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          interest: (form.elements.namedItem('interest') as HTMLSelectElement).value,
+          interest: 'outro',
           consent: true,
           website: field('website').value,
         }),
