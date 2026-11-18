@@ -1,5 +1,5 @@
 {
-  "name": "aegis-platform",
+  "name": "lusorbe-platform",
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "scripts": {

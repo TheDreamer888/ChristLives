@@ -73,6 +73,12 @@ def _auto_cleanup(path: Path, days: int = 30) -> None:
             continue
 
 
+def env(name: str) -> str | None:
+    """Lê uma variável de ambiente; vazio conta como não definida."""
+    value = os.getenv(name, "").strip()
+    return value or None
+
+
 _ensure_dirs(DATA_DIR, LOG_DIR)
 
 
@@ -81,7 +87,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "Aegis"
+    app_name: str = "Lusorbe"
     debug: bool = False
 
     # Origens autorizadas para CORS (frontend em dev/produção), separadas por vírgula.

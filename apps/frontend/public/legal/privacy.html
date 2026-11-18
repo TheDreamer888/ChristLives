@@ -2,60 +2,162 @@
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
-    <title>Política de Privacidade — Aegis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Política de Privacidade — Lusorbe</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #1b1f24; --muted: #5b6573; --line: #d8dde3; --bg: #fff; --mark: #fff3bf; --mark-fg: #5c4400; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #e6edf3; --muted: #9aa4b1; --line: #30363d; --bg: #0d1117; --mark: #3a2f00; --mark-fg: #ffe28a; } }
+      body { font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+      h1 { font-size: 1.9rem; margin: 0 0 4px; }
+      h2 { font-size: 1.2rem; margin: 2.2rem 0 .5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+      .meta, small { color: var(--muted); }
+      .todo { background: var(--mark); color: var(--mark-fg); padding: 0 4px; border-radius: 3px; font-weight: 600; }
+      .notice { border: 1px solid var(--line); border-left: 4px solid #d29922; padding: 10px 14px; margin: 16px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: .92rem; margin: 8px 0; }
+      th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--line); }
+      th { font-weight: 600; }
+      .wrap { overflow-x: auto; }
+      a { color: inherit; }
+    </style>
   </head>
-  <body style="font-family: system-ui; max-width: 720px; margin: 2rem auto; padding: 0 1rem;">
+  <body>
     <h1>Política de Privacidade</h1>
-    <p><strong>Versão: 9 de setembro de 2026.</strong> Esta política deve ser adaptada e revista pelo responsável pelo tratamento antes do lançamento.</p>
-    <h2>Dados recolhidos</h2>
+    <p class="meta">Versão de 17 de novembro de 2026.</p>
+
+    <div class="notice">
+      <strong>Rascunho antes do lançamento.</strong> Esta política descreve o que o software da Lusorbe faz
+      hoje. Os campos <span class="todo">assinalados</span> têm de ser preenchidos pelo responsável pelo
+      tratamento, e o texto deve ser revisto por um jurista antes de recolher dados reais.
+    </div>
+
+    <h2 id="responsavel">1. Quem é o responsável</h2>
     <p>
-      Recolhemos apenas o identificador, nome e email fornecidos pelo provedor
-      de login escolhido (Google, Microsoft, GitHub, etc.) e metadados de
-      credenciais de chave de segurança (não a chave privada — essa nunca sai
-      do teu dispositivo, por desenho do WebAuthn).
+      Responsável pelo tratamento: <span class="todo">nome ou empresa, NIF e morada</span>.<br />
+      Contacto para assuntos de privacidade: <span class="todo">email de contacto</span>.
     </p>
-    <h2>Base legal (RGPD / LGPD)</h2>
+
+    <h2 id="resumo">2. Em resumo</h2>
+    <ul>
+      <li>Não vendemos dados pessoais nem os usamos para publicidade personalizada.</li>
+      <li>A página inicial não usa cookies, analytics, pixels nem gravação de sessões.</li>
+      <li>Só guardamos o que é preciso para cada finalidade e apagamos quando deixa de ser preciso.</li>
+    </ul>
+
+    <h2 id="dados">3. Que dados tratamos, para quê e porquê</h2>
+    <div class="wrap">
+      <table>
+        <thead>
+          <tr><th>Dados</th><th>Finalidade</th><th>Fundamento (RGPD, art. 6.º/1)</th><th>Prazo</th></tr>
+        </thead>
+        <tbody>
+          <tr id="lista-de-espera">
+            <td><strong>Lista de espera:</strong> email, tipo de interesse (família, escola, empresa, outro) e a versão do texto que aceitaste.</td>
+            <td>Avisar-te, uma única vez, quando o serviço abrir.</td>
+            <td>Consentimento (alínea a). Podes retirá-lo a qualquer momento.</td>
+            <td>Até pedires a remoção, até ao aviso de lançamento ou, no máximo, 365 dias. Depois é apagado automaticamente.</td>
+          </tr>
+          <tr>
+            <td><strong>Conta:</strong> identificador, nome e email devolvidos pelo serviço de login que escolheres (Google, Microsoft, GitHub, etc.), se o email está verificado, e datas de criação e último acesso.</td>
+            <td>Criar e manter a tua conta e deixar-te entrar.</td>
+            <td>Execução do contrato (alínea b).</td>
+            <td>Enquanto a conta existir. <span class="todo">prazo após apagar a conta</span></td>
+          </tr>
+          <tr>
+            <td><strong>Chaves de acesso (passkeys):</strong> chave pública, contador de utilizações e nome que deres à chave. A chave privada nunca sai do teu dispositivo.</td>
+            <td>Login sem palavra-passe e resistente a phishing.</td>
+            <td>Execução do contrato (alínea b).</td>
+            <td>Enquanto a chave estiver associada à conta.</td>
+          </tr>
+          <tr>
+            <td><strong>Códigos de recuperação:</strong> só guardamos uma versão cifrada (hash), nunca o código.</td>
+            <td>Recuperar o acesso se perderes os outros métodos.</td>
+            <td>Execução do contrato (alínea b).</td>
+            <td>Até serem usados ou substituídos.</td>
+          </tr>
+          <tr>
+            <td><strong>Cookie de sessão:</strong> um cookie técnico, cifrado e inacessível a scripts.</td>
+            <td>Manter-te com sessão iniciada.</td>
+            <td>Estritamente necessário; não exige consentimento.</td>
+            <td>8 horas. O acesso à administração expira ao fim de 1 hora, mesmo com a sessão ativa.</td>
+          </tr>
+          <tr>
+            <td><strong>Endereço IP, temporariamente:</strong> contagem de pedidos por IP.</td>
+            <td>Travar ataques de força bruta e spam.</td>
+            <td>Interesse legítimo na segurança do serviço (alínea f).</td>
+            <td>No máximo 1 hora; os contadores apagam-se sozinhos.</td>
+          </tr>
+          <tr>
+            <td><strong>Registo de auditoria da administração:</strong> que ação um administrador fez, quando, sobre que conta, a partir de que IP e porquê.</td>
+            <td>Provar quem fez o quê e detetar abusos de acesso.</td>
+            <td>Interesse legítimo (alínea f) e obrigações de segurança.</td>
+            <td><span class="todo">prazo de conservação da auditoria</span>. Quando apagamos alguém da lista de espera, a auditoria guarda só uma referência cifrada, nunca o email.</td>
+          </tr>
+          <tr>
+            <td><strong>Aprendizagem e tutor:</strong> percurso escolhido, progresso e perguntas ao tutor.</td>
+            <td>Mostrar a experiência e o teu progresso.</td>
+            <td>Execução do contrato (alínea b).</td>
+            <td>Enquanto a conta existir. Hoje o tutor funciona no teu dispositivo e não envia perguntas para fora.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><small>A revisão de texto ou scripts na área de segurança é feita no teu browser; o conteúdo não é enviado para os nossos servidores.</small></p>
+
+    <h2 id="destinatarios">4. Quem recebe os dados</h2>
+    <ul>
+      <li><strong>GitHub (Microsoft), EUA:</strong> aloja a página inicial e, como qualquer servidor web, recebe o teu endereço IP ao abri-la.</li>
+      <li><strong>Serviço de login que escolheres</strong> (Google, Microsoft, GitHub, GitLab, Apple, Discord): fica a saber que entraste na Lusorbe, segundo a política dele.</li>
+      <li><strong>Alojamento da API e da base de dados:</strong> <span class="todo">nome do fornecedor e país</span>.</li>
+    </ul>
     <p>
-      O tratamento assenta no teu consentimento explícito (Art. 6.º/1/a e Art.
-      7.º do RGPD; Art. 7.º/I e Art. 8.º da LGPD), registado com data/hora
-      sempre que aceitas estes termos.
+      Quando há transferência para fora do Espaço Económico Europeu, ela assenta numa decisão de adequação
+      (por exemplo, o EU-US Data Privacy Framework) ou em cláusulas contratuais-tipo.
+      <span class="todo">confirmar o mecanismo de cada fornecedor</span>
     </p>
-    <h2>Os teus direitos</h2>
+
+    <h2 id="direitos">5. Os teus direitos</h2>
     <p>
-      Acesso, retificação, apagamento, portabilidade e retirada do
-      consentimento a qualquer momento, através da conta ou contactando o
-      responsável pelo tratamento.
+      Podes pedir acesso, retificação, apagamento, limitação, portabilidade e oposição, e retirar o
+      consentimento a qualquer momento, sem afetar o que foi feito antes. Para isso, escreve para
+      <span class="todo">email de contacto</span>. Respondemos no prazo de um mês.
     </p>
-    <h2>Dados da aprendizagem e tutor</h2>
     <p>
-      Podemos tratar o percurso escolhido, progresso, respostas a exercícios e
-      perguntas feitas ao tutor para apresentar a experiência, medir progresso e
-      melhorar o serviço. Evita inserir dados pessoais nas perguntas. Os prompts
-      enviados para um modelo externo, quando essa integração for ativada, serão
-      sujeitos a informação própria, minimização e configuração de retenção antes
-      de serem utilizados em produção.
+      <strong>Sair da lista de espera:</strong> envia um email a pedir a remoção, a partir do endereço inscrito.
+      Apagamos a inscrição e o pedido fica registado sem o teu email.
     </p>
-    <h2>Menores</h2>
     <p>
-      A área educativa pode ser usada por estudantes. Quando o utilizador for menor,
-      aplicaremos as regras de idade, consentimento parental, publicidade e proteção
-      de dados exigidas no país aplicável. Não criamos perfis de publicidade de menores
-      com base em dados de aprendizagem e não vendemos dados pessoais.
+      Podes também reclamar junto da Comissão Nacional de Proteção de Dados (CNPD),
+      <a href="https://www.cnpd.pt/" rel="noreferrer">www.cnpd.pt</a>.
     </p>
-    <h2>Financiamento e publicidade</h2>
+
+    <h2 id="seguranca">6. Segurança</h2>
     <p>
-      O serviço pode usar subscrições, planos para escolas, patrocínios ou publicidade
-      contextual. A publicidade será identificada e não será usada para inferir a saúde,
-      situação financeira ou características sensíveis de estudantes. Um programa de
-      referências só será ativado com regras transparentes, consentimento e informação
-      sobre retenção, pagamentos e impostos.
+      Ligações cifradas (HTTPS), sessões cifradas em cookies inacessíveis a scripts, login com passkey
+      para administradores, regra de duas pessoas para dar acesso de administração e registo de auditoria
+      à prova de alterações. Nenhum sistema é infalível; se houver uma violação de dados que te afete,
+      avisamos-te e à CNPD nos prazos da lei.
     </p>
-    <h2>Conservação e contacto</h2>
+
+    <h2 id="menores">7. Menores</h2>
     <p>
-      Conservamos os dados apenas pelo período necessário às finalidades informadas e
-      aos deveres legais. Acrescenta antes da produção o nome do responsável, contacto,
-      prazos concretos de conservação e o canal para exercer direitos ou apresentar uma
-      reclamação junto da autoridade de controlo competente.
+      A área educativa pode ser usada por estudantes. Em Portugal, abaixo dos 13 anos o consentimento
+      tem de ser dado pelos pais ou representantes legais. Não criamos perfis de publicidade a partir de
+      dados de aprendizagem e não vendemos dados pessoais.
+      <span class="todo">definir a idade mínima e o fluxo de consentimento parental antes do lançamento</span>
+    </p>
+
+    <h2 id="publicidade">8. Financiamento e publicidade</h2>
+    <p>
+      O serviço pode vir a usar subscrições, planos para escolas ou publicidade contextual, sempre
+      identificada. A publicidade nunca será baseada em saúde, situação financeira ou outras
+      características sensíveis, nem em dados de estudantes.
+    </p>
+
+    <h2 id="alteracoes">9. Alterações</h2>
+    <p>
+      Se mudarmos esta política de forma relevante, avisamos com antecedência e atualizamos a data no topo.
+      Se a mudança afetar a lista de espera, pedimos de novo o teu consentimento.
     </p>
   </body>
 </html>

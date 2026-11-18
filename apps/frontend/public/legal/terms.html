@@ -2,58 +2,232 @@
 <html lang="pt">
   <head>
     <meta charset="UTF-8" />
-    <title>Termos de Serviço — Aegis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Termos de Serviço — Lusorbe</title>
+    <style>
+      :root { color-scheme: light dark; --fg: #1b1f24; --muted: #5b6573; --line: #d8dde3; --bg: #fff; --mark: #fff3bf; --mark-fg: #5c4400; --ok: #1a7f37; --no: #b42318; }
+      @media (prefers-color-scheme: dark) { :root { --fg: #e6edf3; --muted: #9aa4b1; --line: #30363d; --bg: #0d1117; --mark: #3a2f00; --mark-fg: #ffe28a; --ok: #3fb950; --no: #ff7b72; } }
+      body { font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+      h1 { font-size: 1.9rem; margin: 0 0 4px; }
+      h2 { font-size: 1.2rem; margin: 2.2rem 0 .5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+      h3 { font-size: 1rem; margin: 1.4rem 0 .3rem; }
+      .meta, small { color: var(--muted); }
+      .todo { background: var(--mark); color: var(--mark-fg); padding: 0 4px; border-radius: 3px; font-weight: 600; }
+      .notice { border: 1px solid var(--line); border-left: 4px solid #d29922; padding: 10px 14px; margin: 16px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: .92rem; margin: 8px 0; }
+      th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--line); }
+      .wrap { overflow-x: auto; }
+      .yes { color: var(--ok); font-weight: 600; }
+      .no { color: var(--no); font-weight: 600; }
+      nav ol { columns: 2; padding-left: 1.2rem; margin: 8px 0 0; }
+      @media (max-width: 560px) { nav ol { columns: 1; } }
+      a { color: inherit; }
+    </style>
   </head>
-  <body style="font-family: system-ui; max-width: 720px; margin: 2rem auto; padding: 0 1rem;">
+  <body>
     <h1>Termos de Serviço</h1>
-    <p><strong>Versão: 9 de setembro de 2026.</strong> Estes termos devem ser revistos pelo responsável legal antes do lançamento comercial.</p>
+    <p class="meta">Versão de 18 de novembro de 2026. Em vigor a partir de <span class="todo">data de lançamento</span>.</p>
+
+    <div class="notice">
+      <strong>Rascunho antes do lançamento.</strong> Estes termos descrevem o que o software da Lusorbe faz hoje.
+      Os campos <span class="todo">assinalados</span> têm de ser preenchidos pelo responsável pelo serviço, e o texto
+      deve ser revisto por um jurista antes de ser aceite por utilizadores reais.
+    </div>
+
+    <nav aria-label="Índice">
+      <ol>
+        <li><a href="#quem">Quem somos</a></li>
+        <li><a href="#servico">O que é a Lusorbe</a></li>
+        <li><a href="#limites">O que faz e o que não faz</a></li>
+        <li><a href="#conta">A tua conta</a></li>
+        <li><a href="#uso">Utilização aceitável</a></li>
+        <li><a href="#conteudo">Os teus conteúdos</a></li>
+        <li><a href="#propriedade">Propriedade intelectual</a></li>
+        <li><a href="#preco">Preço e pagamentos</a></li>
+        <li><a href="#disponibilidade">Disponibilidade e alterações</a></li>
+        <li><a href="#responsabilidade">Responsabilidade</a></li>
+        <li><a href="#direitos">Os teus direitos</a></li>
+        <li><a href="#fim">Fim da conta</a></li>
+        <li><a href="#lei">Lei e litígios</a></li>
+        <li><a href="#alteracoes">Alterações aos termos</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="quem">1. Quem somos</h2>
     <p>
-      Ao iniciares sessão através de Google, Microsoft, GitHub, chave de segurança
-      (passkey/WebAuthn) ou código de recuperação, concordas com estes termos.
-      A autenticação usa fluxos padrão OAuth 2.0 / OIDC (RFC 6749, RFC 9700) e
-      WebAuthn/FIDO2 (W3C), e os teus tokens de sessão nunca são acessíveis a
-      scripts no browser.
+      A Lusorbe é disponibilizada por <span class="todo">nome ou empresa</span>, NIF <span class="todo">NIF</span>,
+      com sede em <span class="todo">morada</span> («nós»). Contacto: <span class="todo">email de contacto</span>.
     </p>
-    <h2>Contas e recuperação</h2>
     <p>
-      Podes associar múltiplos métodos de login à tua conta. Se perderes o
-      acesso a um método (ex.: telemóvel ou chave física), podes recuperar o
-      acesso através de outro método associado ou com um código de recuperação
-      de utilização única.
+      Ao criares conta ou iniciares sessão, aceitas estes termos e a
+      <a href="privacy.html">Política de Privacidade</a>. Se não concordares, não uses o serviço.
+      Inscrever-te na lista de espera não te obriga a estes termos; aplica-se só a Política de Privacidade.
     </p>
-    <h2>Área educativa e tutor de IA</h2>
+
+    <h2 id="servico">2. O que é a Lusorbe</h2>
     <p>
-      A área educativa disponibiliza percursos do 5.º ao 7.º ano, do 7.º ao 9.º ano,
-      do 9.º ao 12.º ano e conteúdos de nível superior. As lições e o tutor de IA
-      são ferramentas de apoio ao estudo: não substituem professores, escolas,
-      encarregados de educação, médicos, advogados ou consultores financeiros.
-      As respostas podem estar incompletas e devem ser confirmadas em fontes adequadas.
+      Um espaço de trabalho com ferramentas educativas de segurança digital, simulação de mercados e aprendizagem.
+      O serviço está <strong>em desenvolvimento</strong>: funcionalidades podem mudar, ser retiradas ou ter falhas.
+    </p>
+
+    <h2 id="limites">3. O que faz e o que não faz</h2>
+    <p>Para não haver dúvidas sobre o que cada área faz:</p>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>Área</th><th>O que faz</th><th>O que <strong>não</strong> faz</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Revisão de scripts e texto</strong></td>
+            <td>Procura padrões de risco conhecidos no texto que colares (por exemplo, descarregar e executar código).
+              A análise corre no teu browser e o texto não é enviado para os nossos servidores.</td>
+            <td><span class="no">Não é um antivírus</span>, não analisa ficheiros nem o teu computador sozinha,
+              não executa nada e não bloqueia ameaças. Usa regras simples: pode não detetar ameaças reais
+              (falsos negativos) e pode assinalar código inofensivo (falsos positivos). Não substitui a proteção
+              do teu sistema (por exemplo, o Microsoft Defender) nem atualizações de segurança.</td>
+          </tr>
+          <tr>
+            <td><strong>Mercados</strong></td>
+            <td>Simulações educativas com valores que tu introduzes, para perceber risco, comissões e perdas.</td>
+            <td><span class="no">Não usa dados de mercado reais nem em tempo real</span>, não executa ordens,
+              não guarda dinheiro e <span class="no">não é aconselhamento financeiro</span>. Não somos um
+              intermediário financeiro registado na CMVM nem uma instituição de crédito. Não prometemos
+              rendimentos: investir pode resultar na perda do capital.</td>
+          </tr>
+          <tr>
+            <td><strong>Guia e aprendizagem</strong></td>
+            <td>Percursos do 5.º ano à faculdade e um guia com <strong>respostas preparadas</strong> por tema.</td>
+            <td><span class="no">Não usa um modelo de inteligência artificial</span> nem envia as tuas perguntas
+              para serviços externos. Não substitui professores, escolas, médicos, advogados ou consultores.
+              O conteúdo pode estar incompleto ou desatualizado; confirma em fontes adequadas.</td>
+          </tr>
+          <tr>
+            <td><strong>Fontes e integrações</strong></td>
+            <td>Ligações para sites e serviços de terceiros.</td>
+            <td>Não controlamos esses sites, o seu conteúdo nem as suas regras de privacidade.</td>
+          </tr>
+          <tr>
+            <td><strong>Lista de espera</strong></td>
+            <td>Guarda o teu email para te avisar uma vez quando o serviço abrir.</td>
+            <td>Não te inscreve em newsletters nem vende ou cede o teu email para publicidade.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Expressões como «segurança defensiva» ou «defesa» descrevem o objetivo educativo do serviço,
+      <strong>não uma garantia de que ficas protegido</strong> contra ataques.
+    </p>
+
+    <h2 id="conta">4. A tua conta</h2>
+    <ul>
+      <li><strong>Idade:</strong> abaixo dos 13 anos, só com autorização e acompanhamento dos pais ou representantes
+        legais (Lei n.º 58/2019). <span class="todo">confirmar a idade mínima e o fluxo de autorização</span></li>
+      <li><strong>Métodos de entrada:</strong> Google, Microsoft, GitHub e outros serviços, chave de acesso (passkey)
+        ou códigos de recuperação. Podes associar vários métodos para não perderes o acesso.</li>
+      <li><strong>Segurança:</strong> guarda os códigos de recuperação em lugar seguro e não partilhes a tua conta.
+        Avisa-nos se suspeitares de uso indevido.</li>
+      <li><strong>Dados verdadeiros:</strong> não te faças passar por outra pessoa nem uses contas de terceiros.</li>
+    </ul>
+
+    <h2 id="uso">5. Utilização aceitável</h2>
+    <p>Não podes usar a Lusorbe para:</p>
+    <ul>
+      <li>criar, testar ou distribuir malware, ou atacar sistemas, redes ou pessoas;</li>
+      <li>tentar aceder a contas, dados ou áreas sem autorização, ou contornar limites e medidas de segurança;</li>
+      <li>sobrecarregar o serviço, por exemplo com pedidos automáticos em massa;</li>
+      <li>publicar conteúdo ilegal, ou dados pessoais ou segredos de outras pessoas sem autorização;</li>
+      <li>violar a lei, incluindo direitos de autor, proteção de dados e defesa do consumidor.</li>
+    </ul>
+    <p>
+      Se encontrares uma vulnerabilidade, avisa-nos de forma responsável em <span class="todo">email de segurança</span>
+      e não a explores.
+    </p>
+
+    <h2 id="conteudo">6. Os teus conteúdos</h2>
+    <p>
+      O que escreves ou colas continua a ser teu. A revisão de texto e o guia funcionam no teu browser; só tratamos
+      no servidor o que a <a href="privacy.html">Política de Privacidade</a> descreve. Não uses o serviço para
+      guardar palavras-passe, chaves ou dados de outras pessoas.
+    </p>
+
+    <h2 id="propriedade">7. Propriedade intelectual</h2>
+    <p>
+      O software, o design e os textos da Lusorbe pertencem a <span class="todo">titular</span> ou são usados com
+      licença. Alguns elementos gráficos foram criados com ferramentas de terceiros e são usados nos termos das respetivas licenças.
+      O nome «Lusorbe» é usado como marca do serviço. <span class="todo">indicar se e onde a marca está registada</span>
+      Não podes copiar, revender ou apresentar o serviço como teu.
+    </p>
+
+    <h2 id="preco">8. Preço e pagamentos</h2>
+    <p>
+      Neste momento o serviço é <strong>gratuito</strong>. Se vier a haver planos pagos:
+    </p>
+    <ul>
+      <li>o preço total, com IVA, é mostrado antes de pagares, e a cobrança só acontece com a tua confirmação;</li>
+      <li>como consumidor, tens <strong>14 dias</strong> para desistir de uma compra à distância sem indicar motivo
+        (Decreto-Lei n.º 24/2014), salvo nas exceções previstas na lei, que te serão indicadas antes da compra;</li>
+      <li>as subscrições podem ser canceladas a qualquer momento e deixam de ser renovadas no fim do período pago;</li>
+      <li>emitimos fatura de cada pagamento.</li>
+    </ul>
+    <p>Ninguém é pago por convidar outras pessoas. Se houver um programa de referências, terá regras próprias publicadas.</p>
+
+    <h2 id="disponibilidade">9. Disponibilidade e alterações do serviço</h2>
+    <p>
+      Fazemos o possível para manter o serviço disponível e seguro, mas <strong>não garantimos que funcione sempre,
+      sem interrupções ou sem erros</strong>. Podemos alterar ou retirar funcionalidades; se a alteração for relevante
+      e afetar um serviço pago, avisamos com antecedência e, se aplicável, devolvemos a parte paga não usada.
+    </p>
+
+    <h2 id="responsabilidade">10. Responsabilidade</h2>
+    <p>
+      O serviço é educativo. As decisões que tomares (de segurança, financeiras ou outras) são tuas.
+      Na medida permitida pela lei, não respondemos por danos indiretos resultantes dessas decisões
+      ou de falhas de serviços de terceiros.
     </p>
     <p>
-      Utilizadores menores devem usar o serviço com conhecimento e supervisão do
-      encarregado de educação, quando exigido pela lei aplicável. Não introduzas
-      dados pessoais, segredos, palavras-passe ou informação de outras pessoas no tutor.
+      <strong>Nada nestes termos exclui ou limita</strong> a nossa responsabilidade por dolo ou culpa grave, por danos
+      à vida, à integridade física ou à saúde, nem os direitos que a lei garante aos consumidores
+      (Decreto-Lei n.º 446/85, Lei n.º 24/96 e Decreto-Lei n.º 84/2021).
     </p>
-    <h2>Treino financeiro</h2>
+
+    <h2 id="direitos">11. Os teus direitos</h2>
+    <ul>
+      <li><strong>Informação verdadeira:</strong> o serviço deve corresponder ao que descrevemos (secção 3).
+        Se encontrares uma afirmação nossa que não corresponde à realidade, diz-nos e corrigimos.</li>
+      <li><strong>Conformidade:</strong> em conteúdos e serviços digitais pagos, tens direito a que funcionem como
+        acordado e, se não funcionarem, à reposição, redução do preço ou resolução do contrato (Decreto-Lei n.º 84/2021).</li>
+      <li><strong>Dados pessoais:</strong> acesso, retificação, apagamento, portabilidade, oposição e retirada do
+        consentimento, como descrito na <a href="privacy.html#direitos">Política de Privacidade</a>.</li>
+      <li><strong>Reclamações:</strong> podes contactar-nos em <span class="todo">email de contacto</span> e usar o
+        <a href="https://www.livroreclamacoes.pt/" rel="noreferrer">Livro de Reclamações Eletrónico</a>.
+        <span class="todo">confirmar a obrigação conforme a forma jurídica</span></li>
+      <li><strong>Resolução alternativa de litígios:</strong> em caso de litígio de consumo, podes recorrer a uma
+        entidade de resolução alternativa de litígios (Lei n.º 144/2015): <span class="todo">entidade RAL competente, ex.: CNIACC, com site</span>.</li>
+    </ul>
+
+    <h2 id="fim">12. Fim da conta</h2>
     <p>
-      O treino financeiro é exclusivamente educativo. Não constitui recomendação
-      de investimento, crédito, seguro, compra ou venda de ativos. Não garantimos
-      rendimentos e não cobramos comissões escondidas por decisões financeiras.
+      Podes deixar de usar o serviço e pedir que apaguemos a tua conta a qualquer momento, em
+      <span class="todo">email de contacto ou opção na conta</span>.
     </p>
-    <h2>Publicidade e sustentabilidade</h2>
     <p>
-      Podemos financiar o serviço através de subscrições, licenças institucionais,
-      patrocínios ou publicidade claramente identificada. Não vendemos dados pessoais
-      nem prometemos remuneração automática por convidar dez pessoas. Qualquer programa
-      de referência, prémio ou partilha de receita terá regras publicadas, limites,
-      consentimento e tratamento fiscal conforme a lei aplicável. A publicidade dirigida
-      a menores será limitada ou desativada quando a lei o exigir.
+      Podemos suspender ou encerrar uma conta que viole estes termos ou ponha em risco o serviço ou outras pessoas.
+      Exceto em casos urgentes ou ilegais, avisamos antes e explicamos o motivo. Todas as suspensões feitas pela
+      administração ficam registadas, com o motivo, num registo de auditoria.
     </p>
-    <h2>Alterações e contacto</h2>
+
+    <h2 id="lei">13. Lei aplicável e litígios</h2>
     <p>
-      Publicaremos alterações relevantes nesta página e indicaremos a data de entrada
-      em vigor. Antes de produção, acrescenta aqui a identidade e o contacto do
-      responsável pelo serviço.
+      Aplica-se a lei portuguesa. Se fores consumidor, manténs a proteção das leis do país onde vives e podes recorrer
+      aos tribunais do teu domicílio, nos termos da lei.
+    </p>
+
+    <h2 id="alteracoes">14. Alterações a estes termos</h2>
+    <p>
+      Se mudarmos estes termos de forma relevante, avisamos com pelo menos <strong>30 dias</strong> de antecedência,
+      por email ou na app, e indicamos a nova data de entrada em vigor. Se não concordares, podes encerrar a conta
+      antes dessa data. As versões anteriores ficam disponíveis a pedido.
     </p>
   </body>
 </html>

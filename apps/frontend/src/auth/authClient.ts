@@ -82,8 +82,8 @@ export const authClient = {
   /** Signs in with an already-registered passkey / security key. */
   async loginWithPasskey(email: string): Promise<void> {
     const { challenge_id, options } = await api<{ challenge_id: string; options: string }>(
-      `/api/auth/webauthn/login/options?email=${encodeURIComponent(email)}`,
-      { method: "POST" },
+      "/api/auth/webauthn/login/options",
+      { method: "POST", body: JSON.stringify({ email }) },
     );
     const credential = await getPasskeyAssertion(options);
     await api("/api/auth/webauthn/login/verify", {
@@ -101,10 +101,10 @@ export const authClient = {
   },
 
   async loginWithBackupCode(email: string, code: string): Promise<void> {
-    await api(
-      `/api/auth/recovery/backup-codes/redeem?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`,
-      { method: "POST" },
-    );
+    await api("/api/auth/recovery/backup-codes/redeem", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
   },
 
   async recordConsent(termsAccepted: boolean, privacyAccepted: boolean, marketingOptIn = false): Promise<void> {

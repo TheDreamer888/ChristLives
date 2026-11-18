@@ -14,19 +14,36 @@ from __future__ import annotations
 
 import secrets
 
-from passlib.hash import bcrypt
+import bcrypt
+
+# Os códigos têm 17 bytes; o limite de 72 do bcrypt nunca é atingido. O passlib
+# foi removido (sem manutenção desde 2020 e incompatível com o bcrypt 5).
+
+
+def hash_code(code: str) -> str:
+    return bcrypt.hashpw(code.encode(), bcrypt.gensalt()).decode()
+
+
+def check_code(code: str, stored: str) -> bool:
+    raw = code.encode()
+    if len(raw) > 72:
+        return False
+    try:
+        return bcrypt.checkpw(raw, stored.encode())
+    except ValueError:
+        return False
 
 
 def generate_backup_codes(count: int = 10) -> tuple[list[str], list[str]]:
     """Returns (plaintext_codes_to_show_once, hashes_to_persist)."""
     plaintext = [f"{secrets.token_hex(4)}-{secrets.token_hex(4)}" for _ in range(count)]
-    hashed = [bcrypt.hash(code) for code in plaintext]
+    hashed = [hash_code(code) for code in plaintext]
     return plaintext, hashed
 
 
 def verify_backup_code(code: str, stored_hashes: list[str]) -> int | None:
     """Returns the index of the matching (and now consumed) hash, or None."""
     for idx, stored in enumerate(stored_hashes):
-        if bcrypt.verify(code, stored):
+        if check_code(code, stored):
             return idx
     return None

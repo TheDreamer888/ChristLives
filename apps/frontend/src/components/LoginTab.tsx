@@ -183,6 +183,9 @@ export default function LoginTab() {
       </fieldset>
 
       {status && <p className="login-tab__status">{status}</p>}
+      <p className="admin-entry">
+        <a href="#admin">Consola de administração</a> · só para equipas autorizadas
+      </p>
     </div>
   );
 }

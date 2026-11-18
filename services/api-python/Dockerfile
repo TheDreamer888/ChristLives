@@ -4,11 +4,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-RUN pip install --no-cache-dir poetry==2.2.1
+RUN pip install --no-cache-dir poetry==2.5.1
 
 COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-root --only main
+    && poetry install --no-root --only main --no-interaction
 
 COPY src ./src
 

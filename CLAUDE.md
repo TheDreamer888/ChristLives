@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Aegis (repo name "ProtectIA") is a polyglot monorepo with three independent backend
+Lusorbe (repo name "ProtectIA") is a polyglot monorepo with three independent backend
 services and one frontend, unified only by Docker Compose and CI — there is no shared
 build system across languages. Comments, docstrings, and commit messages are
 predominantly in Portuguese; match that when editing existing files.
