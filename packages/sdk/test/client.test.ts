@@ -224,3 +224,25 @@ describe('downloads', () => {
     assert.equal(await blob.text(), 'seq,ts\n1,2\n')
   })
 })
+
+describe('assistant', () => {
+  it('envia a conversa com consentimento e não repete o POST num 503', async () => {
+    const { fn, calls } = fakeFetch([json(503, { detail: 'O assistente não está disponível neste momento.' })])
+    await assert.rejects(
+      client(fn).assistant.send({ messages: [{ role: 'user', content: 'Olá' }], consent: true }),
+      ServerError,
+    )
+    assert.equal(calls.length, 1)
+    assert.equal(calls[0]!.url.pathname, '/api/assistant/messages')
+    assert.deepEqual(JSON.parse(String(calls[0]!.init.body)), { messages: [{ role: 'user', content: 'Olá' }], consent: true })
+  })
+
+  it('expõe o Retry-After do limite diário', async () => {
+    const { fn } = fakeFetch([json(429, { detail: 'Limite' }, { 'retry-after': '120' })])
+    const err = await client(fn, { retry: { maxRetries: 0 } })
+      .assistant.send({ messages: [{ role: 'user', content: 'Olá' }], consent: true })
+      .catch((e: unknown) => e)
+    assert.ok(err instanceof RateLimitError)
+    assert.equal(err.retryAfterSeconds, 120)
+  })
+})

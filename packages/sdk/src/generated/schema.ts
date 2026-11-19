@@ -310,6 +310,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assistant/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Message */
+        post: operations["assistant_send_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assistant/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["assistant_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/consent": {
         parameters: {
             query?: never;
@@ -620,6 +654,38 @@ export interface components {
             /** Items */
             items: components["schemas"]["Approval"][];
         };
+        /** AssistantReply */
+        AssistantReply: {
+            /**
+             * Refused
+             * @description True quando o pedido foi recusado por segurança.
+             */
+            refused: boolean;
+            /** Reply */
+            reply: string;
+        };
+        /** AssistantRequest */
+        AssistantRequest: {
+            /**
+             * Consent
+             * @description Confirma que a pessoa aceitou o envio do texto à Anthropic.
+             * @constant
+             */
+            consent: true;
+            /** Messages */
+            messages: components["schemas"]["ChatMessage"][];
+        };
+        /** AssistantStatus */
+        AssistantStatus: {
+            /** Daily Limit */
+            daily_limit: number;
+            /** Data Notice */
+            data_notice: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Model */
+            model: string;
+        };
         /** AuditEntry */
         AuditEntry: {
             /** Action */
@@ -673,6 +739,16 @@ export interface components {
             total: number;
             /** Valid */
             valid: boolean;
+        };
+        /** ChatMessage */
+        ChatMessage: {
+            /** Content */
+            content: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
         };
         /** ConsentInfo */
         ConsentInfo: {
@@ -1547,6 +1623,59 @@ export interface operations {
                 };
                 content: {
                     "text/csv": unknown;
+                };
+            };
+        };
+    };
+    assistant_send_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantReply"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assistant_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantStatus"];
                 };
             };
         };

@@ -3,6 +3,7 @@ export type { ClientOptions, Logger, OperationOptions, RequestInfo, ResponseInfo
 export type { Page, PageSettings, PagedAsyncIterableIterator } from './paging.ts'
 export type { JoinWaitlist } from './operations/waitlist.ts'
 export type { Justified, ListAuditOptions, ListUsersOptions } from './operations/admin.ts'
+export type { SendAssistantMessage } from './operations/assistant.ts'
 export {
   AbortError,
   ApiError,

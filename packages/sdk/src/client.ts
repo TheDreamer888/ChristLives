@@ -1,4 +1,5 @@
 import { AdminOperations } from './operations/admin.ts'
+import { AssistantOperations } from './operations/assistant.ts'
 import { AuthOperations } from './operations/auth.ts'
 import { WaitlistOperations } from './operations/waitlist.ts'
 import { HttpPipeline, type ClientOptions } from './pipeline.ts'
@@ -17,11 +18,13 @@ export class LusorbeClient {
   readonly auth: AuthOperations
   readonly waitlist: WaitlistOperations
   readonly admin: AdminOperations
+  readonly assistant: AssistantOperations
 
   constructor(options: ClientOptions) {
     const http = new HttpPipeline(options)
     this.auth = new AuthOperations(http)
     this.waitlist = new WaitlistOperations(http)
     this.admin = new AdminOperations(http)
+    this.assistant = new AssistantOperations(http)
   }
 }

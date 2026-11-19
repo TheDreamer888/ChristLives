@@ -6,6 +6,7 @@ from src.app.routers.dns import router as dns_router
 from src.app.auth.routes import router as auth_router
 from src.app.admin.routes import router as admin_router
 from src.app.waitlist import router as waitlist_router
+from src.app.assistant import router as assistant_router
 from src.ml.model import RiskModel
 from src.pylibrary.logging import get_logger
 
@@ -44,12 +45,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # O browser só deixa a app ler Retry-After se for exposto: sem ele o SDK
+    # repetiria pedidos que vão falhar (limite diário do assistente, logins).
+    expose_headers=["Retry-After"],
 )
 
 app.include_router(dns_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(waitlist_router)
+app.include_router(assistant_router)
 
 risk_model = RiskModel()
 
