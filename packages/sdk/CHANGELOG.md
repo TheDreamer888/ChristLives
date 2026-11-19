@@ -2,6 +2,12 @@
 
 Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Por lançar]
+
+### Adicionado
+- `assistant.status()` e `assistant.send()`: assistente opcional (exige sessão, limite diário por conta).
+  Modelos `ChatMessage`, `AssistantReply` e `AssistantStatus`.
+
 ## [0.1.0] — 2026-11-17
 
 ### Adicionado

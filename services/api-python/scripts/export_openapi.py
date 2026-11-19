@@ -3,7 +3,7 @@
     python scripts/export_openapi.py           # escreve o ficheiro
     python scripts/export_openapi.py --check   # falha se o ficheiro estiver desatualizado (CI)
 
-Só entram as operações públicas do SDK (auth, waitlist, admin). O JSON é
+Só entram as operações públicas do SDK (auth, waitlist, admin, assistant). O JSON é
 determinístico (chaves ordenadas) para os diffs no git serem legíveis.
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT.parents[1] / "packages" / "sdk" / "openapi.json"
-SDK_TAGS = {"auth", "waitlist", "admin"}
+SDK_TAGS = {"auth", "waitlist", "admin", "assistant"}
 
 
 def build_spec() -> dict:

@@ -198,6 +198,78 @@
         "title": "ApprovalList",
         "type": "object"
       },
+      "AssistantReply": {
+        "properties": {
+          "refused": {
+            "description": "True quando o pedido foi recusado por segurança.",
+            "title": "Refused",
+            "type": "boolean"
+          },
+          "reply": {
+            "title": "Reply",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reply",
+          "refused"
+        ],
+        "title": "AssistantReply",
+        "type": "object"
+      },
+      "AssistantRequest": {
+        "properties": {
+          "consent": {
+            "const": true,
+            "description": "Confirma que a pessoa aceitou o envio do texto à Anthropic.",
+            "title": "Consent",
+            "type": "boolean"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages",
+          "consent"
+        ],
+        "title": "AssistantRequest",
+        "type": "object"
+      },
+      "AssistantStatus": {
+        "properties": {
+          "daily_limit": {
+            "title": "Daily Limit",
+            "type": "integer"
+          },
+          "data_notice": {
+            "title": "Data Notice",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "daily_limit",
+          "model",
+          "data_notice"
+        ],
+        "title": "AssistantStatus",
+        "type": "object"
+      },
       "AuditEntry": {
         "properties": {
           "action": {
@@ -361,6 +433,30 @@
           "broken_at"
         ],
         "title": "ChainStatus",
+        "type": "object"
+      },
+      "ChatMessage": {
+        "properties": {
+          "content": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage",
         "type": "object"
       },
       "ConsentInfo": {
@@ -1974,6 +2070,68 @@
         "summary": "Waitlist Export",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/assistant/messages": {
+      "post": {
+        "operationId": "assistant_send_message",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Message",
+        "tags": [
+          "assistant"
+        ]
+      }
+    },
+    "/api/assistant/status": {
+      "get": {
+        "operationId": "assistant_status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "assistant"
         ]
       }
     },

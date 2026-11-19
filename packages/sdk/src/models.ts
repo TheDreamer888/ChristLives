@@ -38,6 +38,11 @@ export type DecisionResult = S['DecisionResult']
 export type WaitlistOverview = S['WaitlistOverview']
 export type WaitlistItem = S['WaitlistItem']
 
+// Assistente
+export type ChatMessage = S['ChatMessage']
+export type AssistantReply = S['AssistantReply']
+export type AssistantStatus = S['AssistantStatus']
+
 /** Opções da passkey prontas para `navigator.credentials.create/get` (depois de converter base64url). */
 export interface PasskeyOptions {
   challengeId: string
