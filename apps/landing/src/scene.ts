@@ -14,19 +14,14 @@ import {
   ACESFilmicToneMapping,
   AdditiveBlending,
   BufferAttribute,
-  Box3,
   BufferGeometry,
   CanvasTexture,
   Clock,
   Color,
   DoubleSide,
   Group,
-  IcosahedronGeometry,
   Mesh,
   MeshBasicMaterial,
-  MeshPhysicalMaterial,
-  MeshStandardMaterial,
-  Object3D,
   PerspectiveCamera,
   PMREMGenerator,
   PointLight,
@@ -37,15 +32,14 @@ import {
   SRGBColorSpace,
   Sprite,
   SpriteMaterial,
-  TorusGeometry,
   Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import { hopf, rotation4D, tesseract } from './hyper'
+import { createGlassOrb } from './orb'
 
 export interface SceneHandle {
   setProgress(p: number): void
@@ -58,9 +52,6 @@ export interface SceneHandle {
 
 interface Options {
   canvas: HTMLCanvasElement
-  modelUrl: string
-  /** Versão com texturas de 2048 px, para ecrãs de 2560 px reais ou mais (QHD, 4K). */
-  modelUrl4k?: string
   reducedMotion: boolean
   onProgress?: (ratio: number) => void
   onReady?: () => void
@@ -80,35 +71,6 @@ function radialTexture(stops: [number, string][], size = 256): CanvasTexture {
   const tex = new CanvasTexture(c)
   tex.colorSpace = SRGBColorSpace
   return tex
-}
-
-function proceduralOrb(accent: Color): Group {
-  const orb = new Group()
-  const shell = new Mesh(
-    new IcosahedronGeometry(1, 2),
-    new MeshPhysicalMaterial({
-      color: 0x05070b,
-      metalness: 0.2,
-      roughness: 0.08,
-      transmission: 0.35,
-      thickness: 1.2,
-      clearcoat: 1,
-      clearcoatRoughness: 0.05,
-      flatShading: true,
-      envMapIntensity: 1.4,
-    }),
-  )
-  const core = new Mesh(new IcosahedronGeometry(0.46, 3), new MeshBasicMaterial({ color: accent }))
-  core.name = 'core'
-  const ringMat = new MeshStandardMaterial({ color: 0xc9d2dc, metalness: 1, roughness: 0.25, envMapIntensity: 1.2 })
-  const ringA = new Mesh(new TorusGeometry(1.45, 0.018, 12, 160), ringMat)
-  const ringB = new Mesh(new TorusGeometry(1.7, 0.012, 12, 180), ringMat)
-  ringA.rotation.set(1.2, 0.2, 0)
-  ringB.rotation.set(0.4, 1.1, 0.3)
-  ringA.name = 'ringA'
-  ringB.name = 'ringB'
-  orb.add(shell, core, ringA, ringB)
-  return orb
 }
 
 function starfield(count: number, radius: number): Points {
@@ -192,9 +154,10 @@ export function createScene(opts: Options): SceneHandle {
   const spin = new Group() // gira (arrastar + inércia)
   tilt.add(spin)
 
-  let orb: Object3D = proceduralOrb(accent)
-  const glowMats: MeshStandardMaterial[] = [] // núcleo emissivo do modelo do Higgsfield
-  spin.add(orb)
+  // Orbe de vidro desenhado em código (conceito gerado no Higgsfield; ver orb.ts).
+  const glassOrb = createGlassOrb(reducedMotion)
+  spin.add(glassOrb.group)
+  let viewHalf = 450
 
   const glow = new Sprite(
     new SpriteMaterial({
@@ -205,23 +168,24 @@ export function createScene(opts: Options): SceneHandle {
       blending: AdditiveBlending,
     }),
   )
-  glow.scale.setScalar(4.2)
+  glow.scale.setScalar(1.3)
   tilt.add(glow)
 
   const coreLight = new PointLight(accent, 30, 12, 2)
   tilt.add(coreLight)
 
   // --- 4D: fibração de Hopf (escudo) e hipercubo, rodados e projetados no shader ---
-  const hopfObj = hopf(reducedMotion ? 48 : 72, reducedMotion ? 32 : 44)
+  const hopfObj = hopf(reducedMotion ? 40 : 56, reducedMotion ? 30 : 40)
   hopfObj.material.uniforms['uScale']!.value = 1.55
-  hopfObj.material.uniforms['uSize']!.value = 0.05
+  hopfObj.material.uniforms['uSize']!.value = 0.032
   const tess = tesseract(reducedMotion ? 16 : 26)
-  tess.material.uniforms['uScale']!.value = 0.85
+  tess.material.uniforms['uScale']!.value = 0.7
   tess.material.uniforms['uSize']!.value = 0.04
   // O hipercubo é uma "lua" em 4D que orbita o orbe: pequeno o suficiente para se ler a forma.
   const moon = new Group()
   moon.add(tess.points)
-  tilt.add(hopfObj.points, moon)
+  // O hipercubo existe (hyper.ts) mas não entra na cena: dentro do orbe só criava ruído.
+  tilt.add(hopfObj.points)
   const hyperMats = [hopfObj.material, tess.material]
   let wAngle = 0 // rotação extra na 4.ª dimensão ao arrastar
   const colorB = new Color()
@@ -246,44 +210,7 @@ export function createScene(opts: Options): SceneHandle {
     invalidate()
   }
 
-  // --- Modelo do Higgsfield ---------------------------------------------------------
-  const physical = Math.max(screen.width, screen.height) * (window.devicePixelRatio || 1)
-  const modelUrl = opts.modelUrl4k && physical >= 2560 ? opts.modelUrl4k : opts.modelUrl
-  new GLTFLoader().load(
-    modelUrl,
-    (gltf) => {
-      const model = gltf.scene
-      // normaliza: centra e ajusta ao tamanho do orbe procedimental
-      model.traverse((o) => {
-        const mat = (o as Mesh).material as MeshStandardMaterial | undefined
-        if (mat && 'envMapIntensity' in mat) mat.envMapIntensity = 1.3
-        if (mat?.emissiveMap) glowMats.push(mat)
-        if (mat) {
-          const aniso = renderer.capabilities.getMaxAnisotropy()
-          for (const tex of [mat.map, mat.emissiveMap, mat.metalnessMap, mat.roughnessMap, mat.normalMap]) {
-            if (tex) tex.anisotropy = aniso
-          }
-        }
-      })
-      const bounds = new Box3().setFromObject(model)
-      const box = bounds.getSize(new Vector3())
-      const center = bounds.getCenter(new Vector3())
-      const scale = 3.2 / Math.max(box.x, box.y, box.z)
-      model.position.copy(center).multiplyScalar(-scale)
-      model.scale.setScalar(scale)
-      const holder = new Group()
-      holder.add(model)
-      spin.remove(orb)
-      orb = holder
-      spin.add(orb)
-      opts.onReady?.()
-      invalidate()
-    },
-    (ev) => {
-      if (ev.lengthComputable) opts.onProgress?.(ev.loaded / ev.total)
-    },
-    () => opts.onReady?.(), // falhou: fica o orbe procedimental
-  )
+  setTimeout(() => opts.onReady?.(), 0)
 
   // --- Interação ------------------------------------------------------------------
   const pointer = new Vector2(0, 0)
@@ -322,11 +249,11 @@ export function createScene(opts: Options): SceneHandle {
   let progress = 0
   // [x, y, z, escala] ao longo da página
   const path: [number, number, number, number][] = [
-    [2.1, 0, 0, 1], // topo: texto à esquerda, orbe à direita
-    [-2.3, 0.1, -0.5, 0.78], // defesa: texto à direita
-    [2.3, -0.1, -0.6, 0.78], // mercados
-    [-2.3, 0.1, -0.6, 0.78], // educação
-    [2.9, 1.9, -6.5, 0.5], // conteúdo (como funciona, segurança, FAQ…): recua para o canto
+    [0.58, 0, 0, 0.78], // topo: texto à esquerda, orbe à direita
+    [-0.62, 0.1, -0.5, 0.7], // defesa: texto à direita
+    [0.62, -0.1, -0.6, 0.7], // mercados
+    [-0.62, 0.1, -0.6, 0.7], // educação
+    [1.9, 2.4, -9, 0.4], // conteúdo: o orbe sai de cena para o texto ficar limpo
     [0, 2.3, -3.2, 0.6], // privacidade: texto ao centro, orbe recua para cima
     [0, 3.1, -4.5, 0.5], // lista de espera
   ]
@@ -365,6 +292,7 @@ export function createScene(opts: Options): SceneHandle {
 
   function syncViewHalf() {
     const half = renderer.getDrawingBufferSize(new Vector2()).y / 2
+    viewHalf = half
     for (const m of hyperMats) m.uniforms['uViewHalf']!.value = half
   }
 
@@ -383,13 +311,14 @@ export function createScene(opts: Options): SceneHandle {
 
     // posição pelo scroll
     let [px, py, pz, ps] = pathAt(progress)
-    // afasta o orbe do texto conforme a largura: mais ecrã, mais para o lado
-    px *= Math.min(1.45, Math.max(1, camera.aspect / 1.5))
+    // fração da meia-largura visível → unidades da cena
+    const halfWidth = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z * camera.aspect
+    px *= halfWidth
     if (narrow) {
       // ecrã estreito: o texto fica em baixo, o orbe centrado em cima
       px = 0
-      py = Math.max(py, 1.5)
-      ps *= 0.9
+      py = Math.max(py, 3.25)
+      ps *= 0.46
     }
     rig.position.set(damp(rig.position.x, px, 5, dt), damp(rig.position.y, py, 5, dt), damp(rig.position.z, pz, 5, dt))
     rig.scale.setScalar(damp(rig.scale.x, ps, 5, dt))
@@ -406,21 +335,13 @@ export function createScene(opts: Options): SceneHandle {
     spin.rotation.y += velX * dt * (reducedMotion ? 0 : 1) + (dragging ? velX * 0.5 : 0)
     spin.rotation.x += velY * dt + (dragging ? velY * 0.5 : 0)
 
-    // anéis e núcleo do orbe procedimental
-    const ringA = orb.getObjectByName('ringA')
-    const ringB = orb.getObjectByName('ringB')
-    if (ringA) ringA.rotation.z += dt * 0.6
-    if (ringB) ringB.rotation.z -= dt * 0.4
-    const core = orb.getObjectByName('core') as Mesh | undefined
-    if (core) (core.material as MeshBasicMaterial).color.copy(accent)
-
     kick = damp(kick, 0, 2.5, dt)
     const breathe = reducedMotion ? 1 : 1 + Math.sin(t * 1.6) * 0.05
     glow.material.color.copy(accent)
-    glow.scale.setScalar(4.2 * breathe * (1 + kick * 0.35))
+    glow.scale.setScalar(1.3 * breathe * (1 + kick * 0.5))
     coreLight.color.copy(accent)
-    coreLight.intensity = 30 * (1 + kick)
-    for (const m of glowMats) m.emissiveIntensity = (1.1 + kick * 1.6) * breathe
+    coreLight.intensity = 4 * (1 + kick)
+    glassOrb.update(t, accent, kick, viewHalf)
 
     // 4D: só se atualizam uniforms; cada ponto é rodado e projetado no shader
     const r = reducedMotion ? 0 : t
@@ -437,7 +358,8 @@ export function createScene(opts: Options): SceneHandle {
     rotation4D(hopfObj.material.uniforms['uRot']!.value, r * 0.11 + pointer.x * 0.9 + wAngle, r * 0.07 + pointer.y * 0.9, progress * Math.PI * 1.5 + r * 0.05, r * 0.03)
     const orbit = r * 0.22 + progress * Math.PI
     // órbita elíptica: quando passa para o lado do texto vai por trás (z negativo) e fica mais pequena
-    moon.position.set(Math.cos(orbit) * 2.3, 0.9 + Math.sin(orbit * 0.7) * 0.5, Math.sin(orbit) * 1.2)
+    // órbita vertical: passa por cima e por baixo do orbe, nunca para o lado do texto
+    moon.position.set(0.35 + Math.sin(orbit) * 0.5, Math.cos(orbit) * 2.1, Math.sin(orbit) * 1.4)
     ;(tess.material.uniforms['uPointer']!.value as Vector3).set(0, 0, 100) // a lua não se deforma com o cursor
     rotation4D(tess.material.uniforms['uRot']!.value, r * 0.31 + pointer.x * 1.2 + wAngle * 1.5, r * 0.23 - pointer.y * 1.2, r * 0.17 + progress * Math.PI * 2, r * 0.13)
 

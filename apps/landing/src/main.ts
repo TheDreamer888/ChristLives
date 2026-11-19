@@ -3,8 +3,6 @@ import { initDemos } from './demos'
 import { initWaitlist } from './waitlist'
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
-const loader = document.getElementById('loader')!
-const bar = document.getElementById('loader-bar')!
 const canvas = document.getElementById('scene') as HTMLCanvasElement
 const panels = [...document.querySelectorAll<HTMLElement>('.panel, .content')]
 // Cada zona marcada com data-orb corresponde a uma posição do orbe (ver scene.ts).
@@ -13,11 +11,6 @@ const accents = [...document.querySelectorAll<HTMLElement>('[data-accent]')]
 
 initWaitlist()
 initDemos()
-
-function hideLoader() {
-  loader.classList.add('done')
-  document.body.classList.add('ready')
-}
 
 // Navegação opaca depois do topo.
 const nav = document.querySelector('.nav')!
@@ -32,9 +25,15 @@ document.querySelectorAll('.menu a').forEach((a) =>
 
 // Texto entra quando a secção chega ao ecrã.
 const io = new IntersectionObserver(
-  (entries) => entries.forEach((e) => e.target.classList.toggle('in', e.isIntersecting)),
-  { threshold: 0.35 },
+  (entries) => {
+    entries.forEach((e) => e.target.classList.toggle('in', e.isIntersecting))
+    // Só a partir daqui as secções fora do ecrã ficam escondidas para animar.
+    document.documentElement.classList.add('reveal-ready')
+  },
+  { threshold: 0.2 },
 )
+// O topo nunca espera pela animação.
+document.querySelector('.hero')?.classList.add('in')
 panels.forEach((p) => io.observe(p))
 
 function webglAvailable(): boolean {
@@ -49,20 +48,14 @@ function webglAvailable(): boolean {
 async function boot3d() {
   if (!webglAvailable()) {
     document.body.classList.add('no-webgl')
-    hideLoader()
     return
   }
   // A cena (three.js) é carregada à parte: o texto aparece logo, o 3D chega depois.
   const { createScene } = await import('./scene')
   const scene = createScene({
     canvas,
-    modelUrl: `${import.meta.env.BASE_URL}3d/lusorbe.glb`,
-    modelUrl4k: `${import.meta.env.BASE_URL}3d/lusorbe-4k.glb`,
     reducedMotion,
-    onProgress: (r) => (bar.style.transform = `scaleX(${r})`),
-    onReady: hideLoader,
   })
-  setTimeout(hideLoader, 6000) // nunca prender a página no ecrã de carregamento
 
   // Scroll → percurso do orbe e cor da secção ativa.
   let ticking = false

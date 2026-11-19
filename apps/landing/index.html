@@ -22,19 +22,14 @@
     <canvas id="scene" aria-hidden="true"></canvas>
     <div class="vignette" aria-hidden="true"></div>
 
-    <div class="loader" id="loader" role="status" aria-live="polite">
-      <span class="loader-word">LUSORBE</span>
-      <span class="loader-bar"><i id="loader-bar"></i></span>
-    </div>
-
     <header class="nav" id="top">
       <a class="wordmark" href="./" aria-label="Lusorbe, início"><span class="mark" aria-hidden="true"></span>LUSORBE</a>
       <nav aria-label="Principal">
         <ul class="nav-links">
+          <li><a href="#modulos">Módulos</a></li>
           <li><a href="#defesa">Defesa</a></li>
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
-          <li><a href="#seguranca">Segurança</a></li>
           <li><a href="#faq">Perguntas</a></li>
           <li><a href="#lista">Lista</a></li>
         </ul>
@@ -43,6 +38,7 @@
       <details class="menu">
         <summary aria-label="Abrir menu"><span></span><span></span></summary>
         <ul>
+          <li><a href="#modulos">Módulos</a></li>
           <li><a href="#defesa">Defesa</a></li>
           <li><a href="#mercados">Mercados</a></li>
           <li><a href="#educacao">Educação</a></li>
@@ -57,20 +53,20 @@
     <main id="main">
       <section class="panel hero" data-orb="0" data-accent="#5eead4" aria-labelledby="hero-title">
         <div class="copy">
-          <p class="kicker">Lusorbe · Missão 01</p>
-          <h1 id="hero-title" class="display">Luz que<br />guarda.</h1>
-          <p class="lead">Aprende a reconhecer scripts perigosos, a perceber o risco de um investimento e a proteger os teus dados. Num só espaço, com privacidade por definição.</p>
+          <p class="kicker">Proteção · Dinheiro · Conhecimento</p>
+          <h1 id="hero-title" class="display">Tudo o que<br />te protege.</h1>
+          <p class="lead">Revê scripts antes de os correr, simula o risco de um investimento e aprende a proteger-te online. Segurança, dinheiro e conhecimento num só sítio, com privacidade por definição.</p>
           <div class="actions">
             <a class="btn btn-solid" href="#lista">Entrar na lista</a>
-            <a class="btn btn-ghost" href="#defesa">Experimentar já</a>
+            <a class="btn btn-ghost" href="#modulos">Ver todos os módulos</a>
           </div>
-          <p class="hint" aria-hidden="true">Move o rato · arrasta para rodar a 4.ª dimensão · clica para pulsar</p>
+          <p class="hint" aria-hidden="true">Move o rato · arrasta para rodar · clica para pulsar</p>
         </div>
       </section>
 
       <section class="panel right" id="defesa" data-orb="1" data-accent="#38bdf8" aria-labelledby="defesa-title">
         <div class="copy">
-          <p class="kicker">Missão 02 · Defesa</p>
+          <p class="kicker">Defesa</p>
           <h2 id="defesa-title" class="display">Vê o sinal<br />antes do impacto.</h2>
           <p class="lead">Cola um comando ou script que encontraste na internet. A Lusorbe aponta os padrões perigosos e explica porquê, sem executar nada. Não substitui um antivírus.</p>
           <form class="demo" id="demo-review" novalidate>
@@ -88,7 +84,7 @@ api_key = "sk_test_0123456789abcdef"</textarea>
 
       <section class="panel" id="mercados" data-orb="2" data-accent="#a78bfa" aria-labelledby="mercados-title">
         <div class="copy">
-          <p class="kicker">Missão 03 · Mercados</p>
+          <p class="kicker">Mercados</p>
           <h2 id="mercados-title" class="display">Simula a trajetória.<br />Antes do risco.</h2>
           <p class="lead">Vê quanto as comissões comem a um ganho, ou quanto podes perder. Os valores são os que tu escreves: não há dados reais, ordens nem promessas de retorno.</p>
           <form class="demo" id="demo-sim" novalidate>
@@ -108,7 +104,7 @@ api_key = "sk_test_0123456789abcdef"</textarea>
 
       <section class="panel right" id="educacao" data-orb="3" data-accent="#fbbf24" aria-labelledby="educacao-title">
         <div class="copy">
-          <p class="kicker">Missão 04 · Educação</p>
+          <p class="kicker">Educação</p>
           <h2 id="educacao-title" class="display">Do 5.º ano<br />à faculdade.</h2>
           <p class="lead">Percursos ao teu ritmo e um guia com respostas preparadas por tema. Sem inteligência artificial a inventar respostas e sem perfis publicitários.</p>
           <ol class="tracks">
@@ -124,6 +120,24 @@ api_key = "sk_test_0123456789abcdef"</textarea>
       </section>
 
       <div class="content-zone" data-orb="4">
+        <section class="content" id="modulos" data-accent="#5eead4" aria-labelledby="modulos-title">
+          <p class="kicker">Módulos</p>
+          <h2 id="modulos-title" class="section-title">Tudo num só espaço.</h2>
+          <p class="section-lead">Uma conta, todos os módulos. Os que estão marcados como «Em breve» ainda não estão disponíveis.</p>
+          <div class="modules">
+            <a class="module" href="app/#security"><span class="status on">Disponível</span><h3>Revisão de scripts</h3><p>Cola um comando e vê o que é perigoso e porquê, antes de o correres.</p></a>
+            <a class="module" href="app/#markets"><span class="status on">Disponível</span><h3>Simulador de mercados</h3><p>Calcula ganhos, perdas e o peso das comissões com os teus valores.</p></a>
+            <a class="module" href="app/#education"><span class="status on">Disponível</span><h3>Percursos de aprendizagem</h3><p>Do 5.º ano à faculdade: segurança digital e literacia financeira ao teu ritmo.</p></a>
+            <a class="module" href="app/#intelligence"><span class="status on">Disponível</span><h3>Guia por temas</h3><p>Respostas claras às dúvidas mais comuns, sem enviar as tuas perguntas para fora.</p></a>
+            <a class="module" href="app/#account"><span class="status on">Disponível</span><h3>Conta sem palavra-passe</h3><p>Entra com passkey, Google, Microsoft ou GitHub, com códigos de recuperação.</p></a>
+            <a class="module" href="app/#privacy"><span class="status on">Disponível</span><h3>Controlo dos teus dados</h3><p>Vê o que fica guardado, exporta e apaga quando quiseres.</p></a>
+            <div class="module soon"><span class="status">Em breve</span><h3>Verificação de links</h3><p>Antes de abrires um link suspeito, vê se é conhecido por burlas ou malware.</p></div>
+            <div class="module soon"><span class="status">Em breve</span><h3>Guardian para Windows</h3><p>Avisa-te quando um programa ou ligação de rede se comporta de forma estranha.</p></div>
+            <div class="module soon"><span class="status">Em breve</span><h3>Cotações e notícias</h3><p>Dados de mercado e notícias reais, ao lado do simulador.</p></div>
+            <div class="module soon"><span class="status">Em breve</span><h3>Assistente opcional</h3><p>Um assistente para dúvidas, que só usas se quiseres e que te diz que dados envia.</p></div>
+          </div>
+        </section>
+
         <section class="content" id="como" data-accent="#5eead4" aria-labelledby="como-title">
           <p class="kicker">Como funciona</p>
           <h2 id="como-title" class="section-title">Três passos, nenhum segredo.</h2>
@@ -172,7 +186,7 @@ api_key = "sk_test_0123456789abcdef"</textarea>
           <div class="faq">
             <details><summary>É gratuito?</summary><p>Sim, neste momento. Se vierem a existir planos pagos, o preço com IVA aparece antes de pagares e tens 14 dias para desistir. Ver os <a href="app/legal/terms.html#preco">Termos</a>.</p></details>
             <details><summary>Substitui o antivírus?</summary><p>Não. A Lusorbe explica riscos em texto que colas; não analisa ficheiros nem bloqueia ameaças. Mantém o antivírus do sistema ligado.</p></details>
-            <details><summary>Usa inteligência artificial?</summary><p>Não. O guia usa respostas preparadas por tema e não envia as tuas perguntas para serviços externos.</p></details>
+            <details><summary>Usa inteligência artificial?</summary><p>Hoje não: o guia usa respostas preparadas por tema e não envia as tuas perguntas para fora. Um assistente opcional está a caminho; antes de o usares, dizemos-te que dados envia e para onde.</p></details>
             <details><summary>Os mercados usam dados reais?</summary><p>Não. O simulador usa os valores que escreves, não executa ordens e não é aconselhamento financeiro.</p></details>
             <details><summary>O que fazem com o meu email da lista de espera?</summary><p>Usamo-lo só para avisar quando abrirmos. É apagado a teu pedido ou, no máximo, ao fim de 365 dias. Ver a <a href="app/legal/privacy.html#lista-de-espera">Política de Privacidade</a>.</p></details>
             <details><summary>Crianças podem usar?</summary><p>Sim, com acompanhamento. Abaixo dos 13 anos é preciso autorização dos pais ou representantes legais.</p></details>
@@ -183,7 +197,7 @@ api_key = "sk_test_0123456789abcdef"</textarea>
 
       <section class="panel center" id="privacidade" data-orb="5" data-accent="#f472b6" aria-labelledby="privacidade-title">
         <div class="copy">
-          <p class="kicker">Missão 05 · Privacidade</p>
+          <p class="kicker">Privacidade</p>
           <h2 id="privacidade-title" class="display">O teu espaço.<br />Os teus dados.</h2>
           <p class="lead">Sem analytics publicitários, sem pixels, sem gravação de sessões. Esta página não usa cookies.</p>
           <div class="actions">
@@ -195,7 +209,7 @@ api_key = "sk_test_0123456789abcdef"</textarea>
 
       <section class="panel center waitlist" id="lista" data-orb="6" data-accent="#5eead4" aria-labelledby="lista-title">
         <div class="copy">
-          <p class="kicker">Missão 06 · Lançamento</p>
+          <p class="kicker">Lançamento</p>
           <h2 id="lista-title" class="display">Entra na lista.</h2>
           <p class="lead">Avisamos-te uma vez, quando abrirmos. Sem newsletter, sem venda nem cedência do teu email para publicidade.</p>
 
