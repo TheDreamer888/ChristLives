@@ -1,0 +1,80 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm --filter frontend lint
+      - run: pnpm --filter frontend test
+      - run: pnpm --filter frontend build
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/app/
+      - run: pnpm --filter landing build
+        env:
+          LANDING_BASE: /${{ github.event.repository.name }}/
+      - name: Compor o site (landing 3D na raiz, app em /app/)
+        run: |
+          mkdir -p _site/app
+          cp -R apps/landing/dist/. _site/
+          cp -R apps/frontend/dist/. _site/app/
+      - name: Ligar a lista de espera à API (se LUSORBE_API_URL estiver definida)
+        env:
+          LUSORBE_API_URL: ${{ vars.LUSORBE_API_URL }}
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re, urllib.parse
+          url = os.environ.get("LUSORBE_API_URL", "").strip().rstrip("/")
+          if not url:
+              print("LUSORBE_API_URL vazio: formulário da lista de espera fica desligado.")
+              raise SystemExit(0)
+          u = urllib.parse.urlsplit(url)
+          if u.scheme != "https" or not u.hostname or u.path not in ("", "/") or u.query or u.fragment:
+              raise SystemExit("LUSORBE_API_URL tem de ser só a origem https, ex.: https://api.exemplo.pt")
+          origin = f"https://{u.netloc}"
+          page = pathlib.Path("_site/index.html")
+          html = page.read_text(encoding="utf-8")
+          html = html.replace('<meta name="lusorbe-api" content="" />', f'<meta name="lusorbe-api" content="{origin}" />', 1)
+          html, n = re.subn(r"connect-src 'self' blob:", f"connect-src 'self' blob: {origin}", html, count=1)
+          assert n == 1, "CSP connect-src não encontrado"
+          page.write_text(html, encoding="utf-8")
+          print("Lista de espera ligada a", origin)
+          PY
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

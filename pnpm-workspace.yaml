@@ -1,5 +1,6 @@
 packages:
   - 'apps/*'
+  - 'packages/*'
 
 # Enforce reproducible, reviewed installations across developer machines and CI.
 engineStrict: true

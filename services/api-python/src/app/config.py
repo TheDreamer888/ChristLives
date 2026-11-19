@@ -81,7 +81,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    app_name: str = "Aegis"
+    app_name: str = "Lusorbe"
     debug: bool = False
 
     # Origens autorizadas para CORS (frontend em dev/produção), separadas por vírgula.
