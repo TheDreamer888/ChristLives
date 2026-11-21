@@ -46,6 +46,10 @@ poetry run uvicorn src.app.main:app --reload   # http://localhost:8000
 - **Textos legais:** se uma funcionalidade passa a tratar dados novos ou a enviá-los a
   outra empresa, atualiza `privacy.html` e `terms.html` no mesmo PR. Nunca inventes
   dados do responsável, prazos ou fornecedores: usa `<span class="todo">…</span>`.
+- **Textos da app em várias línguas:** nada de texto fixo nos componentes da app
+  (exceto a consola de administração, que é interna e fica em pt-PT). Acrescenta a
+  chave em `apps/frontend/src/i18n/pt-PT.ts` e a tradução em `en`, `es`, `fr`, `de` e
+  `pt-BR`; o tipo `Messages` e o teste `tests/i18n.test.mjs` falham se faltar alguma.
 - **Sem dados internos no site público:** nada de nomes, emails, números de PR ou
   métricas internas na landing ou nas páginas legais.
 - **Segredos:** nunca em código nem no frontend. `ANTHROPIC_API_KEY`,
