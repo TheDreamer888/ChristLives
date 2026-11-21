@@ -654,6 +654,13 @@ export interface components {
             /** Items */
             items: components["schemas"]["Approval"][];
         };
+        /** AssistantLanguage */
+        AssistantLanguage: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+        };
         /** AssistantReply */
         AssistantReply: {
             /**
@@ -672,8 +679,28 @@ export interface components {
              * @constant
              */
             consent: true;
+            /**
+             * Language
+             * @description Língua da resposta (BCP 47). Sem ela, responde na língua da pessoa.
+             */
+            language?: string | null;
             /** Messages */
             messages: components["schemas"]["ChatMessage"][];
+            /**
+             * Skill
+             * @default geral
+             * @enum {string}
+             */
+            skill: "geral" | "matematica" | "seguranca" | "financas" | "estudo" | "escrita" | "codigo";
+        };
+        /** AssistantSkill */
+        AssistantSkill: {
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** AssistantStatus */
         AssistantStatus: {
@@ -683,8 +710,18 @@ export interface components {
             data_notice: string;
             /** Enabled */
             enabled: boolean;
+            /**
+             * Languages
+             * @default []
+             */
+            languages: components["schemas"]["AssistantLanguage"][];
             /** Model */
             model: string;
+            /**
+             * Skills
+             * @default []
+             */
+            skills: components["schemas"]["AssistantSkill"][];
         };
         /** AuditEntry */
         AuditEntry: {
