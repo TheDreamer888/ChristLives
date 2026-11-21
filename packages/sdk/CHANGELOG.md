@@ -7,6 +7,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). Versões: 
 ### Adicionado
 - `assistant.status()` e `assistant.send()`: assistente opcional (exige sessão, limite diário por conta).
   Modelos `ChatMessage`, `AssistantReply` e `AssistantStatus`.
+- `assistant.send()` aceita `skill` (habilidade, ex.: `'matematica'`) e `language` (BCP 47).
+  `AssistantStatus` traz `skills` e `languages`; novos tipos `AssistantSkill`, `AssistantLanguage` e `AssistantSkillId`.
 
 ## [0.1.0] — 2026-11-17
 

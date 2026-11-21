@@ -5,23 +5,57 @@
  * - Antes da primeira mensagem, a pessoa vê e aceita o aviso de dados.
  * - A conversa vive só nesta página (memória). Não vai para localStorage nem
  *   para o servidor da Lusorbe; "Nova conversa" apaga-a.
- * - As respostas são mostradas como texto simples (sem HTML), por segurança.
+ * - As respostas são desenhadas por RichText (parágrafos, código e fórmulas),\n *   sem nunca injetar o HTML do modelo; só o KaTeX gera HTML, sem 	rust.\n * - A pessoa escolhe a habilidade (matemática, segurança, …) e a língua da resposta.
  */
 import { useEffect, useRef, useState } from 'react'
 import { AuthenticationError, LusorbeError, RateLimitError, ValidationError } from '@lusorbe/sdk'
-import type { AssistantStatus, ChatMessage } from '@lusorbe/sdk'
+import type { AssistantSkillId, AssistantStatus, ChatMessage } from '@lusorbe/sdk'
 
 import { lusorbe } from '../lusorbe'
+import RichText from './RichText'
 import './Assistant.css'
 
 const MAX_CHARS = 4000
 const MAX_TURNS = 20
-const SUGGESTIONS = [
-  'Recebi um SMS do banco a pedir para clicar num link. O que faço?',
-  'Explica-me a diferença entre juros simples e compostos.',
-  'Como crio uma passkey e porque é melhor do que uma palavra-passe?',
-  'O que devo verificar antes de correr um script que encontrei online?',
-]
+const SUGGESTIONS: Record<string, string[]> = {
+  geral: [
+    'Recebi um SMS do banco a pedir para clicar num link. O que faço?',
+    'Explica-me a diferença entre juros simples e compostos.',
+    'Como crio uma passkey e porque é melhor do que uma palavra-passe?',
+    'O que devo verificar antes de correr um script que encontrei online?',
+  ],
+  matematica: [
+    'Resolve 2x² − 7x + 3 = 0 e verifica as soluções.',
+    'Calcula a derivada de f(x) = x³·ln(x).',
+    'Um empréstimo de 10 000 € a 5 % ao ano durante 3 anos: quanto pago de juros compostos?',
+    'Explica o teorema de Pitágoras com um exemplo.',
+  ],
+  seguranca: [
+    'Este email diz que a minha conta vai ser bloqueada. Como sei se é phishing?',
+    'Cliquei num link estranho. O que faço agora?',
+    'Como protejo o meu email com autenticação de dois fatores?',
+  ],
+  financas: [
+    'O que é a TAEG e porque importa num crédito?',
+    'Como faço um orçamento mensal simples?',
+    'Qual a diferença entre um depósito a prazo e um fundo?',
+  ],
+  estudo: [
+    'Explica a fotossíntese e faz-me 3 perguntas de treino.',
+    'Resume as causas da Primeira Guerra Mundial.',
+    'Como organizo uma semana de estudo para um exame?',
+  ],
+  escrita: [
+    'Revê este texto e corrige a gramática: …',
+    'Traduz para inglês: …',
+    'Escreve um email formal a pedir uma reunião.',
+  ],
+  codigo: [
+    'Explica o que faz este código: …',
+    'Escreve uma função em Python que valida um email.',
+    'Como guardo uma chave de API sem a pôr no código?',
+  ],
+}
 
 type Phase = 'loading' | 'signed-out' | 'disabled' | 'ready' | 'error'
 
@@ -52,6 +86,8 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [skill, setSkill] = useState<AssistantSkillId>('geral')
+  const [language, setLanguage] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -78,7 +114,7 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
     const ctrl = new AbortController()
     abortRef.current = ctrl
     try {
-      const res = await lusorbe.assistant.send({ messages: next, consent: true }, { abortSignal: ctrl.signal })
+      const res = await lusorbe.assistant.send({ messages: next, consent: true, skill, ...(language ? { language } : {}) }, { abortSignal: ctrl.signal })
       setHistory(h => [...h, { role: 'assistant', content: res.reply }])
     } catch (err) {
       if (ctrl.signal.aborted) return
@@ -122,26 +158,48 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
         <div className="assistant-consent">
           <p>{status?.data_notice}</p>
           <ul className="plain-list">
-            <li><b>Para que serve</b><span>Segurança digital, dinheiro e estudo. Não dá conselhos de investimento personalizados.</span></li>
+            <li><b>Para que serve</b><span>Segurança digital, dinheiro, estudo, matemática, escrita, tradução e programação, em várias línguas. Não dá conselhos de investimento personalizados.</span></li>
             <li><b>Pode errar</b><span>Confirma informação importante numa fonte oficial ou com um profissional.</span></li>
           </ul>
           <label className="switch-label"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}/>Percebi e quero usar o assistente</label>
         </div>
       ) : (
         <>
+          <div className="assistant-tools">
+            <div className="skill-chips" role="radiogroup" aria-label="Habilidade">
+              {(status?.skills ?? []).map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={skill === s.id}
+                  className={skill === s.id ? 'chip active' : 'chip'}
+                  title={s.description}
+                  onClick={() => setSkill(s.id as AssistantSkillId)}
+                >{s.name}</button>
+              ))}
+            </div>
+            <label className="lang-select">
+              <span>Responder em</span>
+              <select value={language} onChange={e => setLanguage(e.target.value)}>
+                <option value="">Automático (a tua língua)</option>
+                {(status?.languages ?? []).map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+              </select>
+            </label>
+          </div>
           <div className="assistant-log" aria-live="polite" ref={logRef}>
             {history.length === 0 && (
               <div className="assistant-suggestions">
-                {SUGGESTIONS.map(s => <button key={s} onClick={() => void send(s)}>{s}</button>)}
+                {(SUGGESTIONS[skill] ?? SUGGESTIONS['geral']!).map(s => <button key={s} onClick={() => s.endsWith('…') ? setDraft(s.slice(0, -1)) : void send(s)}>{s}</button>)}
               </div>
             )}
             {history.map((m, i) => (
               <div key={i} className={`bubble ${m.role}`}>
                 <span className="sr-only">{m.role === 'user' ? 'Tu disseste:' : 'O assistente respondeu:'}</span>
-                {m.content}
+                {m.role === 'assistant' ? <RichText text={m.content}/> : m.content}
               </div>
             ))}
-            {busy && <div className="bubble assistant typing" role="status">A pensar…</div>}
+            {busy && <div className="bubble assistant typing" role="status">{skill === 'matematica' ? 'A resolver passo a passo…' : 'A pensar…'}</div>}
           </div>
           {error && <p role="alert" className="error-text">{error}</p>}
           <form className="assistant-form" onSubmit={e => { e.preventDefault(); void send(draft) }}>

@@ -1,4 +1,4 @@
-import type { AssistantReply, AssistantStatus, ChatMessage } from '../models.ts'
+import type { AssistantReply, AssistantSkillId, AssistantStatus, ChatMessage } from '../models.ts'
 import type { HttpPipeline, OperationOptions } from '../pipeline.ts'
 
 export interface SendAssistantMessage {
@@ -6,6 +6,10 @@ export interface SendAssistantMessage {
   messages: ChatMessage[]
   /** Tem de ser `true`: a pessoa aceitou que o texto é enviado à Anthropic. */
   consent: true
+  /** Habilidade (ex.: `'matematica'` liga o raciocínio passo a passo). Por omissão, `'geral'`. */
+  skill?: AssistantSkillId
+  /** Língua da resposta, em BCP 47 (ex.: `'en'`, `'pt-BR'`). Sem ela, responde na língua da pessoa. */
+  language?: string
 }
 
 /**
@@ -34,7 +38,7 @@ export class AssistantOperations {
     return this.http.send({
       method: 'POST',
       path: '/api/assistant/messages',
-      body: { messages: body.messages, consent: body.consent },
+      body: { messages: body.messages, consent: body.consent, skill: body.skill, language: body.language },
       options,
     })
   }

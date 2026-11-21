@@ -198,6 +198,24 @@
         "title": "ApprovalList",
         "type": "object"
       },
+      "AssistantLanguage": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "AssistantLanguage",
+        "type": "object"
+      },
       "AssistantReply": {
         "properties": {
           "refused": {
@@ -225,6 +243,19 @@
             "title": "Consent",
             "type": "boolean"
           },
+          "language": {
+            "anyOf": [
+              {
+                "pattern": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8}){0,2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Língua da resposta (BCP 47). Sem ela, responde na língua da pessoa.",
+            "title": "Language"
+          },
           "messages": {
             "items": {
               "$ref": "#/components/schemas/ChatMessage"
@@ -233,6 +264,20 @@
             "minItems": 1,
             "title": "Messages",
             "type": "array"
+          },
+          "skill": {
+            "default": "geral",
+            "enum": [
+              "geral",
+              "matematica",
+              "seguranca",
+              "financas",
+              "estudo",
+              "escrita",
+              "codigo"
+            ],
+            "title": "Skill",
+            "type": "string"
           }
         },
         "required": [
@@ -240,6 +285,29 @@
           "consent"
         ],
         "title": "AssistantRequest",
+        "type": "object"
+      },
+      "AssistantSkill": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "title": "AssistantSkill",
         "type": "object"
       },
       "AssistantStatus": {
@@ -256,9 +324,25 @@
             "title": "Enabled",
             "type": "boolean"
           },
+          "languages": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssistantLanguage"
+            },
+            "title": "Languages",
+            "type": "array"
+          },
           "model": {
             "title": "Model",
             "type": "string"
+          },
+          "skills": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssistantSkill"
+            },
+            "title": "Skills",
+            "type": "array"
           }
         },
         "required": [

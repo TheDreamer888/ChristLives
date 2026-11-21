@@ -42,6 +42,9 @@ export type WaitlistItem = S['WaitlistItem']
 export type ChatMessage = S['ChatMessage']
 export type AssistantReply = S['AssistantReply']
 export type AssistantStatus = S['AssistantStatus']
+export type AssistantSkill = S['AssistantSkill']
+export type AssistantLanguage = S['AssistantLanguage']
+export type AssistantSkillId = NonNullable<S['AssistantRequest']['skill']>
 
 /** Opções da passkey prontas para `navigator.credentials.create/get` (depois de converter base64url). */
 export interface PasskeyOptions {

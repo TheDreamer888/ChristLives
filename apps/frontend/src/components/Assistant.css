@@ -14,3 +14,21 @@
 .assistant-form .input-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .assistant-form .button-row { margin: 0; }
 @media (max-width: 560px) { .bubble { max-width: 100%; } }
+
+.assistant-tools { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-chips .chip { padding: 6px 12px; border: 1px solid #e3ded6; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: .9rem; cursor: pointer; }
+.skill-chips .chip:hover, .skill-chips .chip:focus-visible { border-color: #b56f4b; }
+.skill-chips .chip.active { background: #1f1d1a; border-color: #1f1d1a; color: #f7f3ee; }
+.lang-select { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.lang-select select { max-width: 220px; font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid #e3ded6; background: transparent; color: inherit; }
+.bubble.assistant { white-space: normal; }
+.rich > * { margin: 0 0 .6em; }
+.rich > *:last-child { margin-bottom: 0; }
+.rich p { white-space: pre-wrap; }
+.rich code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 5px; }
+.rich pre { overflow-x: auto; padding: 12px; border-radius: 10px; background: #1f1d1a; color: #f7f3ee; }
+.rich pre code { background: none; padding: 0; white-space: pre; }
+.math-block { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.math-raw { white-space: pre-wrap; }
+@media (max-width: 560px) { .lang-select { width: 100%; } .lang-select select { flex: 1; max-width: none; } }

@@ -13,6 +13,11 @@ Regras que este módulo garante:
   regista o conteúdo; regista só contagens e erros.
 * **Desligado sem chave.** Sem ``ANTHROPIC_API_KEY`` (ou com
   ``ASSISTANT_ENABLED=false``) responde 503 e a app mostra que está indisponível.
+* **Habilidades e línguas.** O pedido escolhe uma habilidade (``skill``), que
+  acrescenta instruções ao prompt, e opcionalmente a língua da resposta
+  (``language``, código BCP 47). Sem língua, responde na língua da pessoa.
+  A habilidade de matemática liga o raciocínio adaptativo e escreve fórmulas
+  em LaTeX, que a app desenha.
 """
 from __future__ import annotations
 
@@ -43,12 +48,14 @@ MAX_TOTAL_CHARS = 24000
 
 SYSTEM_PROMPT = """És o assistente da Lusorbe, uma plataforma que junta segurança digital, literacia financeira e aprendizagem.
 
-Responde sempre em português de Portugal, de forma clara, direta e curta (normalmente até 200 palavras), com passos concretos quando ajudam.
+Responde na língua em que a pessoa escreve (por omissão, português de Portugal), de forma clara e direta, com passos concretos quando ajudam. Sê curto em perguntas simples e completo em perguntas difíceis.
+Podes usar Markdown simples: listas, **negrito**, `código` e blocos de código. Fórmulas matemáticas em LaTeX entre $...$ (na linha) ou $$...$$ (em bloco).
 
 O que fazes bem:
 - Segurança digital defensiva: reconhecer burlas, phishing, scripts e comandos perigosos, proteger contas, palavras-passe, passkeys, cópias de segurança, privacidade.
 - Literacia financeira: explicar conceitos (juros, inflação, diversificação, comissões, risco), ler um extrato, perceber um produto financeiro.
 - Aprender: explicar temas passo a passo, sugerir como estudar.
+- Matemática, escrita, tradução e programação, quando a pessoa escolhe essa habilidade ou pergunta diretamente.
 
 Limites:
 - Não dás aconselhamento de investimento personalizado (o que comprar, vender ou quando). Explicas conceitos e riscos e sugeres falar com um profissional habilitado.
@@ -58,6 +65,93 @@ Limites:
 - Se não souberes ou a informação puder estar desatualizada (preços, leis, notícias), di-lo.
 
 Sobre a Lusorbe: tem revisão de scripts, simulador de mercados, percursos de aprendizagem, guia por temas e controlo dos dados da conta. Não inventes funcionalidades que não estão nesta lista."""
+
+
+SKILLS: dict[str, dict[str, str]] = {
+    "geral": {
+        "name": "Geral",
+        "description": "Segurança, dinheiro e estudo.",
+        "prompt": "",
+    },
+    "matematica": {
+        "name": "Matemática",
+        "description": "Resolve passo a passo, com fórmulas e verificação.",
+        "prompt": (
+            "Habilidade ativa: MATEMÁTICA. Resolve passo a passo: identifica o que é pedido, "
+            "escolhe o método, faz as contas sem saltar passos e verifica o resultado (substituindo, "
+            "por outro método ou por ordem de grandeza). Escreve todas as expressões em LaTeX "
+            "($...$ na linha, $$...$$ em bloco). Termina com a resposta final numa linha própria, "
+            "começada por **Resposta:**. Se o enunciado for ambíguo, diz que suposição fizeste."
+        ),
+    },
+    "seguranca": {
+        "name": "Segurança",
+        "description": "Burlas, phishing, contas e scripts suspeitos.",
+        "prompt": (
+            "Habilidade ativa: SEGURANÇA DIGITAL DEFENSIVA. Avalia o risco (baixo, médio, alto) "
+            "logo no início, explica os sinais que encontraste e dá os passos a seguir por ordem. "
+            "Se a pessoa já clicou ou partilhou dados, começa pelo que fazer agora."
+        ),
+    },
+    "financas": {
+        "name": "Finanças",
+        "description": "Conceitos, contas e produtos explicados.",
+        "prompt": (
+            "Habilidade ativa: LITERACIA FINANCEIRA. Explica com exemplos numéricos simples e "
+            "mostra as contas. Nunca digas o que comprar ou vender; mostra custos, riscos e "
+            "perguntas a fazer a um profissional habilitado."
+        ),
+    },
+    "estudo": {
+        "name": "Estudo",
+        "description": "Explicações, resumos e perguntas de treino.",
+        "prompt": (
+            "Habilidade ativa: ESTUDO. Explica do simples para o complexo, com um exemplo. "
+            "No fim, propõe 2 ou 3 perguntas curtas para a pessoa testar o que aprendeu "
+            "(com as respostas escondidas no fim, depois de uma linha '---')."
+        ),
+    },
+    "escrita": {
+        "name": "Escrita e tradução",
+        "description": "Rever, reescrever, resumir e traduzir textos.",
+        "prompt": (
+            "Habilidade ativa: ESCRITA E TRADUÇÃO. Mantém o sentido e o tom do original. "
+            "Ao rever, mostra o texto corrigido e depois uma lista curta das mudanças. "
+            "Ao traduzir, entrega só a tradução, salvo se a pessoa pedir explicações."
+        ),
+    },
+    "codigo": {
+        "name": "Programação",
+        "description": "Explicar, corrigir e escrever código seguro.",
+        "prompt": (
+            "Habilidade ativa: PROGRAMAÇÃO. Dá código completo e funcional em blocos com a "
+            "linguagem indicada, explica o essencial em poucas linhas e assinala riscos de "
+            "segurança (injeção, segredos no código, permissões). Não escrevas malware, "
+            "ferramentas de intrusão nem código para contornar proteções."
+        ),
+    },
+}
+
+# Línguas que a app oferece no seletor; a API aceita qualquer código BCP 47 válido.
+LANGUAGES: dict[str, str] = {
+    "pt-PT": "Português (Portugal)", "pt-BR": "Português (Brasil)", "en": "English",
+    "es": "Español", "fr": "Français", "de": "Deutsch", "it": "Italiano",
+    "nl": "Nederlands", "pl": "Polski", "ro": "Română", "uk": "Українська",
+    "ru": "Русский", "tr": "Türkçe", "ar": "العربية", "hi": "हिन्दी",
+    "zh-CN": "中文（简体）", "ja": "日本語", "ko": "한국어",
+}
+
+
+def _system_blocks(skill: str, language: str | None) -> list[dict[str, Any]]:
+    """Prompt base (em cache) + instruções da habilidade e da língua."""
+    blocks: list[dict[str, Any]] = [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]
+    extra = SKILLS[skill]["prompt"]
+    if language:
+        label = LANGUAGES.get(language, language)
+        extra = f"{extra}\n\nResponde sempre nesta língua: {label} ({language}), mesmo que a pessoa escreva noutra.".strip()
+    if extra:
+        blocks.append({"type": "text", "text": extra})
+    return blocks
 
 
 def _enabled() -> bool:
@@ -101,6 +195,12 @@ class ChatMessage(BaseModel):
 class AssistantRequest(BaseModel):
     messages: list[ChatMessage] = Field(min_length=1, max_length=MAX_TURNS)
     consent: Literal[True] = Field(description="Confirma que a pessoa aceitou o envio do texto à Anthropic.")
+    skill: Literal["geral", "matematica", "seguranca", "financas", "estudo", "escrita", "codigo"] = "geral"
+    language: str | None = Field(
+        default=None,
+        pattern=r"^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8}){0,2}$",
+        description="Língua da resposta (BCP 47). Sem ela, responde na língua da pessoa.",
+    )
 
     @field_validator("messages")
     @classmethod
@@ -120,11 +220,24 @@ class AssistantReply(BaseModel):
     refused: bool = Field(description="True quando o pedido foi recusado por segurança.")
 
 
+class AssistantSkill(BaseModel):
+    id: str
+    name: str
+    description: str
+
+
+class AssistantLanguage(BaseModel):
+    code: str
+    name: str
+
+
 class AssistantStatus(BaseModel):
     enabled: bool
     daily_limit: int
     model: str
     data_notice: str
+    skills: list[AssistantSkill] = []
+    languages: list[AssistantLanguage] = []
 
 
 # ---------- Limites ----------
@@ -151,7 +264,14 @@ def _limit(user: UserRecord) -> None:
 
 @router.get("/status", response_model=AssistantStatus)
 def status(user: UserRecord = Depends(auth_routes._require_user)) -> AssistantStatus:
-    return AssistantStatus(enabled=_enabled(), daily_limit=_daily_limit(), model=_model(), data_notice=DATA_NOTICE)
+    return AssistantStatus(
+        enabled=_enabled(),
+        daily_limit=_daily_limit(),
+        model=_model(),
+        data_notice=DATA_NOTICE,
+        skills=[AssistantSkill(id=k, name=v["name"], description=v["description"]) for k, v in SKILLS.items()],
+        languages=[AssistantLanguage(code=k, name=v) for k, v in LANGUAGES.items()],
+    )
 
 
 @router.post("/messages", response_model=AssistantReply, dependencies=[Depends(auth_routes._require_same_origin)])
@@ -164,13 +284,21 @@ def send_message(
         raise HTTPException(503, "O assistente não está disponível neste momento.")
     _limit(user)
 
+    # Matemática: raciocínio adaptativo e mais esforço, para contas com verificação.
+    reasoning: dict[str, Any] = {}
+    effort = os.getenv("ASSISTANT_EFFORT", "medium")
+    if body.skill == "matematica":
+        reasoning["thinking"] = {"type": "adaptive"}
+        effort = os.getenv("ASSISTANT_MATH_EFFORT", "high")
+
     try:
         response = get_client().beta.messages.create(
             model=_model(),
             max_tokens=16000,
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+            system=_system_blocks(body.skill, body.language),
             messages=[{"role": m.role, "content": m.content} for m in body.messages],
-            output_config={"effort": os.getenv("ASSISTANT_EFFORT", "medium")},
+            output_config={"effort": effort},
+            **reasoning,
             # Se o modelo principal recusar por precaução, a API tenta um modelo alternativo.
             betas=["server-side-fallback-2026-07-01"],
             fallbacks="default",
