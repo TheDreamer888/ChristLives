@@ -5,7 +5,11 @@
  * - Antes da primeira mensagem, a pessoa vê e aceita o aviso de dados.
  * - A conversa vive só nesta página (memória). Não vai para localStorage nem
  *   para o servidor da Lusorbe; "Nova conversa" apaga-a.
- * - As respostas são desenhadas por RichText (parágrafos, código e fórmulas),\n *   sem nunca injetar o HTML do modelo; só o KaTeX gera HTML, sem 	rust.\n * - A pessoa escolhe a habilidade (matemática, segurança, …) e a língua da resposta.
+ * - As respostas são desenhadas por `RichText` (parágrafos, código e fórmulas),
+ *   sem nunca injetar o HTML do modelo; só o KaTeX gera HTML, sem `trust`.
+ * - A pessoa escolhe a habilidade (matemática, segurança, …) e a língua da resposta.
+ * - Os textos da interface vêm de `i18n`. Em "Automático", o assistente responde
+ *   na língua em que a pessoa escreve.
  */
 import { useEffect, useRef, useState } from 'react'
 import { AuthenticationError, LusorbeError, RateLimitError, ValidationError } from '@lusorbe/sdk'
@@ -13,49 +17,12 @@ import type { AssistantSkillId, AssistantStatus, ChatMessage } from '@lusorbe/sd
 
 import { lusorbe } from '../lusorbe'
 import RichText from './RichText'
+import { useI18n } from '../i18n/context'
+import type { Messages } from '../i18n/pt-PT'
 import './Assistant.css'
 
 const MAX_CHARS = 4000
 const MAX_TURNS = 20
-const SUGGESTIONS: Record<string, string[]> = {
-  geral: [
-    'Recebi um SMS do banco a pedir para clicar num link. O que faço?',
-    'Explica-me a diferença entre juros simples e compostos.',
-    'Como crio uma passkey e porque é melhor do que uma palavra-passe?',
-    'O que devo verificar antes de correr um script que encontrei online?',
-  ],
-  matematica: [
-    'Resolve 2x² − 7x + 3 = 0 e verifica as soluções.',
-    'Calcula a derivada de f(x) = x³·ln(x).',
-    'Um empréstimo de 10 000 € a 5 % ao ano durante 3 anos: quanto pago de juros compostos?',
-    'Explica o teorema de Pitágoras com um exemplo.',
-  ],
-  seguranca: [
-    'Este email diz que a minha conta vai ser bloqueada. Como sei se é phishing?',
-    'Cliquei num link estranho. O que faço agora?',
-    'Como protejo o meu email com autenticação de dois fatores?',
-  ],
-  financas: [
-    'O que é a TAEG e porque importa num crédito?',
-    'Como faço um orçamento mensal simples?',
-    'Qual a diferença entre um depósito a prazo e um fundo?',
-  ],
-  estudo: [
-    'Explica a fotossíntese e faz-me 3 perguntas de treino.',
-    'Resume as causas da Primeira Guerra Mundial.',
-    'Como organizo uma semana de estudo para um exame?',
-  ],
-  escrita: [
-    'Revê este texto e corrige a gramática: …',
-    'Traduz para inglês: …',
-    'Escreve um email formal a pedir uma reunião.',
-  ],
-  codigo: [
-    'Explica o que faz este código: …',
-    'Escreve uma função em Python que valida um email.',
-    'Como guardo uma chave de API sem a pôr no código?',
-  ],
-}
 
 type Phase = 'loading' | 'signed-out' | 'disabled' | 'ready' | 'error'
 
@@ -66,19 +33,24 @@ function trim(history: ChatMessage[]): ChatMessage[] {
   return h
 }
 
-function friendly(err: unknown): string {
+/** Mensagem de erro na língua da interface. Em pt-PT usa o texto do servidor, que é mais preciso. */
+function friendly(err: unknown, m: Messages, isPt: boolean): string {
+  const e = m.assistant.errors
   if (err instanceof RateLimitError) {
     const s = err.retryAfterSeconds
-    const wait = s === undefined ? '' : s >= 3600 ? ` Volta daqui a cerca de ${Math.ceil(s / 3600)} h.` : ` Tenta daqui a ${Math.max(1, Math.ceil(s / 60))} min.`
-    return `${err.message}${wait}`
+    const wait = s === undefined ? '' : s >= 3600 ? e.backInHours(Math.ceil(s / 3600)) : e.tryInMinutes(Math.max(1, Math.ceil(s / 60)))
+    return `${isPt && err.message ? err.message : e.rateLimited} ${wait}`.trim()
   }
-  if (err instanceof AuthenticationError) return 'A tua sessão terminou. Entra de novo na tua conta.'
-  if (err instanceof ValidationError) return 'A conversa ficou demasiado longa ou tem um formato inválido. Começa uma nova.'
-  if (err instanceof LusorbeError) return err.message || 'O assistente não conseguiu responder. Tenta de novo.'
-  return 'Sem ligação. Verifica a internet e tenta de novo.'
+  if (err instanceof AuthenticationError) return e.session
+  if (err instanceof ValidationError) return e.invalid
+  if (err instanceof LusorbeError) return (isPt && err.message) || e.failed
+  return e.offline
 }
 
 export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
+  const { m, lang, locale } = useI18n()
+  const a = m.assistant
+  const isPt = lang === 'pt-PT'
   const [phase, setPhase] = useState<Phase>('loading')
   const [status, setStatus] = useState<AssistantStatus | null>(null)
   const [consent, setConsent] = useState(false)
@@ -118,7 +90,7 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
       setHistory(h => [...h, { role: 'assistant', content: res.reply }])
     } catch (err) {
       if (ctrl.signal.aborted) return
-      setError(friendly(err))
+      setError(friendly(err, m, isPt))
       if (err instanceof AuthenticationError) setPhase('signed-out')
       // A mensagem não teve resposta: volta para a caixa, para não se perder.
       setHistory(h => h.slice(0, -1))
@@ -130,43 +102,43 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
 
   const reset = () => { abortRef.current?.abort(); setHistory([]); setDraft(''); setError(''); setBusy(false) }
 
-  if (phase === 'loading') return <section className="aegis-panel assistant"><p role="status">A verificar o assistente…</p></section>
+  if (phase === 'loading') return <section className="aegis-panel assistant"><p role="status">{a.checking}</p></section>
   if (phase === 'signed-out') return (
     <section className="aegis-panel assistant assistant-gate">
-      <p className="eyebrow">ASSISTENTE · SÓ COM CONTA</p>
-      <h2>Entra para conversar.</h2>
-      <p className="muted">O assistente usa um modelo de IA com custos reais, por isso só está disponível com conta e com um limite diário de mensagens.</p>
-      <button className="button button-dark" onClick={onSignIn}>Entrar na conta</button>
+      <p className="eyebrow">{a.gateKicker}</p>
+      <h2>{a.gateTitle}</h2>
+      <p className="muted">{a.gateText}</p>
+      <button className="button button-dark" onClick={onSignIn}>{a.signIn}</button>
     </section>
   )
   if (phase === 'disabled' || phase === 'error') return (
     <section className="aegis-panel assistant assistant-gate">
-      <p className="eyebrow">ASSISTENTE</p>
-      <h2>{phase === 'disabled' ? 'Indisponível neste momento.' : 'Não foi possível ligar ao assistente.'}</h2>
-      <p className="muted">{phase === 'disabled' ? 'O assistente está desligado neste servidor. As outras ferramentas continuam a funcionar.' : 'Verifica a ligação e tenta de novo mais tarde.'}</p>
+      <p className="eyebrow">{a.kicker}</p>
+      <h2>{phase === 'disabled' ? a.unavailable : a.cantConnect}</h2>
+      <p className="muted">{phase === 'disabled' ? a.disabledText : a.errorText}</p>
     </section>
   )
 
   return (
-    <section className="aegis-panel assistant" aria-label="Conversa com o assistente">
+    <section className="aegis-panel assistant" aria-label={a.regionLabel}>
       <div className="panel-top">
-        <div><p className="eyebrow">ASSISTENTE · CLAUDE</p><h2>Pergunta o que precisares.</h2></div>
-        <span className="subtle-tag">{status?.daily_limit} mensagens/dia</span>
+        <div><p className="eyebrow">{a.kicker} · CLAUDE</p><h2>{a.title}</h2></div>
+        <span className="subtle-tag">{a.perDay(status?.daily_limit ?? 0)}</span>
       </div>
 
       {!consent ? (
         <div className="assistant-consent">
-          <p>{status?.data_notice}</p>
+          <p>{isPt ? status?.data_notice : a.dataNotice}</p>
           <ul className="plain-list">
-            <li><b>Para que serve</b><span>Segurança digital, dinheiro, estudo, matemática, escrita, tradução e programação, em várias línguas. Não dá conselhos de investimento personalizados.</span></li>
-            <li><b>Pode errar</b><span>Confirma informação importante numa fonte oficial ou com um profissional.</span></li>
+            <li><b>{a.whatFor}</b><span>{a.whatForText}</span></li>
+            <li><b>{a.canErr}</b><span>{a.canErrText}</span></li>
           </ul>
-          <label className="switch-label"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}/>Percebi e quero usar o assistente</label>
+          <label className="switch-label"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)}/>{a.accept}</label>
         </div>
       ) : (
         <>
           <div className="assistant-tools">
-            <div className="skill-chips" role="radiogroup" aria-label="Habilidade">
+            <div className="skill-chips" role="radiogroup" aria-label={a.skillsLabel}>
               {(status?.skills ?? []).map(s => (
                 <button
                   key={s.id}
@@ -176,13 +148,13 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
                   className={skill === s.id ? 'chip active' : 'chip'}
                   title={s.description}
                   onClick={() => setSkill(s.id as AssistantSkillId)}
-                >{s.name}</button>
+                >{a.skills[s.id] ?? s.name}</button>
               ))}
             </div>
             <label className="lang-select">
-              <span>Responder em</span>
+              <span>{a.replyIn}</span>
               <select value={language} onChange={e => setLanguage(e.target.value)}>
-                <option value="">Automático (a tua língua)</option>
+                <option value="">{a.auto}</option>
                 {(status?.languages ?? []).map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
               </select>
             </label>
@@ -190,38 +162,38 @@ export default function Assistant({ onSignIn }: { onSignIn: () => void }) {
           <div className="assistant-log" aria-live="polite" ref={logRef}>
             {history.length === 0 && (
               <div className="assistant-suggestions">
-                {(SUGGESTIONS[skill] ?? SUGGESTIONS['geral']!).map(s => <button key={s} onClick={() => s.endsWith('…') ? setDraft(s.slice(0, -1)) : void send(s)}>{s}</button>)}
+                {(a.suggestions[skill] ?? a.suggestions['geral'] ?? []).map(s => <button key={s} onClick={() => s.endsWith('…') ? setDraft(s.slice(0, -1)) : void send(s)}>{s}</button>)}
               </div>
             )}
             {history.map((m, i) => (
               <div key={i} className={`bubble ${m.role}`}>
-                <span className="sr-only">{m.role === 'user' ? 'Tu disseste:' : 'O assistente respondeu:'}</span>
+                <span className="sr-only">{m.role === 'user' ? a.youSaid : a.replied}</span>
                 {m.role === 'assistant' ? <RichText text={m.content}/> : m.content}
               </div>
             ))}
-            {busy && <div className="bubble assistant typing" role="status">{skill === 'matematica' ? 'A resolver passo a passo…' : 'A pensar…'}</div>}
+            {busy && <div className="bubble assistant typing" role="status">{skill === 'matematica' ? a.solving : a.thinking}</div>}
           </div>
           {error && <p role="alert" className="error-text">{error}</p>}
           <form className="assistant-form" onSubmit={e => { e.preventDefault(); void send(draft) }}>
-            <label className="sr-only" htmlFor="assistant-input">Mensagem para o assistente</label>
+            <label className="sr-only" htmlFor="assistant-input">{a.inputLabel}</label>
             <textarea
               id="assistant-input"
               rows={3}
               maxLength={MAX_CHARS}
               value={draft}
-              placeholder="Escreve a tua pergunta… (Enter envia, Shift+Enter muda de linha)"
+              placeholder={a.placeholder}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(draft) } }}
             />
             <div className="input-meta">
-              <span>{draft.length.toLocaleString('pt-PT')} / {MAX_CHARS.toLocaleString('pt-PT')}</span>
+              <span>{draft.length.toLocaleString(locale)} / {MAX_CHARS.toLocaleString(locale)}</span>
               <div className="button-row">
-                <button type="button" className="button button-quiet" onClick={reset} disabled={!history.length && !draft}>Nova conversa</button>
-                <button type="submit" className="button button-dark" disabled={busy || !draft.trim()}>{busy ? 'A enviar…' : 'Enviar'}</button>
+                <button type="button" className="button button-quiet" onClick={reset} disabled={!history.length && !draft}>{a.newChat}</button>
+                <button type="submit" className="button button-dark" disabled={busy || !draft.trim()}>{busy ? a.sending : a.send}</button>
               </div>
             </div>
           </form>
-          <p className="caption">A conversa fica só nesta página e é apagada ao fechar ou ao começar uma nova. Não escrevas palavras-passe nem dados bancários.</p>
+          <p className="caption">{a.caption}</p>
         </>
       )}
     </section>

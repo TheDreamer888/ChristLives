@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { authClient, type ProviderInfo, type SessionUser } from "../auth/authClient";
 import { runUnauthenticatedGuard } from "../lib/loginTabGuard";
 import "./LoginTab.css";
+import { useI18n } from "../i18n/context";
 
 const PROVIDER_ICONS: Record<string, string> = {
   google: "🟢",
@@ -17,6 +18,8 @@ type Mode = "providers" | "passkey" | "recovery";
 /** Adaptable, secure login tab: OAuth (Google/Microsoft/GitHub/...), passkeys
  *  / hardware security keys, and account-recovery when a factor is lost. */
 export default function LoginTab() {
+  const { m } = useI18n();
+  const l = m.login;
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [passkeyOk, setPasskeyOk] = useState(false);
   const [mode, setMode] = useState<Mode>("providers");
@@ -26,13 +29,14 @@ export default function LoginTab() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [apiDown, setApiDown] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     authClient.listProviders().then((res) => {
       setProviders(res.oauth);
       setPasskeyOk(res.webauthn && authClient.passkeySupported());
-    }).catch(() => setStatus("API de autenticação indisponível. Tenta novamente quando o serviço estiver configurado."));
+    }).catch(() => setApiDown(true));
     authClient.getSession().then(setSession);
   }, []);
 
@@ -40,7 +44,7 @@ export default function LoginTab() {
 
   const withGuard = async (action: () => Promise<void>) => {
     if (!session && !legalOk) {
-      setStatus("Aceita os Termos e a Política de Privacidade para continuar.");
+      setStatus(l.acceptFirst);
       return;
     }
     setBusy(true);
@@ -55,7 +59,7 @@ export default function LoginTab() {
       );
       setSession(await authClient.getSession());
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Ocorreu um erro.");
+      setStatus(err instanceof Error ? err.message : l.error);
     } finally {
       setBusy(false);
     }
@@ -64,62 +68,61 @@ export default function LoginTab() {
   if (session) {
     return (
       <div className="login-tab">
-        <h2>Sessão iniciada</h2>
+        <h2>{l.signedIn}</h2>
         <p>
-          Bem-vindo{session.name ? `, ${session.name}` : ""}. Métodos ligados:{" "}
-          {session.linked_methods.join(", ") || "nenhum"}.
+          {l.welcome(session.name)} {l.methods}{" "}
+          {session.linked_methods.join(", ") || l.none}.
         </p>
         {!session.mfa_enrolled && (
           <p className="login-tab__hint">
-            Recomendado: adiciona uma chave de segurança e gera códigos de recuperação, para nunca perderes o
-            acesso.
+            {l.recommend}
           </p>
         )}
         <div className="login-tab__actions">
           <button disabled={busy} onClick={() => withGuard(() => authClient.registerPasskey())}>
-            Adicionar chave de segurança / passkey
+            {l.addPasskey}
           </button>
           <button
             disabled={busy}
             onClick={() =>
               withGuard(async () => {
                 const codes = await authClient.generateBackupCodes();
-                setStatus(`Guarda estes códigos: ${codes.join(", ")}`);
+                setStatus(l.keepCodes(codes.join(", ")));
               })
             }
           >
-            Gerar códigos de recuperação
+            {l.genCodes}
           </button>
           <button disabled={busy} onClick={() => withGuard(() => authClient.logout())}>
-            Terminar sessão
+            {l.signOut}
           </button>
         </div>
-        {status && <p className="login-tab__status">{status}</p>}
+        {(status ?? (apiDown ? l.apiDown : null)) && <p className="login-tab__status">{status ?? l.apiDown}</p>}
       </div>
     );
   }
 
   return (
     <div className="login-tab">
-      <h2>Iniciar sessão</h2>
+      <h2>{l.signIn}</h2>
 
       <div className="login-tab__tabs">
         <button className={mode === "providers" ? "active" : ""} onClick={() => setMode("providers")}>
-          Contas
+          {l.accounts}
         </button>
         {passkeyOk && (
           <button className={mode === "passkey" ? "active" : ""} onClick={() => setMode("passkey")}>
-            Chave de segurança
+            {l.securityKey}
           </button>
         )}
         <button className={mode === "recovery" ? "active" : ""} onClick={() => setMode("recovery")}>
-          Perdi o acesso
+          {l.lostAccess}
         </button>
       </div>
 
       {mode === "providers" && (
         <div className="login-tab__providers">
-          {providers.length === 0 && <p>Nenhum provedor configurado ainda.</p>}
+          {providers.length === 0 && <p>{l.noProviders}</p>}
           {providers.map((p) => (
             <button
               key={p.id}
@@ -127,7 +130,7 @@ export default function LoginTab() {
               disabled={busy}
               onClick={() => withGuard(() => authClient.loginWithProvider(p.id))}
             >
-              <span aria-hidden>{PROVIDER_ICONS[p.id] ?? "🔑"}</span> Continuar com {p.name}
+              <span aria-hidden>{PROVIDER_ICONS[p.id] ?? "🔑"}</span> {l.continueWith(p.name)}
             </button>
           ))}
         </div>
@@ -137,27 +140,27 @@ export default function LoginTab() {
         <div className="login-tab__passkey">
           <input
             type="email"
-            placeholder="O teu email"
+            placeholder={l.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <button disabled={busy || !email} onClick={() => withGuard(() => authClient.loginWithPasskey(email))}>
-            Entrar com passkey / chave USB
+            {l.passkeyLogin}
           </button>
         </div>
       )}
 
       {mode === "recovery" && (
         <div className="login-tab__recovery">
-          <p>Perdeste o telemóvel ou a chave de segurança? Liga-te com outra conta acima, ou usa um código de recuperação:</p>
+          <p>{l.lostText}</p>
           <input
             type="email"
-            placeholder="O teu email"
+            placeholder={l.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
-            placeholder="Código de recuperação (xxxxxxxx-xxxxxxxx)"
+            placeholder={l.codePlaceholder}
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
@@ -165,7 +168,7 @@ export default function LoginTab() {
             disabled={busy || !email || !code}
             onClick={() => withGuard(() => authClient.loginWithBackupCode(email, code))}
           >
-            Recuperar acesso
+            {l.recover}
           </button>
         </div>
       )}
@@ -173,18 +176,17 @@ export default function LoginTab() {
       <fieldset className="login-tab__legal">
         <label>
           <input type="checkbox" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-          Li e aceito os <a href="/legal/terms.html" target="_blank" rel="noreferrer">Termos de Serviço</a>
+          {l.acceptTerms[0]}<a href="/legal/terms.html" target="_blank" rel="noreferrer">{l.acceptTerms[1]}</a>
         </label>
         <label>
           <input type="checkbox" checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />
-          Li e aceito a <a href="/legal/privacy.html" target="_blank" rel="noreferrer">Política de Privacidade</a>{" "}
-          (RGPD/LGPD)
+          {l.acceptPrivacy[0]}<a href="/legal/privacy.html" target="_blank" rel="noreferrer">{l.acceptPrivacy[1]}</a>{l.acceptPrivacy[2]}
         </label>
       </fieldset>
 
-      {status && <p className="login-tab__status">{status}</p>}
+      {(status ?? (apiDown ? l.apiDown : null)) && <p className="login-tab__status">{status ?? l.apiDown}</p>}
       <p className="admin-entry">
-        <a href="#admin">Consola de administração</a> · só para equipas autorizadas
+        <a href="#admin">{l.adminLink}</a>{l.adminOnly}
       </p>
     </div>
   );

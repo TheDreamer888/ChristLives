@@ -17,3 +17,6 @@
 .account-panel .login-tab{--accent-bg:#fafbf7;--accent-border:#d9dfd0;color:#293026}.account-panel input{background:white;color:#293026;border:1px solid #bcc5b4;padding:10px;border-radius:6px}.account-panel button{padding:10px 14px;border:1px solid #bcc5b4;border-radius:6px;color:#293026;background:#eef1e8}
 
 .admin-entry{margin:16px 0 0;font-size:13px;color:#5b6573}.admin-entry a{color:inherit;font-weight:600}
+
+.lang-picker select { font: inherit; font-size: .85rem; padding: 6px 8px; border-radius: 999px; border: 1px solid #e3ded6; background: transparent; color: inherit; cursor: pointer; }
+@media (max-width: 560px) { .lang-picker select { max-width: 120px; } }
