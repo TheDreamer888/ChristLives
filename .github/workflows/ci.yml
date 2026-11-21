@@ -26,6 +26,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      # SDK: tipos gerados em dia com o contrato, testes, tipos e build.
+      - run: pnpm --filter @lusorbe/sdk check:generated
+      - run: pnpm --filter @lusorbe/sdk typecheck
+      - run: pnpm --filter @lusorbe/sdk test
       - run: pnpm --filter frontend lint
       - run: pnpm --filter frontend test
       - run: pnpm --filter frontend build
@@ -33,6 +37,29 @@ jobs:
   python:
     name: Python API
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: lusorbe
+          POSTGRES_PASSWORD: lusorbe-ci-only
+          POSTGRES_DB: lusorbe_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lusorbe"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: services/api-python
@@ -43,10 +70,18 @@ jobs:
           python-version: '3.12'
       - uses: snok/install-poetry@v1
         with:
-          version: 2.2.1
+          version: 2.5.1
           virtualenvs-create: true
+      # Falha se o poetry.lock não corresponder ao pyproject.toml (lock desatualizado).
+      - run: poetry check --lock
       - run: poetry install --no-interaction
       - run: poetry run python -m compileall -q src
+      # O contrato OpenAPI do SDK tem de corresponder à API.
+      - run: poetry run python scripts/export_openapi.py --check
+      - run: poetry run pytest -q
+        env:
+          TEST_DATABASE_URL: postgresql://lusorbe:lusorbe-ci-only@localhost:5432/lusorbe_test
+          TEST_REDIS_URL: redis://localhost:6379/15
 
   rust:
     name: Rust API

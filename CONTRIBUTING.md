@@ -1,6 +1,6 @@
 # Contribuição
 
-Obrigado por contribuir para o Aegis.
+Obrigado por contribuir para o Lusorbe.
 
 ## Fluxo de branches
 

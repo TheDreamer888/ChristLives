@@ -1,120 +1,74 @@
 /**
- * authClient — the app's auth "SDK". Everything a UI needs to sign in with
- * Google/Microsoft/GitHub/passkeys/backup-codes lives behind this small API.
+ * Autenticação da app, por cima do SDK oficial (@lusorbe/sdk).
  *
- * Session tokens are httpOnly cookies (never touched here). This client previously
- * caches a non-sensitive profile snapshot, encrypted at rest (see
- * secureStore.ts) but cached data must never establish an authenticated session.
+ * A sessão é um cookie httpOnly (nunca tocado aqui). Os dados em cache local
+ * (secureStore.ts) nunca servem para considerar alguém autenticado: só o servidor
+ * confirma a sessão.
  */
-import { secureClear } from "./secureStore";
-import { createPasskey, getPasskeyAssertion, isPasskeySupported } from "./webauthn";
+import { LusorbeError } from '@lusorbe/sdk'
+import type { ProviderInfo, Providers, SessionUser } from '@lusorbe/sdk'
 
-const API_BASE = import.meta.env['VITE_API_BASE_URL'] ?? "http://localhost:8000";
+import { lusorbe } from '../lusorbe'
+import { secureClear } from './secureStore'
+import { createPasskey, getPasskeyAssertion, isPasskeySupported } from './webauthn'
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    credentials: "include", // send/receive the httpOnly session cookie
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail ?? `Falha no pedido (${res.status})`);
-  }
-  return res.status === 204 ? (undefined as T) : res.json();
-}
-
-export interface ProviderInfo {
-  id: string;
-  name: string;
-}
-
-export interface SessionUser {
-  id: string;
-  email: string | null;
-  name: string | null;
-  linked_methods: string[];
-  mfa_enrolled: boolean;
-}
+export type { ProviderInfo, SessionUser }
 
 export const authClient = {
   passkeySupported: isPasskeySupported,
 
-  async listProviders(): Promise<{ oauth: ProviderInfo[]; webauthn: boolean; backup_codes: boolean }> {
-    return api("/api/auth/providers");
+  listProviders(): Promise<Providers> {
+    return lusorbe.auth.providers()
   },
 
-  /** Redirects the browser to the provider's consent screen (Google/Microsoft/GitHub/...). */
+  /** Redireciona o browser para o ecrã de consentimento do provedor. */
   async loginWithProvider(providerId: string): Promise<void> {
-    const { authorize_url } = await api<{ authorize_url: string; state: string }>(
-      `/api/auth/oauth/${providerId}/start`,
-    );
-    window.location.assign(authorize_url);
+    const { authorize_url } = await lusorbe.auth.oauthStart(providerId)
+    window.location.assign(authorize_url)
   },
 
   async getSession(): Promise<SessionUser | null> {
     try {
-      const user = await api<SessionUser | null>("/api/auth/session");
-      return user;
-    } catch {
-      return null; // Only the server can confirm an authenticated session.
+      return await lusorbe.auth.session()
+    } catch (err) {
+      if (err instanceof LusorbeError) return null // só o servidor confirma a sessão
+      throw err
     }
   },
 
   async logout(): Promise<void> {
-    await api("/api/auth/logout", { method: "POST" });
-    await secureClear();
+    await lusorbe.auth.logout()
+    await secureClear()
   },
 
-  /** Registers a new passkey / hardware security key for the signed-in user. */
+  /** Regista uma passkey ou chave de segurança para o utilizador com sessão. */
   async registerPasskey(deviceLabel?: string): Promise<void> {
-    const { challenge_id, options } = await api<{ challenge_id: string; options: string }>(
-      "/api/auth/webauthn/register/options",
-      { method: "POST" },
-    );
-    const credential = await createPasskey(options);
-    await api("/api/auth/webauthn/register/verify", {
-      method: "POST",
-      body: JSON.stringify({ credential, challenge_id, device_label: deviceLabel }),
-    });
+    const { challengeId, options } = await lusorbe.auth.passkeys.registerOptions()
+    const credential = await createPasskey(options)
+    await lusorbe.auth.passkeys.registerVerify({ challengeId, credential, deviceLabel })
   },
 
-  /** Signs in with an already-registered passkey / security key. */
+  /** Entra com uma passkey já registada. */
   async loginWithPasskey(email: string): Promise<void> {
-    const { challenge_id, options } = await api<{ challenge_id: string; options: string }>(
-      `/api/auth/webauthn/login/options?email=${encodeURIComponent(email)}`,
-      { method: "POST" },
-    );
-    const credential = await getPasskeyAssertion(options);
-    await api("/api/auth/webauthn/login/verify", {
-      method: "POST",
-      body: JSON.stringify({ credential, challenge_id }),
-    });
+    const { challengeId, options } = await lusorbe.auth.passkeys.loginOptions(email)
+    const credential = await getPasskeyAssertion(options)
+    await lusorbe.auth.passkeys.loginVerify({ challengeId, credential })
   },
 
-  /** Account recovery when every other method (phone/passkey) is lost. */
+  /** Recuperação quando todos os outros métodos se perderam. */
   async generateBackupCodes(): Promise<string[]> {
-    const { codes } = await api<{ codes: string[] }>("/api/auth/recovery/backup-codes/generate", {
-      method: "POST",
-    });
-    return codes;
+    return (await lusorbe.auth.recovery.generate()).codes
   },
 
   async loginWithBackupCode(email: string, code: string): Promise<void> {
-    await api(
-      `/api/auth/recovery/backup-codes/redeem?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`,
-      { method: "POST" },
-    );
+    await lusorbe.auth.recovery.redeem({ email, code })
   },
 
   async recordConsent(termsAccepted: boolean, privacyAccepted: boolean, marketingOptIn = false): Promise<void> {
-    await api("/api/auth/consent", {
-      method: "POST",
-      body: JSON.stringify({
-        terms_accepted: termsAccepted,
-        privacy_accepted: privacyAccepted,
-        marketing_opt_in: marketingOptIn,
-      }),
-    });
+    await lusorbe.auth.recordConsent({
+      terms_accepted: termsAccepted,
+      privacy_accepted: privacyAccepted,
+      marketing_opt_in: marketingOptIn,
+    })
   },
-};
+}

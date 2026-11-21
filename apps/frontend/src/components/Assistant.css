@@ -1,0 +1,16 @@
+.assistant { display: flex; flex-direction: column; gap: 14px; }
+.assistant-gate { max-width: 640px; }
+.assistant-consent { display: grid; gap: 14px; }
+.assistant-consent > p { margin: 0; font-size: 1rem; line-height: 1.6; }
+.assistant-log { display: flex; flex-direction: column; gap: 10px; min-height: 260px; max-height: min(60vh, 560px); overflow-y: auto; padding: 4px 2px; }
+.assistant-suggestions { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.assistant-suggestions button { text-align: left; padding: 14px; border: 1px solid #e3ded6; border-radius: 12px; background: transparent; color: inherit; font: inherit; line-height: 1.45; cursor: pointer; }
+.assistant-suggestions button:hover, .assistant-suggestions button:focus-visible { border-color: #b56f4b; }
+.bubble { max-width: min(78ch, 88%); padding: 12px 14px; border-radius: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.user { align-self: flex-end; background: #1f1d1a; color: #f7f3ee; border-bottom-right-radius: 4px; }
+.bubble.assistant { align-self: flex-start; background: #f3efe9; color: #1f1d1a; border-bottom-left-radius: 4px; }
+.bubble.typing { opacity: .7; font-style: italic; }
+.assistant-form textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+.assistant-form .input-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.assistant-form .button-row { margin: 0; }
+@media (max-width: 560px) { .bubble { max-width: 100%; } }

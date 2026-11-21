@@ -1,5 +1,5 @@
 {
-  "name": "aegis-platform",
+  "name": "lusorbe-platform",
   "private": true,
   "packageManager": "pnpm@10.15.1",
   "scripts": {
@@ -11,6 +11,8 @@
     "build": "pnpm run build:frontend",
     "check:python": "python -m compileall -q services/api-python/src",
     "check:rust": "cargo check --manifest-path services/api-rust/Cargo.toml",
-    "check:dotnet": "dotnet build services/api-dotnet/WebApplication1/WebApplication1.csproj --no-restore"
+    "check:dotnet": "dotnet build services/api-dotnet/WebApplication1/WebApplication1.csproj --no-restore",
+    "sdk:generate": "cd services/api-python && python scripts/export_openapi.py && cd ../.. && pnpm --filter @lusorbe/sdk generate",
+    "sdk:test": "pnpm --filter @lusorbe/sdk test"
   }
 }

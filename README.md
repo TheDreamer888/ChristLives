@@ -1,4 +1,4 @@
-# Aegis
+# Lusorbe
 
 Monorepo organizado em três áreas: `apps/`, `services/` e `infra/`.
 
